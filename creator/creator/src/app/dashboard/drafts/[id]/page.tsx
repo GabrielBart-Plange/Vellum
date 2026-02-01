@@ -352,11 +352,11 @@ export default function DraftEditorPage() {
                         </button>
                         <button
                             onClick={() => {
-                                const template = `\n|Status|\nName: ...\nLevel: 1\nClass: ...\nStrength: 10\nAgility: 10\n|/Status|\n`;
+                                const template = `\n|Status: Chronicle Status Screen|\nName: ...\nLevel: 1\nClass: ...\nStrength: 10\nAgility: 10\n|/Status|\n`;
                                 if (type === 'short') setContent(content + template);
                                 else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
                             }}
-                            className="bg-emerald-600 hover:bg-emerald-600 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 font-bold shadow-lg"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 font-bold shadow-lg"
                         >
                             + |Status Table|
                         </button>
