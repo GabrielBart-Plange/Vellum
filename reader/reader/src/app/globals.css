@@ -3,10 +3,42 @@
 :root {
   --background: #000000;
   --foreground: #ededed;
+
+  /* Reading Theme Tokens - Default (Void) */
+  --reader-bg: #000000;
+  --reader-text: #d4d4d8;
+  --reader-accent: #6366f1;
+  --reader-border: rgba(255, 255, 255, 0.05);
+  --reader-footer-bg: #09090b;
+}
+
+[data-theme='archive'] {
+  --reader-bg: #f5f2e9;
+  --reader-text: #2c2c2c;
+  --reader-accent: #7c2d12;
+  --reader-border: rgba(0, 0, 0, 0.05);
+  --reader-footer-bg: #ebe7d9;
+}
+
+[data-theme='nebula'] {
+  --reader-bg: #0c0b1e;
+  --reader-text: #c7d2fe;
+  --reader-accent: #a78bfa;
+  --reader-border: rgba(167, 139, 250, 0.1);
+  --reader-footer-bg: #141233;
+}
+
+[data-theme='light'] {
+  --reader-bg: #ffffff;
+  --reader-text: #1a1a1a;
+  --reader-accent: #2563eb;
+  --reader-border: rgba(0, 0, 0, 0.1);
+  --reader-footer-bg: #f8fafc;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }

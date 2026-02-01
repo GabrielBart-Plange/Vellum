@@ -19,10 +19,17 @@ import { useParams } from "next/navigation";
 import ImageUpload from "@/components/ImageUpload";
 
 export default function DraftEditorPage() {
+    const GENRE_OPTIONS = {
+        fiction: ["Fantasy", "Sci-Fi", "Mystery", "Horror", "Thriller", "Romance", "Adventure", "Historical Fiction", "Comedy", "Literary Fiction"],
+        "non-fiction": ["Biography", "Memoir", "Self-Help", "Essay", "Travel", "History", "Science", "Philosophy", "Guide", "Commentary"]
+    };
+
     const { id } = useParams<{ id: string }>();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
+    const [category, setCategory] = useState<keyof typeof GENRE_OPTIONS>("fiction");
     const [genre, setGenre] = useState("Fantasy");
+    const [isCustomGenre, setIsCustomGenre] = useState(false);
     const [coverImage, setCoverImage] = useState("");
     const [type, setType] = useState<"short" | "novel">("short");
     const [chapters, setChapters] = useState<{ id: string, title: string, content: string }[]>([]);
@@ -40,61 +47,38 @@ export default function DraftEditorPage() {
                 const draftSnap = await getDoc(draftRef);
 
                 let currentData = null;
-                let usedFallback = false;
 
                 if (draftSnap.exists()) {
-                    console.log("Found existing draft.");
                     currentData = draftSnap.data();
                 } else {
-                    console.log("No draft found, checking published collections...");
                     const novelSnap = await getDoc(doc(db, "novels", id));
-                    if (novelSnap.exists()) {
-                        currentData = novelSnap.data();
-                        usedFallback = true;
-                        console.log("Found published novel fallback.");
-                    } else {
+                    if (novelSnap.exists()) currentData = novelSnap.data();
+                    else {
                         const storySnap = await getDoc(doc(db, "stories", id));
-                        if (storySnap.exists()) {
-                            currentData = storySnap.data();
-                            usedFallback = true;
-                            console.log("Found published story fallback.");
-                        }
+                        if (storySnap.exists()) currentData = storySnap.data();
                     }
                 }
 
                 if (currentData) {
                     setTitle(currentData.title || "");
-                    setGenre(currentData.genre || "Fantasy");
+
+                    // Handle legacy and new genre structure
+                    const loadedCategory = (currentData.category as keyof typeof GENRE_OPTIONS) || "fiction";
+                    setCategory(loadedCategory);
+
+                    const loadedGenre = currentData.genre || "Fantasy";
+                    setGenre(loadedGenre);
+
+                    // If the loaded genre isn't in our list, it's custom
+                    if (!GENRE_OPTIONS[loadedCategory].includes(loadedGenre)) {
+                        setIsCustomGenre(true);
+                    }
+
                     setCoverImage(currentData.coverImage || "");
                     const detectedType = currentData.type || "short";
                     setType(detectedType);
                     setContent(currentData.content || "");
-
-                    if (detectedType === "novel") {
-                        let chaptersRef = collection(db, "users", user.uid, "drafts", id, "chapters");
-                        let q = query(chaptersRef, orderBy("createdAt", "asc"));
-                        let chapSnap = await getDocs(q);
-
-                        // If draft has no chapters, try pulling from published as a second-level fallback
-                        if (chapSnap.docs.length === 0) {
-                            console.log("No chapters in draft, checking published version...");
-                            const pubChaptersRef = collection(db, "novels", id, "chapters");
-                            const pubQ = query(pubChaptersRef, orderBy("order", "asc"));
-                            const pubSnap = await getDocs(pubQ);
-
-                            if (pubSnap.docs.length > 0) {
-                                console.log(`Recovered ${pubSnap.docs.length} chapters from published version.`);
-                                setChapters(pubSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
-                            } else {
-                                console.log("No published chapters found either, initializing default.");
-                                setChapters([{ id: doc(collection(db, "temp")).id, title: "Chapter 1", content: "" }]);
-                            }
-                        } else {
-                            setChapters(chapSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
-                        }
-                    }
-                } else {
-                    console.log("Document not found in any collection.");
+                    // Wait for type state to update then load chapters if needed
                 }
             } catch (err) {
                 console.error("Critical Load Error:", err);
@@ -104,7 +88,35 @@ export default function DraftEditorPage() {
         return () => unsub();
     }, [id]);
 
-    // Autosave with cleaner logic
+    // Separate chapter loading effect to ensure type is set
+    useEffect(() => {
+        const loadChapters = async () => {
+            const user = auth.currentUser;
+            if (!user || type !== "novel") return;
+
+            try {
+                let chaptersRef = collection(db, "users", user.uid, "drafts", id, "chapters");
+                let q = query(chaptersRef, orderBy("order", "asc"));
+                let chapSnap = await getDocs(q);
+
+                if (chapSnap.docs.length === 0) {
+                    const pubChaptersRef = collection(db, "novels", id, "chapters");
+                    const pubQ = query(pubChaptersRef, orderBy("order", "asc"));
+                    const pubSnap = await getDocs(pubQ);
+                    if (pubSnap.docs.length > 0) {
+                        setChapters(pubSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
+                    } else {
+                        setChapters([{ id: doc(collection(db, "temp")).id, title: "Chapter 1", content: "" }]);
+                    }
+                } else {
+                    setChapters(chapSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
+                }
+            } catch (e) { console.error("Chapter load error", e); }
+        };
+        loadChapters();
+    }, [id, type]);
+
+    // Autosave
     useEffect(() => {
         const user = auth.currentUser;
         if (!user || !title) return;
@@ -112,11 +124,11 @@ export default function DraftEditorPage() {
         const t = setTimeout(async () => {
             setSaving(true);
             try {
-                console.log("Autosaving...");
                 const ref = doc(db, "users", user.uid, "drafts", id);
                 await setDoc(ref, {
                     title,
                     content: type === "short" ? content : "",
+                    category,
                     genre,
                     coverImage,
                     type,
@@ -127,7 +139,6 @@ export default function DraftEditorPage() {
                     for (let i = 0; i < chapters.length; i++) {
                         const chapter = chapters[i];
                         if (!chapter?.id) continue;
-
                         const chapRef = doc(db, "users", user.uid, "drafts", id, "chapters", chapter.id);
                         await setDoc(chapRef, {
                             title: chapter.title || "Untitled Chapter",
@@ -137,7 +148,6 @@ export default function DraftEditorPage() {
                         }, { merge: true });
                     }
                 }
-                console.log("Autosave complete.");
             } catch (err) {
                 console.error("Autosave Failure:", err);
             } finally {
@@ -146,85 +156,61 @@ export default function DraftEditorPage() {
         }, 2000);
 
         return () => clearTimeout(t);
-    }, [title, content, genre, coverImage, chapters, id, type]);
+    }, [title, content, category, genre, coverImage, chapters, id, type]);
 
     const publish = async () => {
         const user = auth.currentUser;
         if (!user) return;
 
-        // Fetch latest username before publishing to ensure we have it
         let authorDisplayName = user.email || "Unknown Author";
         try {
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
-            if (userSnap.exists() && userSnap.data().username) {
-                authorDisplayName = userSnap.data().username;
-            }
-        } catch (e) {
-            console.error("Error fetching username for publish:", e);
-        }
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            if (userSnap.exists() && userSnap.data().username) authorDisplayName = userSnap.data().username;
+        } catch (e) { }
 
-        // Determine collection based on draft type
         const collectionName = type === "novel" ? "novels" : "stories";
-
-        // Use setDoc to keep the ID consistent (draft ID = story ID) and prevent duplicates
         await setDoc(doc(db, collectionName, id), {
             title,
             authorId: user.uid,
             authorName: authorDisplayName,
             coverImage: coverImage || "https://placehold.co/400x600/1a1a1a/666666?text=Cover",
+            category,
             genre,
             type,
             published: true,
             createdAt: serverTimestamp(),
             publishedAt: serverTimestamp(),
-            // Short stories keep content, novels don't (they use chapters sub-collection)
             ...(type === "short" ? { content } : {}),
         });
 
-        // Publish chapters if novel
         if (type === "novel" && chapters) {
             for (let i = 0; i < chapters.length; i++) {
                 const chapter = chapters[i];
                 if (!chapter || !chapter.id) continue;
-
                 await setDoc(doc(db, "novels", id, "chapters", chapter.id), {
                     title: chapter.title || "Untitled",
                     content: chapter.content || "",
                     order: i,
-                    authorId: user.uid, // Denormalized for security rules
+                    authorId: user.uid,
                     novelId: id,
-                    published: true, // Denormalized for security rules
+                    published: true,
                     publishedAt: serverTimestamp(),
                 });
             }
         }
-
         alert(`${type === "novel" ? "Novel" : "Short story"} published successfully!`);
     };
 
+    // ... rest of help functions same ...
     const deleteChapter = async (index: number) => {
-        if (!confirm("Are you sure you want to delete this chapter from your draft?")) return;
-
+        if (!confirm("Are you sure you want to delete this chapter?")) return;
         const chapterToDelete = chapters[index];
         const newChapters = chapters.filter((_, i) => i !== index);
         setChapters(newChapters);
-
-        // If we deleted the active chapter, adjust index
-        if (activeChapterIndex >= newChapters.length) {
-            setActiveChapterIndex(Math.max(0, newChapters.length - 1));
-        }
-
-        // Also delete from Firestore draft collection immediately
+        if (activeChapterIndex >= newChapters.length) setActiveChapterIndex(Math.max(0, newChapters.length - 1));
         const user = auth.currentUser;
         if (user && chapterToDelete?.id) {
-            try {
-                const chapRef = doc(db, "users", user.uid, "drafts", id, "chapters", chapterToDelete.id);
-                await deleteDoc(chapRef);
-                console.log("Chapter deleted from draft storage.");
-            } catch (err) {
-                console.error("Failed to delete chapter from Firestore:", err);
-            }
+            try { await deleteDoc(doc(db, "users", user.uid, "drafts", id, "chapters", chapterToDelete.id)); } catch (err) { }
         }
     };
 
@@ -241,32 +227,71 @@ export default function DraftEditorPage() {
     };
 
     return (
-        <section className="max-w-3xl space-y-4">
-            <div className="flex gap-4">
-                <div className="flex-1">
-                    <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1">Title</label>
-                    <input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Story title"
-                        className="w-full bg-black border border-white/10 p-2 text-lg focus:outline-none focus:border-white/30 transition-colors"
-                    />
+        <section className="max-w-4xl space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-1">
+                    <label className="block text-[10px] uppercase tracking-widest text-gray-500 mb-2 font-bold">Category</label>
+                    <div className="flex gap-2 p-1 bg-white/5 border border-white/5">
+                        <button
+                            onClick={() => { setCategory("fiction"); setGenre(GENRE_OPTIONS.fiction[0]); setIsCustomGenre(false); }}
+                            className={`flex-1 py-2 text-[10px] uppercase tracking-widest transition-all ${category === "fiction" ? "bg-white text-black font-bold" : "text-gray-500 hover:text-white"}`}
+                        >
+                            Fiction
+                        </button>
+                        <button
+                            onClick={() => { setCategory("non-fiction"); setGenre(GENRE_OPTIONS["non-fiction"][0]); setIsCustomGenre(false); }}
+                            className={`flex-1 py-2 text-[10px] uppercase tracking-widest transition-all ${category === "non-fiction" ? "bg-white text-black font-bold" : "text-gray-500 hover:text-white"}`}
+                        >
+                            Non-Fiction
+                        </button>
+                    </div>
                 </div>
-                <div className="w-48">
-                    <label className="block text-xs uppercase tracking-widest text-gray-500 mb-1">Genre</label>
-                    <select
-                        value={genre}
-                        onChange={(e) => setGenre(e.target.value)}
-                        className="w-full bg-black border border-white/10 p-2 text-lg focus:outline-none focus:border-white/30 transition-colors"
-                    >
-                        <option value="Fantasy">Fantasy</option>
-                        <option value="Sci-Fi">Sci-Fi</option>
-                        <option value="Mystery">Mystery</option>
-                        <option value="Horror">Horror</option>
-                        <option value="Thriller">Thriller</option>
-                        <option value="Romance">Romance</option>
-                    </select>
+
+                <div className="md:col-span-2">
+                    <label className="block text-[10px] uppercase tracking-widest text-gray-500 mb-2 font-bold">Genre</label>
+                    <div className="flex gap-2">
+                        {!isCustomGenre ? (
+                            <select
+                                value={genre}
+                                onChange={(e) => {
+                                    if (e.target.value === "CUSTOM") setIsCustomGenre(true);
+                                    else setGenre(e.target.value);
+                                }}
+                                className="flex-1 bg-black border border-white/10 p-2 text-sm focus:outline-none focus:border-white/30 transition-colors uppercase tracking-widest"
+                            >
+                                {GENRE_OPTIONS[category].map(opt => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                                <option value="CUSTOM">+ Custom Genre...</option>
+                            </select>
+                        ) : (
+                            <div className="flex-1 flex gap-2">
+                                <input
+                                    value={genre === "CUSTOM" ? "" : genre}
+                                    onChange={(e) => setGenre(e.target.value)}
+                                    placeholder="Enter custom genre..."
+                                    className="flex-1 bg-black border border-white/10 p-2 text-sm focus:outline-none focus:border-white/30 transition-colors"
+                                />
+                                <button
+                                    onClick={() => { setIsCustomGenre(false); setGenre(GENRE_OPTIONS[category][0]); }}
+                                    className="px-3 border border-white/10 text-gray-500 hover:text-white text-xs"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
+            </div>
+
+            <div className="space-y-2">
+                <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold">Book Title</label>
+                <input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter the chronicle's title..."
+                    className="w-full bg-black border border-white/10 p-3 text-xl font-light focus:outline-none focus:border-white/30 transition-colors"
+                />
             </div>
 
             <div className="flex gap-8 items-start">

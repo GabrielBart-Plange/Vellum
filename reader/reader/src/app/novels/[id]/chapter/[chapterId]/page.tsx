@@ -6,6 +6,8 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import Link from "next/link";
 
+import ReadingSettings from "@/components/reader/ReadingSettings";
+
 export default function ChapterReaderPage() {
     const { id: novelId, chapterId } = useParams<{ id: string, chapterId: string }>();
     const [novel, setNovel] = useState<any>(null);
@@ -13,6 +15,26 @@ export default function ChapterReaderPage() {
     const [allChapters, setAllChapters] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+
+    // Reading Transformation State
+    const [theme, setTheme] = useState("void");
+    const [fontSize, setFontSize] = useState(18);
+
+    useEffect(() => {
+        const savedTheme = localStorage.getItem("reader-theme") || "void";
+        const savedSize = localStorage.getItem("reader-font-size") || "18";
+        setTheme(savedTheme);
+        setFontSize(parseInt(savedSize));
+    }, []);
+
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("reader-theme", theme);
+    }, [theme]);
+
+    useEffect(() => {
+        localStorage.setItem("reader-font-size", fontSize.toString());
+    }, [fontSize]);
 
     useEffect(() => {
         const load = async () => {
@@ -63,16 +85,29 @@ export default function ChapterReaderPage() {
     const nextChapter = allChapters[currentIndex + 1];
 
     return (
-        <main className="min-h-screen bg-black text-gray-300 py-24 selection:bg-indigo-500/30">
+        <main
+            className="min-h-screen py-24 transition-colors duration-500 ease-in-out"
+            style={{ backgroundColor: 'var(--reader-bg)', color: 'var(--reader-text)' }}
+        >
+            <ReadingSettings
+                currentTheme={theme}
+                currentFontSize={fontSize}
+                onThemeChange={setTheme}
+                onFontSizeChange={setFontSize}
+            />
+
             {/* Top Navigation Bar */}
-            <div className="fixed top-0 inset-x-0 bg-black/80 backdrop-blur-xl border-b border-white/5 z-50">
+            <div
+                className="fixed top-0 inset-x-0 backdrop-blur-xl border-b z-50 transition-colors"
+                style={{ backgroundColor: 'var(--reader-footer-bg)', borderColor: 'var(--reader-border)' }}
+            >
                 <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <Link href={`/novels/${novelId}`} className="text-[10px] uppercase tracking-[0.4em] text-gray-500 hover:text-white transition-colors">
+                    <Link href={`/novels/${novelId}`} className="text-[10px] uppercase tracking-[0.4em] text-gray-500 hover:text-[var(--reader-accent)] transition-colors">
                         ← {novel.title}
                     </Link>
                     <div className="text-center">
-                        <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold leading-none">Chapter {currentIndex + 1}</p>
-                        <h3 className="text-xs text-gray-600 truncate max-w-[200px]">{chapter.title}</h3>
+                        <p className="text-[10px] uppercase tracking-widest opacity-50 font-bold leading-none">Chapter {currentIndex + 1}</p>
+                        <h3 className="text-xs opacity-80 truncate max-w-[200px]">{chapter.title}</h3>
                     </div>
                     <div className="w-16" /> {/* Spacer */}
                 </div>
@@ -81,45 +116,50 @@ export default function ChapterReaderPage() {
             <article className="max-w-2xl mx-auto px-6 space-y-16">
                 {/* Chapter Title Section */}
                 <header className="space-y-4 pt-12 text-center">
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-indigo-400 font-bold">Chapter {currentIndex + 1}</p>
-                    <h1 className="text-3xl md:text-5xl font-light tracking-wide text-white uppercase italic">
+                    <p className="text-[10px] uppercase tracking-[0.6em] font-bold" style={{ color: 'var(--reader-accent)' }}>Chapter {currentIndex + 1}</p>
+                    <h1 className="text-3xl md:text-5xl font-light tracking-wide uppercase italic" style={{ color: 'var(--reader-text)' }}>
                         {chapter.title}
                     </h1>
-                    <div className="h-1 w-12 bg-white/10 mx-auto mt-12" />
+                    <div className="h-1 w-12 mx-auto mt-12 transition-colors" style={{ backgroundColor: 'var(--reader-border)' }} />
                 </header>
 
                 {/* Chapter Content */}
-                <div className="prose prose-invert prose-zinc max-w-none">
-                    <p className="text-lg md:text-xl leading-relaxed text-gray-300 font-serif whitespace-pre-wrap">
+                <div className="max-w-none">
+                    <div
+                        className="leading-relaxed font-serif whitespace-pre-wrap select-text"
+                        style={{ fontSize: `${fontSize}px` }}
+                    >
                         {chapter.content}
-                    </p>
+                    </div>
                 </div>
 
                 {/* Footer Navigation */}
                 <footer className="pt-24 space-y-12">
-                    <div className="h-1 w-full bg-white/5" />
+                    <div className="h-px w-full" style={{ backgroundColor: 'var(--reader-border)' }} />
                     <div className="grid grid-cols-2 gap-8 pb-32">
                         {prevChapter ? (
                             <Link
                                 href={`/novels/${novelId}/chapter/${prevChapter.id}`}
-                                className="group p-6 border border-white/5 hover:bg-white/5 transition-all space-y-2 text-left"
+                                className="group p-6 border transition-all space-y-2 text-left hover:scale-[1.02]"
+                                style={{ borderColor: 'var(--reader-border)' }}
                             >
-                                <p className="text-[10px] uppercase tracking-widest text-gray-600">Previous</p>
-                                <p className="text-sm text-gray-400 group-hover:text-white transition-colors">{prevChapter.title}</p>
+                                <p className="text-[10px] uppercase tracking-widest opacity-50">Previous</p>
+                                <p className="text-sm opacity-80 group-hover:opacity-100 transition-opacity">{prevChapter.title}</p>
                             </Link>
                         ) : <div />}
 
                         {nextChapter ? (
                             <Link
                                 href={`/novels/${novelId}/chapter/${nextChapter.id}`}
-                                className="group p-6 border border-white/5 hover:bg-white/5 transition-all space-y-2 text-right"
+                                className="group p-6 border transition-all space-y-2 text-right hover:scale-[1.02]"
+                                style={{ borderColor: 'var(--reader-border)', backgroundColor: 'var(--reader-footer-bg)' }}
                             >
-                                <p className="text-[10px] uppercase tracking-widest text-gray-600">Next Chapter</p>
-                                <p className="text-sm text-gray-400 group-hover:text-white transition-colors">{nextChapter.title}</p>
+                                <p className="text-[10px] uppercase tracking-widest opacity-50">Next Chapter</p>
+                                <p className="text-sm opacity-80 group-hover:opacity-100 transition-opacity">{nextChapter.title}</p>
                             </Link>
                         ) : (
-                            <div className="p-6 border border-dashed border-white/5 text-center">
-                                <p className="text-[10px] uppercase tracking-widest text-gray-700">The End of Current Chronicles</p>
+                            <div className="p-6 border border-dashed text-center" style={{ borderColor: 'var(--reader-border)' }}>
+                                <p className="text-[10px] uppercase tracking-widest opacity-30">The End of Current Chronicles</p>
                             </div>
                         )}
                     </div>
@@ -127,10 +167,13 @@ export default function ChapterReaderPage() {
             </article>
 
             {/* Reading Progress Line */}
-            <div className="fixed bottom-0 inset-x-0 h-1 bg-zinc-900 z-50">
+            <div className="fixed bottom-0 inset-x-0 h-1 z-50" style={{ backgroundColor: 'var(--reader-border)' }}>
                 <div
-                    className="h-full bg-white transition-all duration-300"
-                    style={{ width: `${((currentIndex + 1) / allChapters.length) * 100}%` }}
+                    className="h-full transition-all duration-300"
+                    style={{
+                        width: `${((currentIndex + 1) / allChapters.length) * 100}%`,
+                        backgroundColor: 'var(--reader-accent)'
+                    }}
                 />
             </div>
         </main>
