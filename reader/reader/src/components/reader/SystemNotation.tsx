@@ -14,7 +14,8 @@ export default function SystemNotation({ content, fontSize }: SystemNotationProp
     // 3. |Status| ... |/Status|
 
     const parseContent = (text: string) => {
-        const parts = text.split(/(\[System:.*?\]|\{Quest:[\s\S]*?\}|\|Status.*?\|[\s\S]*?\|\/Status\|)/g);
+        // Improved regex to handle multiline system alerts, quests, and status screens properly
+        const parts = text.split(/(\[System:[\s\S]*?\]|\{Quest:[\s\S]*?\}|\|Status.*?\|[\s\S]*?\|\/Status\|)/g);
 
         return parts.map((part, index) => {
             // --- 1. [System: Header | Message] ---
@@ -34,7 +35,7 @@ export default function SystemNotation({ content, fontSize }: SystemNotationProp
                                 {header.trim()}
                             </p>
                         )}
-                        <p className="italic font-medium leading-relaxed" style={{ fontSize: `${fontSize}px`, color: 'var(--notion-sys-text)' }}>
+                        <p className="italic font-medium leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${fontSize}px`, color: 'var(--notion-sys-text)' }}>
                             {message}
                         </p>
                     </div>
@@ -110,8 +111,16 @@ export default function SystemNotation({ content, fontSize }: SystemNotationProp
                 );
             }
 
-            // Normal text
-            return <span key={index} className="whitespace-pre-wrap">{part}</span>;
+            // Normal text - Added global scaling
+            return (
+                <span
+                    key={index}
+                    className="whitespace-pre-wrap leading-relaxed block mb-4"
+                    style={{ fontSize: `${fontSize}px` }}
+                >
+                    {part}
+                </span>
+            );
         });
     };
 
