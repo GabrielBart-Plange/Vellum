@@ -5,6 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { notFound, useParams } from "next/navigation";
 import ReadingSettings from "@/components/reader/ReadingSettings";
+import SystemNotation from "@/components/reader/SystemNotation";
 
 export default function StoryPage() {
     const { id } = useParams<{ id: string }>();
@@ -84,13 +85,8 @@ export default function StoryPage() {
                     </div>
                 </header>
 
-                <div
-                    className="leading-relaxed whitespace-pre-wrap select-text space-y-6"
-                    style={{ fontSize: `${fontSize}px` }}
-                >
-                    {story.content.split("\n").map((line: string, i: number) => (
-                        <p key={i} className={line.trim() === "" ? "h-4" : ""}>{line}</p>
-                    ))}
+                <div className="leading-relaxed select-text">
+                    <SystemNotation content={story.content} fontSize={fontSize} />
                 </div>
 
                 <footer className="pt-24 pb-32 text-center">

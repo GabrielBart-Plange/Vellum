@@ -35,6 +35,10 @@ export default function DraftEditorPage() {
     const [chapters, setChapters] = useState<{ id: string, title: string, content: string }[]>([]);
     const [activeChapterIndex, setActiveChapterIndex] = useState(0);
     const [saving, setSaving] = useState(false);
+    const [tags, setTags] = useState<string[]>([]);
+    const [tagInput, setTagInput] = useState("");
+
+    const hasSystemTag = tags.some(t => t.toLowerCase() === "@system");
 
     // Unified data loading effect
     useEffect(() => {
@@ -78,6 +82,7 @@ export default function DraftEditorPage() {
                     const detectedType = currentData.type || "short";
                     setType(detectedType);
                     setContent(currentData.content || "");
+                    setTags(currentData.tags || []);
                     // Wait for type state to update then load chapters if needed
                 }
             } catch (err) {
@@ -132,6 +137,7 @@ export default function DraftEditorPage() {
                     genre,
                     coverImage,
                     type,
+                    tags,
                     updatedAt: serverTimestamp(),
                 }, { merge: true });
 
@@ -156,7 +162,7 @@ export default function DraftEditorPage() {
         }, 2000);
 
         return () => clearTimeout(t);
-    }, [title, content, category, genre, coverImage, chapters, id, type]);
+    }, [title, content, category, genre, coverImage, chapters, id, type, tags]);
 
     const publish = async () => {
         const user = auth.currentUser;
@@ -177,6 +183,7 @@ export default function DraftEditorPage() {
             category,
             genre,
             type,
+            tags,
             published: true,
             createdAt: serverTimestamp(),
             publishedAt: serverTimestamp(),
@@ -292,6 +299,69 @@ export default function DraftEditorPage() {
                     placeholder="Enter the chronicle's title..."
                     className="w-full bg-black border border-white/10 p-3 text-xl font-light focus:outline-none focus:border-white/30 transition-colors"
                 />
+            </div>
+
+            <div className="space-y-4 bg-white/5 border border-white/5 p-4 relative group">
+                <div className="flex justify-between items-center">
+                    <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold">Smart Tags (@tags)</label>
+                    <span className="text-[9px] text-gray-600 italic">Prepend @system to unlock system tools</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {tags.map((tag, idx) => (
+                        <span key={idx} className={`px-2 py-1 text-[10px] uppercase tracking-widest border ${tag.toLowerCase() === '@system' ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-300' : 'border-white/10 bg-white/5 text-gray-400'} flex items-center gap-2`}>
+                            {tag}
+                            <button onClick={() => setTags(tags.filter((_, i) => i !== idx))} className="hover:text-white">✕</button>
+                        </span>
+                    ))}
+                    <input
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && tagInput.trim()) {
+                                setTags([...tags, tagInput.trim().startsWith('@') ? tagInput.trim() : `@${tagInput.trim()}`]);
+                                setTagInput("");
+                            }
+                        }}
+                        placeholder="Add tag (e.g. action)..."
+                        className="bg-transparent border-none text-[10px] uppercase tracking-widest focus:outline-none text-gray-300 w-32"
+                    />
+                </div>
+
+                {/* System Toolbox - Triggered by @system */}
+                {hasSystemTag && (
+                    <div className="absolute -top-12 left-0 right-0 flex gap-2 animate-in slide-in-from-bottom-2 duration-300">
+                        <button
+                            onClick={() => {
+                                const template = `\n[System: Notification text here]\n`;
+                                if (type === 'short') setContent(content + template);
+                                else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
+                            }}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 font-bold shadow-lg"
+                        >
+                            + [System]
+                        </button>
+                        <button
+                            onClick={() => {
+                                const template = `\n{Quest: Quest Name\n- Objective: ...\n- Reward: ...}\n`;
+                                if (type === 'short') setContent(content + template);
+                                else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
+                            }}
+                            className="bg-amber-600 hover:bg-amber-500 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 font-bold shadow-lg"
+                        >
+                            + {"{Quest}"}
+                        </button>
+                        <button
+                            onClick={() => {
+                                const template = `\n|Status|\nName: ...\nLevel: 1\nClass: ...\nStrength: 10\nAgility: 10\n|/Status|\n`;
+                                if (type === 'short') setContent(content + template);
+                                else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-600 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 font-bold shadow-lg"
+                        >
+                            + |Status Table|
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="flex gap-8 items-start">

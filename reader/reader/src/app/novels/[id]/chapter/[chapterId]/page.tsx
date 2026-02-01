@@ -7,6 +7,7 @@ import { doc, getDoc, collection, getDocs, orderBy, query, where } from "firebas
 import Link from "next/link";
 
 import ReadingSettings from "@/components/reader/ReadingSettings";
+import SystemNotation from "@/components/reader/SystemNotation";
 
 export default function ChapterReaderPage() {
     const { id: novelId, chapterId } = useParams<{ id: string, chapterId: string }>();
@@ -125,11 +126,8 @@ export default function ChapterReaderPage() {
 
                 {/* Chapter Content */}
                 <div className="max-w-none">
-                    <div
-                        className="leading-relaxed font-serif whitespace-pre-wrap select-text"
-                        style={{ fontSize: `${fontSize}px` }}
-                    >
-                        {chapter.content}
+                    <div className="leading-relaxed font-serif select-text">
+                        <SystemNotation content={chapter.content} fontSize={fontSize} />
                     </div>
                 </div>
 
