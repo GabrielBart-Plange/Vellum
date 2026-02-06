@@ -23,30 +23,32 @@ export default function StoryCard({
 }: StoryCardProps) {
     const displayImage = coverImage || imageUrl || "https://placehold.co/400x600/1a1a1a/666666?text=Cover";
     const CardContent = (
-        <div className="group relative cursor-pointer flex flex-col gap-3">
+        <div className="group relative cursor-pointer flex flex-col gap-4">
             {/* Image Container */}
-            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-zinc-900 shadow-lg transition-transform duration-300 group-hover:-translate-y-1">
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-zinc-900 shadow-2xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.7)]">
                 <img
                     src={displayImage}
                     alt={title}
-                    className="h-full w-full object-cover opacity-80 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+                    className="h-full w-full object-cover opacity-90 transition-all duration-700 group-hover:opacity-100 group-hover:scale-110"
                 />
                 {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-40" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
 
                 {/* Category Tag */}
-                <span className="absolute top-2 left-2 rounded-full bg-black/50 px-2 py-1 text-xs font-medium text-white backdrop-blur-md text-[10px] uppercase tracking-wider">
-                    {category}
-                </span>
+                <div className="absolute bottom-3 left-3 flex gap-2">
+                    <span className="rounded-full border border-white/40 glass-panel px-3 py-1 text-[9px] font-bold text-white uppercase tracking-widest backdrop-blur-md">
+                        {category}
+                    </span>
+                </div>
             </div>
 
             {/* Content */}
-            <div className="space-y-1">
-                <h3 className="line-clamp-1 text-lg font-semibold text-gray-100 group-hover:text-white">
+            <div className="space-y-1 px-1">
+                <h3 className="line-clamp-1 text-base font-bold text-zinc-100 group-hover:text-white transition-colors">
                     {title}
                 </h3>
                 {!hideAuthor && (
-                    <p className="text-sm font-medium text-gray-400 group-hover:text-gray-300">
+                    <p className="text-[13px] font-medium text-zinc-500 group-hover:text-zinc-400 transition-colors">
                         {author}
                     </p>
                 )}

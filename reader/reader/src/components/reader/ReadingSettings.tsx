@@ -21,6 +21,8 @@ export default function ReadingSettings({
         { id: "void", name: "The Void", bg: "#000000", text: "#d4d4d8" },
         { id: "archive", name: "The Archive", bg: "#f5f2e9", text: "#2c2c2c" },
         { id: "nebula", name: "The Nebula", bg: "#0c0b1e", text: "#c7d2fe" },
+        { id: "midnight", name: "The Midnight", bg: "#0f172a", text: "#e2e8f0" },
+        { id: "serene", name: "The Serene", bg: "#fff5f7", text: "#3d2c2e" },
         { id: "light", name: "The Light", bg: "#ffffff", text: "#1a1a1a" },
     ];
 
@@ -34,7 +36,17 @@ export default function ReadingSettings({
             </button>
 
             {isOpen && (
-                <div className="absolute bottom-16 right-0 w-64 bg-black/90 backdrop-blur-xl border border-white/10 p-6 space-y-6 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="absolute bottom-16 right-0 w-64 bg-black/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-6 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                        <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Reading Engine</p>
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="text-zinc-500 hover:text-white transition-colors"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
                     <div className="space-y-3">
                         <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Chronicle Theme</p>
                         <div className="grid grid-cols-4 gap-2">

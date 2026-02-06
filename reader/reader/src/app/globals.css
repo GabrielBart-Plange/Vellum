@@ -1,89 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --foreground: #ededed;
+  --background: #0b0a0f;
+  --foreground: #f4f4f5;
 
   /* Reading Theme Tokens - Default (Void) */
-  --reader-bg: #000000;
-  --reader-text: #d4d4d8;
-  --reader-accent: #6366f1;
-  --reader-border: rgba(255, 255, 255, 0.05);
-  --reader-footer-bg: #09090b;
+  --reader-bg: #0b0a0f;
+  --reader-text: #e4e4e7;
+  --reader-accent: #8b5cf6;
+  --reader-border: rgba(139, 92, 246, 0.1);
+  --reader-footer-bg: #0b0a0f;
 
-  /* Notation Tokens */
-  --notion-sys-bg: rgba(99, 102, 241, 0.1);
-  --notion-sys-border: #6366f1;
-  --notion-sys-text: #e0e7ff;
-  --notion-qst-bg: rgba(245, 158, 11, 0.05);
-  --notion-qst-border: rgba(245, 158, 11, 0.5);
-  --notion-qst-text: #fef3c7;
-  --notion-sta-bg: rgba(255, 255, 255, 0.03);
-  --notion-sta-border: rgba(255, 255, 255, 0.1);
-  --notion-sta-text: #f4f4f5;
+  /* Glow Effects */
+  --glow-blue: rgba(59, 130, 246, 0.3);
+  --glow-purple: rgba(139, 92, 246, 0.3);
+
+  /* User Inspiration Accents */
+  --accent-lime: #d9f99d;
+  --accent-sakura: #fbcfe8;
+  --glow-lime: rgba(217, 249, 157, 0.3);
 }
 
 [data-theme='archive'] {
   --reader-bg: #f5f2e9;
-  --reader-text: #2c2c2c;
+  --reader-text: #27272a;
   --reader-accent: #7c2d12;
-  --reader-border: rgba(0, 0, 0, 0.05);
+  --reader-border: rgba(124, 45, 18, 0.1);
   --reader-footer-bg: #ebe7d9;
-
-  /* Notation Tokens */
-  --notion-sys-bg: #e0e7ff;
-  /* Slightly more saturated indigo for paper */
-  --notion-sys-border: #4338ca;
-  --notion-sys-text: #1e1b4b;
-  --notion-qst-bg: #fef3c7;
-  --notion-qst-border: #b45309;
-  --notion-qst-text: #451a03;
-  --notion-sta-bg: #f3f4f6;
-  --notion-sta-border: #d1d5db;
-  --notion-sta-text: #111827;
 }
 
 [data-theme='nebula'] {
-  --reader-bg: #0c0b1e;
-  --reader-text: #c7d2fe;
-  --reader-accent: #a78bfa;
-  --reader-border: rgba(167, 139, 250, 0.1);
-  --reader-footer-bg: #141233;
-
-  /* Notation Tokens */
-  --notion-sys-bg: rgba(167, 139, 250, 0.1);
-  --notion-sys-border: #a78bfa;
-  --notion-sys-text: #ddd6fe;
-  --notion-qst-bg: rgba(245, 158, 11, 0.1);
-  --notion-qst-border: #f59e0b;
-  --notion-qst-text: #fef3c7;
-  --notion-sta-bg: rgba(255, 255, 255, 0.05);
-  --notion-sta-border: rgba(167, 139, 250, 0.2);
-  --notion-sta-text: #f5f3ff;
+  --reader-bg: #110e20;
+  --reader-text: #e0e7ff;
+  --reader-accent: #c084fc;
+  --reader-border: rgba(192, 132, 252, 0.2);
+  --reader-footer-bg: #141126;
 }
 
 [data-theme='light'] {
   --reader-bg: #ffffff;
-  --reader-text: #1a1a1a;
+  --reader-text: #09090b;
   --reader-accent: #2563eb;
-  --reader-border: rgba(0, 0, 0, 0.1);
-  --reader-footer-bg: #f8fafc;
-
-  /* Notation Tokens */
-  --notion-sys-bg: #eff6ff;
-  --notion-sys-border: #2563eb;
-  --notion-sys-text: #1e3a8a;
-  --notion-qst-bg: #fffbeb;
-  --notion-qst-border: #d97706;
-  --notion-qst-text: #78350f;
-  --notion-sta-bg: #f8fafc;
-  --notion-sta-border: #e2e8f0;
-  --notion-sta-text: #0f172a;
+  --reader-border: rgba(37, 99, 235, 0.1);
+  --reader-footer-bg: #f4f4f5;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  transition: background-color 0.5s ease, color 0.5s ease;
+[data-theme='midnight'] {
+  --reader-bg: #0f172a;
+  --reader-text: #e2e8f0;
+  --reader-accent: #38bdf8;
+  --reader-border: rgba(56, 189, 248, 0.1);
+  --reader-footer-bg: #020617;
+}
+
+[data-theme='serene'] {
+  --reader-bg: #fff5f7;
+  --reader-text: #3d2c2e;
+  --reader-accent: #f472b6;
+  --reader-border: rgba(244, 114, 182, 0.2);
+  --reader-footer-bg: #ffe4e6;
+}
+
+@layer base {
+  body {
+    @apply antialiased;
+    color: var(--foreground);
+    background: var(--background);
+    font-family: 'Outfit', sans-serif;
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-tight font-semibold;
+  }
+}
+
+/* Custom Glow Components */
+.premium-glow {
+  box-shadow: 0 0 40px -10px var(--glow-blue), 0 0 20px -5px var(--glow-purple);
+}
+
+.reader-container-glow {
+  box-shadow: 0 0 80px -20px var(--glow-purple);
+}
+
+.glass-panel {
+  @apply backdrop-blur-xl border border-white/5;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Text Selection Glow */
+::selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: #fff;
 }
