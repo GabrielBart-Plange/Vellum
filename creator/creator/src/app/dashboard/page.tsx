@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { collection, query, where, getDocs, limit } from "firebase/firestore";
 import Link from "next/link";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
