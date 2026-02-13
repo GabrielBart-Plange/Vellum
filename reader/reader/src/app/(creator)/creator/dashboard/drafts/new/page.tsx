@@ -34,23 +34,20 @@ export default function NewDraftPage() {
 
         if (file.type === "application/pdf") {
             try {
-                // Load pdfjs-dist via script tag for better compatibility
+                // Load pdfjs-dist via script tag (stable v3 build)
                 if (!(window as any).pdfjsLib) {
                     const script = document.createElement('script');
-                    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs";
-                    script.type = "module";
+                    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
                     document.head.appendChild(script);
 
-                    // Wait for load
                     await new Promise((resolve, reject) => {
                         script.onload = resolve;
                         script.onerror = () => reject(new Error("Failed to load PDF library from CDN"));
                     });
                 }
 
-                // Give it a moment to initialize the module if needed
-                const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs" as any);
-                pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs";
+                const pdfjsLib = (window as any).pdfjsLib;
+                pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
                 const arrayBuffer = await file.arrayBuffer();
                 const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
