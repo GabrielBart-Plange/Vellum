@@ -164,7 +164,7 @@ export default function LibraryPage() {
                                     >
                                         <div className="aspect-video bg-zinc-900 relative overflow-hidden">
                                             <img
-                                                src={story.coverImage || "https://placehold.co/400x300/1a1a1a/666666?text=15+Chronicles"}
+                                                src={story.coverImage || "https://placehold.co/400x300/1a1a1a/666666?text=Vellum"}
                                                 alt={story.title}
                                                 className="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                                             />
@@ -193,7 +193,7 @@ export default function LibraryPage() {
                                     >
                                         <div className="aspect-[3/4] bg-zinc-900 relative overflow-hidden">
                                             <img
-                                                src={novel.coverImage || "https://placehold.co/400x600/1a1a1a/666666?text=15+Chronicles"}
+                                                src={novel.coverImage || "https://placehold.co/400x600/1a1a1a/666666?text=Vellum"}
                                                 alt={novel.title}
                                                 className="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                                             />
@@ -224,7 +224,7 @@ export default function LibraryPage() {
                                             <div className="flex-shrink-0">
                                                 <div className="w-24 h-32 bg-zinc-900 rounded-xl overflow-hidden">
                                                     <img
-                                                        src={novel.coverImage || "https://placehold.co/200x300/1a1a1a/666666?text=15+Chronicles"}
+                                                        src={novel.coverImage || "https://placehold.co/200x300/1a1a1a/666666?text=Vellum"}
                                                         alt={novel.title}
                                                         className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-all"
                                                     />

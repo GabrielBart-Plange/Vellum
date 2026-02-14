@@ -48,59 +48,64 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <section className="space-y-12">
+    <section className="space-y-16">
       <header className="space-y-4">
-        <h1 className="text-2xl tracking-[0.2em] font-light uppercase text-[var(--foreground)]">
+        <h1 className="text-4xl tracking-[0.3em] font-light uppercase text-[var(--foreground)]">
           Studio Overview
         </h1>
-        <p className="text-[var(--reader-text)]/70 max-w-lg leading-relaxed">
-          Monitor your creative progress, manage your latest drafts, and track the pulse of your published stories.
+        <p className="text-[var(--reader-text)]/50 max-w-lg leading-relaxed text-sm">
+          Monitor your creative progress, manage your latest drafts, and track the pulse of your published stories in the <span className="text-[var(--accent-sakura)] italic">Archives</span>.
         </p>
       </header>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="border border-[var(--reader-border)] bg-[var(--reader-border)]/10 p-8 rounded-sm space-y-2">
-          <p className="text-xs uppercase tracking-widest text-emerald-600/80 font-medium">Drafts in progress</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-light text-[var(--foreground)]">{loading ? "—" : stats.drafts}</span>
-            <span className="text-[var(--reader-text)] text-sm">Stories being told</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-white/10 transition-all">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-500/60 font-semibold">Drafts in progress</p>
+          <div className="flex items-baseline gap-4">
+            <span className="text-6xl font-extralight text-[var(--foreground)] group-hover:scale-110 transition-transform block origin-left">
+              {loading ? "—" : stats.drafts}
+            </span>
+            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Stories being told</span>
           </div>
         </div>
 
-        <div className="border border-[var(--reader-border)] bg-[var(--reader-border)]/10 p-8 rounded-sm space-y-2">
-          <p className="text-xs uppercase tracking-widest text-indigo-400 font-medium">Published Works</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-light text-[var(--foreground)]">{loading ? "—" : stats.published}</span>
-            <span className="text-[var(--reader-text)] text-sm">Live in the Chronicles</span>
+        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-white/10 transition-all">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--reader-accent)] font-semibold">Published Works</p>
+          <div className="flex items-baseline gap-4">
+            <span className="text-6xl font-extralight text-[var(--foreground)] group-hover:scale-110 transition-transform block origin-left">
+              {loading ? "—" : stats.published}
+            </span>
+            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Live in the Chronicles</span>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="space-y-6">
-        <h2 className="text-xs uppercase tracking-[0.3em] text-[var(--reader-text)]/60 font-semibold border-b border-[var(--reader-border)] pb-2 w-fit">
-          Quick Actions
+      <div className="space-y-8">
+        <h2 className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/30 font-bold flex items-center gap-4">
+          <span className="flex-shrink-0">Quick Actions</span>
+          <div className="h-[1px] w-full bg-white/[0.05]" />
         </h2>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-6">
           <Link
-            href="/dashboard/drafts/new"
-            className="px-6 py-3 bg-[var(--foreground)] text-[var(--background)] text-sm uppercase tracking-widest font-bold hover:opacity-90 transition-opacity"
+            href="/creator/dashboard/drafts/new"
+            className="px-10 py-4 bg-[var(--accent-lime)] text-white text-[10px] uppercase tracking-[0.2em] font-bold rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_-5px_var(--glow-lime)]"
           >
             Start New Story
           </Link>
 
           <Link
-            href="/dashboard/drafts"
-            className="px-6 py-3 border border-[var(--reader-border)] text-[var(--foreground)] text-sm uppercase tracking-widest hover:border-[var(--reader-text)] transition-colors"
+            href="/creator/dashboard/drafts"
+            className="px-10 py-4 glass-panel border-white/10 text-[var(--foreground)] text-[10px] uppercase tracking-[0.2em] font-bold rounded-full hover:bg-white/5 transition-all"
           >
             View Drafts
           </Link>
 
           <Link
-            href="/dashboard/published"
-            className="px-6 py-3 border border-[var(--reader-border)] text-[var(--foreground)] text-sm uppercase tracking-widest hover:border-[var(--reader-text)] transition-colors"
+            href="/creator/dashboard/published"
+            className="px-10 py-4 glass-panel border-white/10 text-[var(--foreground)] text-[10px] uppercase tracking-[0.2em] font-bold rounded-full hover:bg-white/5 transition-all"
           >
             Manage Published
           </Link>
@@ -108,10 +113,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Atmospheric Footer Tip */}
-      <footer className="pt-12 border-t border-[var(--reader-border)]">
-        <p className="text-xs italic text-[var(--reader-text)] max-w-md">
-          "A professional writer is an amateur who didn't quit." — Keep writing, your next chronicles await.
-        </p>
+      <footer className="pt-20">
+        <div className="p-8 rounded-3xl bg-white/[0.01] border border-white/5 max-w-2xl">
+          <p className="text-xs italic text-[var(--reader-text)]/50 leading-relaxed font-light">
+            "A professional writer is an amateur who didn't quit." — Your next great chronicle is just a chapter away within the Vellum Archives.
+          </p>
+        </div>
       </footer>
     </section>
   );

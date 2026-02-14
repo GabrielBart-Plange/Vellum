@@ -92,63 +92,66 @@ export default function ArtGalleryPage() {
     };
 
     return (
-        <section className="space-y-8">
+        <section className="space-y-12 transition-all duration-500">
             <header className="flex items-center justify-between">
                 <div className="space-y-1">
-                    <h1 className="text-xl tracking-widest uppercase text-[var(--foreground)]">Art Gallery</h1>
-                    <p className="text-xs text-[var(--reader-text)] uppercase tracking-widest">Manage your visual chronicles</p>
+                    <h1 className="text-4xl tracking-[0.3em] font-light uppercase text-[var(--foreground)]">Art Gallery</h1>
+                    <p className="text-[var(--reader-text)]/40 text-[10px] uppercase tracking-[0.2em]">Manage your visual chronicles</p>
                 </div>
 
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
-                    className="border border-[var(--reader-border)] px-6 py-2 text-sm uppercase tracking-widest hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-all"
+                    className={`px-10 py-4 rounded-full text-[10px] uppercase tracking-[0.2em] font-bold transition-all ${showAddForm
+                            ? "glass-panel border-white/10 text-[var(--foreground)] hover:bg-white/5"
+                            : "bg-[var(--accent-lime)] text-white shadow-[0_0_20px_-5px_var(--glow-lime)] hover:scale-105"
+                        }`}
                 >
-                    {showAddForm ? "Cancel" : "Add New Art"}
+                    {showAddForm ? "Discard Change" : "Add New Art"}
                 </button>
             </header>
 
             {showAddForm && (
-                <form onSubmit={handleAddArt} className="bg-[var(--reader-border)]/10 border border-[var(--reader-border)] p-8 space-y-6 rounded-sm max-w-2xl animate-in fade-in slide-in-from-top-4">
-                    <div className="space-y-4 text-sm">
-                        <div className="space-y-1">
-                            <label className="text-[10px] uppercase tracking-widest text-[var(--reader-text)] font-bold">Piece Title</label>
+                <form onSubmit={handleAddArt} className="glass-panel p-10 space-y-8 rounded-3xl max-w-2xl animate-in fade-in slide-in-from-top-4 border-white/5">
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/50 font-bold ml-1">Piece Title</label>
                             <input
                                 value={newTitle}
                                 onChange={(e) => setNewTitle(e.target.value)}
                                 placeholder="E.g. The Shattered Citadel"
-                                className="w-full bg-[var(--background)] border border-[var(--reader-border)] p-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors"
+                                className="w-full bg-white/[0.02] border border-white/5 p-4 rounded-xl text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all placeholder:text-white/10"
                             />
                         </div>
-                        <div className="flex gap-4 items-end">
+                        <div className="flex flex-col sm:flex-row gap-6 items-end">
                             <ImageUpload
                                 label="Upload Piece"
                                 onUploadComplete={setNewImageUrl}
                                 className="flex-shrink-0"
                             />
-                            <div className="flex-1 space-y-1">
-                                <label className="text-[10px] uppercase tracking-widest text-[var(--reader-text)] font-bold">Or Image URL</label>
+                            <div className="flex-1 w-full space-y-2">
+                                <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/50 font-bold ml-1">Or Image URL</label>
                                 <input
                                     value={newImageUrl}
                                     onChange={(e) => setNewImageUrl(e.target.value)}
                                     placeholder="https://example.com/art.jpg"
                                     required
-                                    className="w-full bg-[var(--background)] border border-[var(--reader-border)] p-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors"
+                                    className="w-full bg-white/[0.02] border border-white/5 p-4 rounded-xl text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all placeholder:text-white/10"
                                 />
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-[10px] uppercase tracking-widest text-[var(--reader-text)] font-bold">Description (Optional)</label>
+                        <div className="space-y-2">
+                            <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/50 font-bold ml-1">Description (Optional)</label>
                             <textarea
                                 value={newDescription}
                                 onChange={(e) => setNewDescription(e.target.value)}
                                 placeholder="A brief context for this piece..."
-                                className="w-full bg-[var(--background)] border border-[var(--reader-border)] p-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors h-24 resize-none"
+                                className="w-full bg-white/[0.02] border border-white/5 p-4 rounded-xl text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all h-32 resize-none placeholder:text-white/10 leading-relaxed"
                             />
                         </div>
                     </div>
                     <button
                         disabled={saving}
-                        className="w-full bg-[var(--foreground)] text-[var(--background)] py-3 text-xs uppercase tracking-[0.3em] font-bold hover:opacity-90 transition-colors disabled:opacity-50"
+                        className="w-full bg-[var(--reader-accent)] text-white py-5 rounded-full text-[10px] uppercase tracking-[0.3em] font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_30px_-5px_hsla(var(--reader-accent-hsl),0.3)] disabled:opacity-50"
                     >
                         {saving ? "Publishing..." : "Publish to Gallery"}
                     </button>
@@ -156,39 +159,39 @@ export default function ArtGalleryPage() {
             )}
 
             {loading ? (
-                <div className="flex gap-4 animate-pulse">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="w-64 h-80 bg-[var(--reader-border)]/10 rounded-sm" />
+                        <div key={i} className="aspect-[4/5] glass-panel rounded-3xl animate-pulse" />
                     ))}
                 </div>
             ) : art.length === 0 ? (
-                <div className="py-20 text-center border border-dashed border-[var(--reader-border)] rounded-sm">
-                    <p className="text-[var(--reader-text)] italic">"No visual echoes found in your gallery."</p>
+                <div className="py-24 text-center glass-panel border-dashed border-white/5 rounded-3xl">
+                    <p className="text-[var(--reader-text)]/40 italic tracking-wide">"The gallery sits in silence. Populate it with your visions."</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                     {art.map((item) => (
-                        <div key={item.id} className="group relative bg-[var(--reader-border)]/10 border border-[var(--reader-border)] overflow-hidden rounded-sm transition-all hover:border-[var(--reader-text)]">
-                            <div className="aspect-[4/5] overflow-hidden grayscale-[0.5] group-hover:grayscale-0 transition-all duration-700">
+                        <div key={item.id} className="group glass-panel rounded-3xl overflow-hidden hover:border-white/10 transition-all">
+                            <div className="aspect-[4/5] overflow-hidden">
                                 <img
                                     src={item.imageUrl}
                                     alt={item.title}
-                                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 grayscale-[0.3] group-hover:grayscale-0"
                                     onError={(e) => (e.currentTarget.src = "https://placehold.co/400x500/1a1a1a/666666?text=Image+Not+Found")}
                                 />
                             </div>
-                            <div className="p-4 space-y-2">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="text-sm font-medium text-[var(--foreground)] tracking-wide uppercase">{item.title}</h3>
+                            <div className="p-8 space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-lg font-light text-[var(--foreground)] tracking-wide">{item.title}</h3>
                                     <button
                                         onClick={() => handleDeleteArt(item.id)}
-                                        className="text-[10px] text-red-900/70 hover:text-red-500 uppercase tracking-widest transition-colors"
+                                        className="text-[9px] text-red-900/40 hover:text-red-500 uppercase tracking-[0.2em] font-bold transition-all"
                                     >
                                         Remove
                                     </button>
                                 </div>
                                 {item.description && (
-                                    <p className="text-xs text-[var(--reader-text)] line-clamp-2 leading-relaxed">
+                                    <p className="text-xs text-[var(--reader-text)]/50 line-clamp-2 leading-relaxed font-light italic">
                                         {item.description}
                                     </p>
                                 )}

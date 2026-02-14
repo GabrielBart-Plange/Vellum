@@ -8,7 +8,8 @@ import {
     onAuthStateChanged,
     AuthError,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
@@ -19,6 +20,7 @@ interface AuthContextType {
     signIn: (email: string, password: string) => Promise<void>;
     signInWithGoogle: () => Promise<void>;
     signOut: () => Promise<void>;
+    resetPassword: (email: string) => Promise<void>;
     error: string | null;
 }
 
@@ -95,12 +97,27 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
         }
     };
 
+    const resetPassword = async (email: string): Promise<void> => {
+        try {
+            setError(null);
+            setLoading(true);
+            await sendPasswordResetEmail(auth, email);
+        } catch (err) {
+            const authError = err as AuthError;
+            setError(getAuthErrorMessage(authError));
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const value: AuthContextType = {
         user,
         loading,
         signIn,
         signInWithGoogle,
         signOut,
+        resetPassword,
         error,
     };
 

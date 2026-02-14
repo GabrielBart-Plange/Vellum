@@ -224,228 +224,280 @@ export default function DraftEditorPage() {
     };
 
     return (
-        <section className="max-w-4xl space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-1">
-                    <label className="block text-[10px] uppercase tracking-widest text-[var(--reader-text)] mb-2 font-bold">Category</label>
-                    <div className="flex gap-2 p-1 bg-[var(--reader-border)]/10 border border-[var(--reader-border)]">
-                        <button
-                            onClick={() => { setCategory("fiction"); setGenre(GENRE_OPTIONS.fiction[0]); setIsCustomGenre(false); }}
-                            className={`flex-1 py-2 text-[10px] uppercase tracking-widest transition-all ${category === "fiction" ? "bg-[var(--foreground)] text-[var(--background)] font-bold" : "text-[var(--reader-text)] hover:text-[var(--foreground)]"}`}
-                        >
-                            Fiction
-                        </button>
-                        <button
-                            onClick={() => { setCategory("non-fiction"); setGenre(GENRE_OPTIONS["non-fiction"][0]); setIsCustomGenre(false); }}
-                            className={`flex-1 py-2 text-[10px] uppercase tracking-widest transition-all ${category === "non-fiction" ? "bg-[var(--foreground)] text-[var(--background)] font-bold" : "text-[var(--reader-text)] hover:text-[var(--foreground)]"}`}
-                        >
-                            Non-Fiction
-                        </button>
+        <section className="space-y-12 max-w-5xl mx-auto pb-24 transition-all duration-700">
+            {/* Header Area */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-white/5">
+                <div className="flex-1 space-y-4">
+                    <div className="flex items-center gap-4 text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">
+                        <span>Drafting Room</span>
+                        <div className="h-1 w-1 rounded-full bg-white/10" />
+                        <span className="text-[var(--accent-sakura)]">{type === "novel" ? "Epic Architecture" : "Stand-alone Legend"}</span>
                     </div>
+                    <input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Untitled Chronicle..."
+                        className="w-full bg-transparent border-none p-0 text-5xl font-light text-[var(--foreground)] focus:outline-none placeholder:text-white/5 tracking-tight"
+                    />
                 </div>
+                <div className="flex items-center gap-6">
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--reader-text)]/30 font-bold">
+                        {saving ? "Synchronizing..." : "Archive Secured"}
+                    </p>
+                    <button
+                        onClick={publish}
+                        className="bg-[var(--accent-lime)] text-white px-10 py-4 rounded-full text-[10px] uppercase tracking-[0.3em] font-bold shadow-[0_0_20px_-5px_var(--glow-lime)] hover:scale-105 active:scale-95 transition-all"
+                    >
+                        Publish to Archives
+                    </button>
+                </div>
+            </header>
 
-                <div className="md:col-span-2">
-                    <label className="block text-[10px] uppercase tracking-widest text-[var(--reader-text)] mb-2 font-bold">Genre</label>
-                    <div className="flex gap-2">
-                        {!isCustomGenre ? (
-                            <select
-                                value={genre}
-                                onChange={(e) => {
-                                    if (e.target.value === "CUSTOM") setIsCustomGenre(true);
-                                    else setGenre(e.target.value);
-                                }}
-                                className="flex-1 bg-[var(--background)] border border-[var(--reader-border)] p-2 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors uppercase tracking-widest"
-                            >
-                                {GENRE_OPTIONS[category].map(opt => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                                <option value="CUSTOM">+ Custom Genre...</option>
-                            </select>
-                        ) : (
-                            <div className="flex-1 flex gap-2">
-                                <input
-                                    value={genre === "CUSTOM" ? "" : genre}
-                                    onChange={(e) => setGenre(e.target.value)}
-                                    placeholder="Enter custom genre..."
-                                    className="flex-1 bg-[var(--background)] border border-[var(--reader-border)] p-2 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors"
-                                />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                {/* Left Column: Metadata & Config */}
+                <div className="lg:col-span-1 space-y-10">
+                    {/* Category & Genre Block */}
+                    <div className="glass-panel p-8 rounded-3xl space-y-8 border-white/5">
+                        <div className="space-y-4">
+                            <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Archive Category</label>
+                            <div className="flex gap-2 p-1.5 bg-black/20 rounded-2xl border border-white/5">
                                 <button
-                                    onClick={() => { setIsCustomGenre(false); setGenre(GENRE_OPTIONS[category][0]); }}
-                                    className="px-3 border border-[var(--reader-border)] text-[var(--reader-text)] hover:text-[var(--foreground)] text-xs"
+                                    onClick={() => { setCategory("fiction"); setGenre(GENRE_OPTIONS.fiction[0]); setIsCustomGenre(false); }}
+                                    className={`flex-1 py-3 text-[9px] uppercase tracking-[0.2em] rounded-xl transition-all ${category === "fiction" ? "bg-white/5 text-white font-bold shadow-inner" : "text-[var(--reader-text)]/40 hover:text-white"}`}
                                 >
-                                    ✕
+                                    Fiction
+                                </button>
+                                <button
+                                    onClick={() => { setCategory("non-fiction"); setGenre(GENRE_OPTIONS["non-fiction"][0]); setIsCustomGenre(false); }}
+                                    className={`flex-1 py-3 text-[9px] uppercase tracking-[0.2em] rounded-xl transition-all ${category === "non-fiction" ? "bg-white/5 text-white font-bold shadow-inner" : "text-[var(--reader-text)]/40 hover:text-white"}`}
+                                >
+                                    Non-Fiction
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Genre</label>
+                            {!isCustomGenre ? (
+                                <select
+                                    value={genre}
+                                    onChange={(e) => {
+                                        if (e.target.value === "CUSTOM") setIsCustomGenre(true);
+                                        else setGenre(e.target.value);
+                                    }}
+                                    className="w-full bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-xs text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all uppercase tracking-[0.2em] appearance-none cursor-pointer"
+                                >
+                                    {GENRE_OPTIONS[category].map(opt => (
+                                        <option key={opt} value={opt} className="bg-neutral-900">{opt}</option>
+                                    ))}
+                                    <option value="CUSTOM" className="bg-neutral-900">+ Custom Genre...</option>
+                                </select>
+                            ) : (
+                                <div className="flex gap-3">
+                                    <input
+                                        value={genre === "CUSTOM" ? "" : genre}
+                                        onChange={(e) => setGenre(e.target.value)}
+                                        placeholder="Custom Genre..."
+                                        className="flex-1 bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-xs text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all uppercase tracking-[0.2em]"
+                                    />
+                                    <button
+                                        onClick={() => { setIsCustomGenre(false); setGenre(GENRE_OPTIONS[category][0]); }}
+                                        className="aspect-square w-12 flex items-center justify-center border border-white/5 text-[var(--reader-text)] hover:text-white rounded-2xl transition-all"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Tags Block */}
+                    <div className="glass-panel p-8 rounded-3xl space-y-6 border-white/5 relative">
+                        <div className="flex justify-between items-center">
+                            <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Smart Tags</label>
+                            <span className="text-[8px] text-[var(--reader-text)]/20 italic tracking-widest">@system for tools</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2 min-h-24 content-start">
+                            {tags.map((tag, idx) => (
+                                <span
+                                    key={idx}
+                                    className={`px-3 py-1.5 text-[9px] uppercase tracking-[0.2em] rounded-full border transition-all flex items-center gap-3 ${tag.toLowerCase() === '@system'
+                                        ? 'border-[var(--accent-sakura)]/30 bg-[var(--accent-sakura)]/5 text-[var(--accent-sakura)] shadow-[0_0_15px_-5px_var(--accent-sakura)]'
+                                        : 'border-white/5 bg-white/[0.02] text-[var(--reader-text)]/60'
+                                        }`}
+                                >
+                                    {tag}
+                                    <button onClick={() => setTags(tags.filter((_, i) => i !== idx))} className="hover:text-white opacity-40 hover:opacity-100 transition-opacity">✕</button>
+                                </span>
+                            ))}
+                            <input
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && tagInput.trim()) {
+                                        setTags([...tags, tagInput.trim().startsWith('@') ? tagInput.trim() : `@${tagInput.trim()}`]);
+                                        setTagInput("");
+                                    }
+                                }}
+                                placeholder="Add @tag..."
+                                className="bg-transparent border-none text-[10px] uppercase tracking-[0.2em] focus:outline-none text-white placeholder-white/10 w-24 ml-2"
+                            />
+                        </div>
+
+                        {/* Floating System Toolbox */}
+                        {hasSystemTag && (
+                            <div className="absolute -top-6 -right-4 flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-500 z-20">
+                                <button
+                                    onClick={() => {
+                                        const template = `\n[System: Alert | Connection timed out.]\n`;
+                                        if (type === 'short') setContent(content + template);
+                                        else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
+                                    }}
+                                    className="bg-neutral-900 border border-white/10 text-[8px] uppercase tracking-[0.3em] px-4 py-2 font-bold rounded-full shadow-2xl hover:bg-white hover:text-black transition-all flex items-center gap-2"
+                                >
+                                    <div className="w-1 h-1 rounded-full bg-indigo-500" /> [System]
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const template = `\n{Quest: Daily Quests | - 5km run\n- 50 push-ups}\n`;
+                                        if (type === 'short') setContent(content + template);
+                                        else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
+                                    }}
+                                    className="bg-neutral-900 border border-white/10 text-[8px] uppercase tracking-[0.3em] px-4 py-2 font-bold rounded-full shadow-2xl hover:bg-white hover:text-black transition-all flex items-center gap-2"
+                                >
+                                    <div className="w-1 h-1 rounded-full bg-amber-500" /> {`{Quest}`}
                                 </button>
                             </div>
                         )}
                     </div>
-                </div>
-            </div>
 
-            <div className="space-y-2">
-                <label className="block text-[10px] uppercase tracking-widest text-[var(--reader-text)] font-bold">Book Title</label>
-                <input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter the chronicle's title..."
-                    className="w-full bg-[var(--background)] border border-[var(--reader-border)] p-3 text-xl font-light text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors"
-                />
-            </div>
-
-            <div className="space-y-4 bg-[var(--reader-border)]/10 border border-[var(--reader-border)] p-4 relative group">
-                <div className="flex justify-between items-center">
-                    <label className="block text-[10px] uppercase tracking-widest text-[var(--reader-text)] font-bold">Smart Tags (@tags)</label>
-                    <span className="text-[9px] text-[var(--reader-text)]/70 italic">Prepend @system to unlock system tools</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {tags.map((tag, idx) => (
-                        <span key={idx} className={`px-2 py-1 text-[10px] uppercase tracking-widest border ${tag.toLowerCase() === '@system' ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-400' : 'border-[var(--reader-border)] bg-[var(--background)] text-[var(--reader-text)]'} flex items-center gap-2`}>
-                            {tag}
-                            <button onClick={() => setTags(tags.filter((_, i) => i !== idx))} className="hover:text-[var(--foreground)]">✕</button>
-                        </span>
-                    ))}
-                    <input
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && tagInput.trim()) {
-                                setTags([...tags, tagInput.trim().startsWith('@') ? tagInput.trim() : `@${tagInput.trim()}`]);
-                                setTagInput("");
-                            }
-                        }}
-                        placeholder="Add tag (e.g. action)..."
-                        className="bg-transparent border-none text-[10px] uppercase tracking-widest focus:outline-none text-[var(--foreground)] placeholder-[var(--reader-text)]/50 w-32"
-                    />
-                </div>
-
-                {/* System Toolbox - Triggered by @system */}
-                {hasSystemTag && (
-                    <div className="absolute -top-12 left-0 right-0 flex gap-2 animate-in slide-in-from-bottom-2 duration-300">
-                        <button
-                            onClick={() => {
-                                const template = `\n[System: Alert | Connection timed out.]\n`;
-                                if (type === 'short') setContent(content + template);
-                                else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
-                            }}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 font-bold shadow-lg"
-                        >
-                            + [System]
-                        </button>
-                        <button
-                            onClick={() => {
-                                const template = `\n{Quest: Daily Quests | - 5km run\n- 50 push-ups}\n`;
-                                if (type === 'short') setContent(content + template);
-                                else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
-                            }}
-                            className="bg-amber-600 hover:bg-amber-500 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 font-bold shadow-lg"
-                        >
-                            + {"{Quest}"}
-                        </button>
-                        <button
-                            onClick={() => {
-                                const template = `\n|Status: Chronicle Status Screen|\nName: ...\nLevel: 1\nClass: ...\nStrength: 10\nAgility: 10\n|/Status|\n`;
-                                if (type === 'short') setContent(content + template);
-                                else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
-                            }}
-                            className="bg-emerald-700 hover:bg-emerald-600 text-white text-[9px] uppercase tracking-widest px-3 py-1.5 font-bold shadow-lg"
-                        >
-                            + |Status Table|
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            <div className="flex gap-8 items-start">
-                <ImageUpload
-                    label="Cover Image"
-                    onUploadComplete={setCoverImage}
-                    className="flex-shrink-0"
-                />
-                <div className="flex-1 space-y-4">
-                    <p className="text-[10px] uppercase tracking-widest text-[var(--reader-text)] font-bold mb-1">Current URL</p>
-                    <input
-                        value={coverImage}
-                        onChange={(e) => setCoverImage(e.target.value)}
-                        placeholder="https://example.com/cover.jpg"
-                        className="w-full bg-[var(--background)] border border-[var(--reader-border)] p-2 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors"
-                    />
-                    <p className="text-[10px] text-[var(--reader-text)]/70 italic">"Upload a file above or paste a direct link here."</p>
-                </div>
-            </div>
-
-            {type === "short" ? (
-                <div className="pt-4">
-                    <label className="block text-xs uppercase tracking-widest text-[var(--reader-text)] mb-1">Content</label>
-                    <textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="Start writing…"
-                        className="w-full h-[60vh] bg-[var(--background)] border border-[var(--reader-border)] p-3 resize-none text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors"
-                    />
-                </div>
-            ) : (
-                <div className="flex gap-6 pt-4 h-[70vh]">
-                    {/* Chapter Sidebar */}
-                    <div className="w-48 flex flex-col gap-2 border-r border-[var(--reader-border)] pr-4 overflow-y-auto">
-                        <label className="text-[10px] uppercase tracking-widest text-[var(--reader-text)] font-bold mb-2">Chapters</label>
-                        {chapters.map((ch, idx) => (
-                            <div key={ch?.id || `idx-${idx}`} className="group relative">
-                                <button
-                                    onClick={() => setActiveChapterIndex(idx)}
-                                    className={`w-full text-left p-2 text-xs truncate transition-colors pr-8 ${activeChapterIndex === idx
-                                        ? "bg-[var(--reader-border)]/20 text-[var(--foreground)]"
-                                        : "text-[var(--reader-text)] hover:text-[var(--foreground)]"
-                                        }`}
-                                >
-                                    {idx + 1}. {ch?.title || "Untitled"}
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); deleteChapter(idx); }}
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-red-900/50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                                    title="Delete Chapter"
-                                >
-                                    ✕
-                                </button>
+                    {/* Cover Asset Block */}
+                    <div className="glass-panel p-8 rounded-3xl space-y-6 border-white/5">
+                        <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Cover Asset</label>
+                        <div className="aspect-[4/6] rounded-2xl overflow-hidden glass-panel border-white/5 relative group">
+                            {coverImage ? (
+                                <img src={coverImage} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Cover" />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-[0.3em] text-white/5 italic">No asset selected</div>
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6">
+                                <ImageUpload
+                                    label="Replace Image"
+                                    onUploadComplete={setCoverImage}
+                                    className="scale-90"
+                                />
                             </div>
-                        ))}
-                        <button
-                            onClick={addChapter}
-                            className="text-center p-2 text-[10px] uppercase tracking-widest border border-dashed border-[var(--reader-border)] text-[var(--reader-text)] hover:text-[var(--foreground)] hover:border-[var(--reader-text)] transition-all mt-4"
-                        >
-                            + New Chapter
-                        </button>
-                    </div>
-
-                    {/* Chapter Editor */}
-                    <div className="flex-1 flex flex-col gap-4">
-                        <div>
-                            <label className="block text-[10px] uppercase tracking-widest text-[var(--reader-text)] font-bold mb-1">Chapter Title</label>
-                            <input
-                                value={chapters[activeChapterIndex]?.title || ""}
-                                onChange={(e) => updateActiveChapter({ title: e.target.value })}
-                                placeholder="E.g. The Quiet Before"
-                                className="w-full bg-[var(--background)] border border-[var(--reader-border)] p-2 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors"
-                            />
                         </div>
-                        <div className="flex-1 flex flex-col min-h-0">
-                            <label className="block text-[10px] uppercase tracking-widest text-[var(--reader-text)] font-bold mb-1">Chapter Content</label>
-                            <textarea
-                                value={chapters[activeChapterIndex]?.content || ""}
-                                onChange={(e) => updateActiveChapter({ content: e.target.value })}
-                                placeholder="Expand the chronicle…"
-                                className="flex-1 bg-[var(--background)] border border-[var(--reader-border)] p-3 resize-none text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors"
-                            />
-                        </div>
+                        <input
+                            value={coverImage}
+                            onChange={(e) => setCoverImage(e.target.value)}
+                            placeholder="Direct URL..."
+                            className="w-full bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-[9px] text-[var(--reader-text)]/40 focus:outline-none focus:border-white/20 transition-all uppercase tracking-[0.2em] placeholder:text-white/5"
+                        />
                     </div>
                 </div>
-            )}
 
-            <p className="text-xs text-[var(--reader-text)]">
-                {saving ? "Saving…" : "Saved"}
-            </p>
+                {/* Right Column: Writing Surface */}
+                <div className="lg:col-span-2 space-y-10">
+                    {type === "short" ? (
+                        <div className="glass-panel p-1 rounded-[2.5rem] border-white/5 h-full min-h-[80vh] flex flex-col overflow-hidden">
+                            <div className="absolute top-8 left-8 text-[9px] uppercase tracking-[0.5em] text-white/5 pointer-events-none">Narrative Flow</div>
+                            <textarea
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                placeholder="Start your legend…"
+                                className="flex-1 w-full bg-transparent p-12 resize-none text-xl font-light text-[var(--foreground)] focus:outline-none placeholder:text-white/5 leading-relaxed selection:bg-[var(--accent-sakura)]/20"
+                            />
+                        </div>
+                    ) : (
+                        <div className="flex gap-6 h-[85vh]">
+                            {/* Modern Chapter Sidebar */}
+                            <div className="w-64 flex flex-col gap-4 border-r border-white/5 pr-6 overflow-y-auto scrollbar-hide">
+                                <div className="flex justify-between items-center mb-4">
+                                    <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold">Chapters</label>
+                                    <button
+                                        onClick={addChapter}
+                                        className="text-[16px] text-white/20 hover:text-white transition-all p-2 bg-white/5 rounded-full"
+                                        title="Add New Chapter"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    </button>
+                                </div>
+                                <div className="space-y-3">
+                                    {chapters.map((ch, idx) => (
+                                        <div key={ch?.id || `idx-${idx}`} className="group relative">
+                                            <button
+                                                onClick={() => setActiveChapterIndex(idx)}
+                                                className={`w-full text-left p-4 rounded-2xl text-[11px] truncate transition-all duration-500 border relative overflow-hidden pr-12 ${activeChapterIndex === idx
+                                                    ? "glass-panel bg-white/5 border-white/10 text-white translate-x-1"
+                                                    : "border-transparent text-white/20 hover:text-white/60 hover:translate-x-1"
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <span className="opacity-30 font-bold tabular-nums">{(idx + 1).toString().padStart(2, '0')}</span>
+                                                    <span className="tracking-wide">{ch?.title || "Untitled"}</span>
+                                                </div>
+                                                {activeChapterIndex === idx && (
+                                                    <div className="absolute right-0 top-0 bottom-0 w-1 bg-[var(--accent-sakura)] shadow-[0_0_10px_var(--accent-sakura)]" />
+                                                )}
+                                            </button>
+                                            {/* Quick Delete Trigger */}
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); deleteChapter(idx); }}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-white/0 group-hover:text-red-500/40 hover:text-red-500 transition-all z-10"
+                                                title="Delete Chapter"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
 
-            <button onClick={publish} className="bg-[var(--foreground)] text-[var(--background)] px-6 py-2 text-sm font-bold uppercase tracking-widest hover:opacity-90 transition-opacity">
-                Publish {type === "novel" ? "novel" : "short story"}
-            </button>
+                            {/* Refined Chapter Editor */}
+                            <div className="flex-1 flex flex-col gap-8 min-h-0 bg-white/[0.01] rounded-[2.5rem] border border-white/5 p-12 overflow-hidden relative">
+                                <div className="space-y-4">
+                                    <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/30 font-bold ml-1">Chapter Title</label>
+                                    <div className="flex items-center justify-between gap-6 group">
+                                        <input
+                                            value={chapters[activeChapterIndex]?.title || ""}
+                                            onChange={(e) => updateActiveChapter({ title: e.target.value })}
+                                            placeholder="E.g. A New Dawn..."
+                                            className="bg-transparent border-none p-0 text-3xl font-light text-white focus:outline-none placeholder:text-white/5 flex-1 tracking-tight"
+                                        />
+                                        <button
+                                            onClick={() => deleteChapter(activeChapterIndex)}
+                                            className="text-[9px] uppercase tracking-[0.3em] font-bold text-red-500 border border-red-500/20 px-4 py-2 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)] appearance-none"
+                                        >
+                                            Discard Chapter
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex-1 flex flex-col min-h-0 relative">
+                                    <textarea
+                                        value={chapters[activeChapterIndex]?.content || ""}
+                                        onChange={(e) => updateActiveChapter({ content: e.target.value })}
+                                        placeholder="Weave your story..."
+                                        className="flex-1 w-full bg-transparent resize-none text-xl font-light text-[var(--foreground)] focus:outline-none placeholder:text-white/5 leading-relaxed selection:bg-[var(--accent-sakura)]/20 scrollbar-hide"
+                                    />
+                                    <div className="absolute top-0 right-0 py-1 px-3 text-[8px] uppercase tracking-[0.4em] text-white/5 border border-white/5 rounded-full pointer-events-none">
+                                        Creative Flow
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <footer className="pt-24 border-t border-white/5 flex justify-between items-center opacity-10 grayscale">
+                <div className="flex items-center gap-6 text-[10px] uppercase tracking-[0.5em] font-bold">
+                    <span>Vellum Editor Suite</span>
+                    <div className="h-1 w-1 rounded-full bg-white" />
+                    <span className="italic">Archival Grade</span>
+                </div>
+                <span className="text-[9px] uppercase tracking-[0.3em] font-bold">Achronos-3 Interface</span>
+            </footer>
         </section>
     );
 }
