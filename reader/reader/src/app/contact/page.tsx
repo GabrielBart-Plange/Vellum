@@ -10,11 +10,20 @@ export default function ContactPage() {
                 </header>
                 <div className="glass-panel p-12 rounded-3xl border border-white/5 space-y-8">
                     <p className="text-zinc-400 text-lg font-light">
-                        For inquiries regarding the archives, please reach out via Discord or our archivist email.
+                        For inquiries regarding the archives, please reach out via our community nexus.
                     </p>
-                    <div className="space-y-2">
-                        <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Archaic Mail</p>
-                        <p className="text-white font-black text-xl">archivist@15chronicles.xyz</p>
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Community Nexus</p>
+                            <a
+                                href="https://discord.gg/DWrHwZRvNq"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block px-8 py-3 rounded-xl bg-[#5865F2] text-white font-bold uppercase tracking-widest text-[10px] hover:scale-105 transition-all shadow-[0_0_20px_-5px_#5865F2]"
+                            >
+                                Join the Discord
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

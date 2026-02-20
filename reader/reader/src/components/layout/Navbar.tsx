@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import SearchModal from "./SearchModal";
 import { useEffect } from "react";
-import { collection, query, orderBy, onSnapshot, where, doc, updateDoc, writeBatch } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, where, doc, updateDoc, writeBatch, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function Navbar() {
@@ -37,12 +37,22 @@ export default function Navbar() {
 
         const q = query(
             collection(db, "users", user.uid, "notifications"),
-            orderBy("createdAt", "desc")
+            limit(20)
         );
 
-        const unsubscribe = onSnapshot(q, (snap) => {
-            setNotifications(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        });
+        console.log(`[Archive] Listening for: users/${user.uid}/notifications`);
+
+        const unsubscribe = onSnapshot(q,
+            (snap) => {
+                const results = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+                results.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                setNotifications(results);
+            },
+            (error) => {
+                console.error("Archive Listener Error:", error.code, error.message);
+                console.error("Debug Context - UID:", user.uid, "Path:", `users/${user.uid}/notifications`);
+            }
+        );
 
         return () => unsubscribe();
     }, [user]);

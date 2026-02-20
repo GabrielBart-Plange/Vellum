@@ -8,6 +8,14 @@ export default function Footer() {
                     <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
                     <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms</Link>
                     <Link href="/contact" className="hover:text-gray-300 transition-colors">Contact</Link>
+                    <a
+                        href="https://discord.gg/DWrHwZRvNq"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-[#5865F2] transition-colors"
+                    >
+                        Discord
+                    </a>
                 </div>
                 <p>&copy; {new Date().getFullYear()} Vellum. All rights reserved.</p>
             </div>
