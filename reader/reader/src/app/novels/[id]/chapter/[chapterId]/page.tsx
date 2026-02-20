@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, orderBy, query, where, onSnapshot, increment, updateDoc } from "firebase/firestore";
 import Link from "next/link";
 
 import ReadingSettings from "@/components/reader/ReadingSettings";
@@ -60,25 +60,50 @@ export default function ChapterReaderPage() {
     }, [fontSize]);
 
     useEffect(() => {
+        // Increment View Count for Chapter with basic deduplication
+        const incrementView = async () => {
+            if (!chapterId || !novelId) return;
+
+            const storageKey = `viewed_chapter_${chapterId}`;
+            if (localStorage.getItem(storageKey)) return;
+
+            try {
+                const chapterRef = doc(db, "novels", novelId, "chapters", chapterId);
+                await updateDoc(chapterRef, {
+                    views: increment(1)
+                });
+                localStorage.setItem(storageKey, "true");
+            } catch (error) {
+                console.error("Error incrementing view:", error);
+            }
+        };
+        incrementView();
+    }, [chapterId, novelId]);
+
+    useEffect(() => {
+        let unsubscribeChapter: () => void;
+
         const load = async () => {
             if (!novelId || !chapterId) return;
             try {
-                // Load Novel Metadata
+                // Load Novel Metadata (Static is fine for metadata, but we might want real-time later. For now keep static to minimize reads if not needed, but consistency suggested real-time)
+                // Actually user said "engagement to record real-time", specifically for metrics. 
                 const novelSnap = await getDoc(doc(db, "novels", novelId));
                 if (novelSnap.exists()) {
                     const novelData = novelSnap.data();
                     setNovel(novelData);
                 }
 
-                // Load Chapter
-                const chapterSnap = await getDoc(doc(db, "novels", novelId, "chapters", chapterId));
-                let chapterData: any = null;
-                if (chapterSnap.exists()) {
-                    chapterData = chapterSnap.data();
-                    setChapter(chapterData);
-                } else {
-                    router.push(`/novels/${novelId}`);
-                }
+                // Load Chapter Real-time
+                unsubscribeChapter = onSnapshot(doc(db, "novels", novelId, "chapters", chapterId), (doc) => {
+                    if (doc.exists()) {
+                        setChapter(doc.data());
+                    } else {
+                        router.push(`/novels/${novelId}`);
+                    }
+                }, (error) => {
+                    console.error("Error listening to chapter:", error);
+                });
 
                 // Load all chapters for navigation
                 const chaptersRef = collection(db, "novels", novelId, "chapters");
@@ -87,12 +112,21 @@ export default function ChapterReaderPage() {
                     where("published", "==", true),
                     orderBy("order", "asc")
                 );
+                // Keeping navigation static for now to avoid flickering, unless requested.
                 const chaptersSnap = await getDocs(q);
                 setAllChapters(chaptersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
                 // Save progress if user is authenticated
-                if (user && novelSnap.exists() && chapterSnap.exists()) {
-                    try {
+                // We only do this once on mount/load, not on every snapshot update
+                if (user && novelSnap.exists()) { // Check novelSnap existence from the static fetch above
+                    // We need the chapter data for 'order'. We can get it from the snapshot listener but that's async. 
+                    // For progress saving complexity, let's fetch it once or assume access.
+                    // A cleaner way is to separate the progress saving.
+
+                    // Let's do a single fetch for progress saving purposes or wait for the first snapshot.
+                    const chapterSnap = await getDoc(doc(db, "novels", novelId, "chapters", chapterId));
+                    if (chapterSnap.exists()) {
+                        const chapterData = chapterSnap.data();
                         const chapterOrder = typeof chapterData?.order === "number" ? chapterData.order : 0;
                         await progressTracking.saveProgress(
                             user.uid,
@@ -101,8 +135,6 @@ export default function ChapterReaderPage() {
                             chapterOrder,
                             chaptersSnap.size
                         );
-                    } catch (error) {
-                        console.error("Error saving progress:", error);
                     }
                 }
 
@@ -114,6 +146,9 @@ export default function ChapterReaderPage() {
         };
 
         load();
+        return () => {
+            if (unsubscribeChapter) unsubscribeChapter();
+        };
     }, [novelId, chapterId, router, user]);
 
     if (loading) return (
@@ -176,11 +211,11 @@ export default function ChapterReaderPage() {
             <article className="max-w-3xl mx-auto px-6 md:px-12">
                 {/* Interaction Bar - Moescape style */}
                 <div className="flex items-center gap-4 py-8 border-b border-t mb-16 transition-colors" style={{ borderColor: 'var(--reader-border)' }}>
-                    <LikeButton 
-                        contentType="chapter" 
-                        contentId={chapterId} 
-                        novelId={novelId} 
-                        initialLikeCount={chapter.likes || 0} 
+                    <LikeButton
+                        contentType="chapter"
+                        contentId={chapterId}
+                        novelId={novelId}
+                        initialLikeCount={chapter.likes || 0}
                     />
 
                     <div className="flex-grow" />
@@ -204,11 +239,11 @@ export default function ChapterReaderPage() {
                     <SystemNotation content={chapter.content} fontSize={fontSize} />
                 </div>
 
-                <CommentSection 
-                    contentType="chapter" 
-                    contentId={chapterId} 
-                    novelId={novelId} 
-                    initialCommentCount={chapter.commentCount || 0} 
+                <CommentSection
+                    contentType="chapter"
+                    contentId={chapterId}
+                    novelId={novelId}
+                    initialCommentCount={chapter.commentCount || 0}
                 />
 
                 {/* Footer Navigation */}
@@ -246,7 +281,7 @@ export default function ChapterReaderPage() {
 
                     <div className="text-center pt-16">
                         <Link href={`/novels/${novelId}`} className="text-[10px] uppercase tracking-[0.6em] font-black opacity-40 hover:opacity-100 hover:text-[var(--reader-accent)] transition-all">
-                            Back to Index
+                            Back to Shelf
                         </Link>
                     </div>
                 </footer>

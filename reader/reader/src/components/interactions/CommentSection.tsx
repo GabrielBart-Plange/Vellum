@@ -3,17 +3,18 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { 
-  collection, 
-  addDoc, 
-  deleteDoc, 
-  doc, 
-  getDocs, 
-  query, 
-  orderBy, 
-  increment, 
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  orderBy,
+  increment,
   updateDoc,
-  Timestamp
+  Timestamp,
+  onSnapshot
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Comment as CommentType } from "@/types";
@@ -25,18 +26,20 @@ interface CommentSectionProps {
   initialCommentCount: number;
 }
 
-export default function CommentSection({ 
-  contentType, 
-  contentId, 
-  novelId, 
-  initialCommentCount 
+export default function CommentSection({
+  contentType,
+  contentId,
+  novelId,
+  initialCommentCount
 }: CommentSectionProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [comments, setComments] = useState<CommentType[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
-  const [commentCount, setCommentCount] = useState(initialCommentCount);
+  // We use comments.length for the count to ensure accuracy with what's shown
+  // but if comments aren't loaded yet, we can fall back to initialCommentCount if needed.
+  // actually, let's just rely on real-time comments.length.
 
   // Determine the Firestore path based on content type
   const getCommentsPath = () => {
@@ -55,31 +58,40 @@ export default function CommentSection({
     }
   };
 
-  // Fetch comments on mount
+  // Fetch comments real-time
   useEffect(() => {
-    const fetchComments = async () => {
+    let unsubscribe: () => void;
+
+    const setupListener = async () => {
       try {
         const commentsRef = collection(db, getCommentsPath());
         const q = query(commentsRef, orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        
-        const commentsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as CommentType[];
-        
-        setComments(commentsData);
+
+        unsubscribe = onSnapshot(q, (snapshot) => {
+          const commentsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as CommentType[];
+          setComments(commentsData);
+        }, (error) => {
+          console.error("Error listening to comments:", error);
+        });
+
       } catch (error) {
-        console.error("Error fetching comments:", error);
+        console.error("Error setting up comments listener:", error);
       }
     };
 
-    fetchComments();
+    setupListener();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    }
   }, [contentId, novelId, contentType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       router.push(`/login?returnUrl=${encodeURIComponent(window.location.pathname)}`);
       return;
@@ -88,7 +100,7 @@ export default function CommentSection({
     if (!newComment.trim()) return;
 
     setLoading(true);
-    
+
     try {
       const commentsRef = collection(db, getCommentsPath());
       const commentData = {
@@ -99,22 +111,13 @@ export default function CommentSection({
       };
 
       await addDoc(commentsRef, commentData);
-      
+
       // Update comment count on parent document
       await updateDoc(doc(db, getParentPath()), {
         commentCount: increment(1)
       });
 
-      // Add to local state
-      setComments(prev => [{
-        id: Date.now().toString(), // Temporary ID until refresh
-        userId: commentData.userId,
-        username: commentData.username,
-        text: commentData.text,
-        createdAt: commentData.createdAt
-      } as CommentType, ...prev]);
-      
-      setCommentCount(prev => prev + 1);
+      // No need to update local state manually, onSnapshot handles it
       setNewComment("");
     } catch (error) {
       console.error("Error submitting comment:", error);
@@ -125,18 +128,16 @@ export default function CommentSection({
 
   const handleDelete = async (commentId: string) => {
     if (!user) return;
-    
+
     try {
       await deleteDoc(doc(db, getCommentsPath(), commentId));
-      
+
       // Update comment count on parent document
       await updateDoc(doc(db, getParentPath()), {
         commentCount: increment(-1)
       });
-      
-      // Remove from local state
-      setComments(prev => prev.filter(comment => comment.id !== commentId));
-      setCommentCount(prev => prev - 1);
+
+      // No need to update local state manually, onSnapshot handles it
     } catch (error) {
       console.error("Error deleting comment:", error);
     }
@@ -170,7 +171,7 @@ export default function CommentSection({
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785c-.442.483.087 1.228.639.986 1.123-.494 2.454-.973 3.348-1.15a3.15 3.15 0 0 1 1.066.023c.337.062.671.139 1.011.139Z" />
         </svg>
-        Comments ({commentCount})
+        Comments ({comments.length})
       </h3>
 
       {/* Comment Form */}
@@ -199,7 +200,7 @@ export default function CommentSection({
       ) : (
         <div className="mb-8 p-6 rounded-xl bg-zinc-900/30 border border-white/5 text-center">
           <p className="text-zinc-400 text-sm">
-            <button 
+            <button
               onClick={() => router.push("/login")}
               className="text-purple-400 hover:text-purple-300 font-medium"
             >

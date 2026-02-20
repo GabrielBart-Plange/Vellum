@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where, orderBy, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useParams } from "next/navigation";
 import StoryCard from "@/components/cards/StoryCard";
@@ -26,6 +26,10 @@ export default function AuthorPage() {
         joinedDate: "",
     });
 
+    // Follow System
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followerCount, setFollowerCount] = useState(0);
+
     useEffect(() => {
         const load = async () => {
             if (!authorId) return;
@@ -42,6 +46,16 @@ export default function AuthorPage() {
                         bio: data.bio || "This author has not yet unrolled their scroll of biography.",
                         joinedDate: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : "06/01/2026",
                     });
+                }
+
+                // Check Follow Status & Count
+                const followersRef = collection(db, "users", authorId, "followers");
+                const followersSnap = await getDocs(followersRef);
+                setFollowerCount(followersSnap.size);
+
+                if (auth.currentUser) {
+                    const followDoc = await getDoc(doc(db, "users", auth.currentUser.uid, "following", authorId));
+                    setIsFollowing(followDoc.exists());
                 }
 
                 // 2. Fetch Stories
@@ -81,7 +95,41 @@ export default function AuthorPage() {
         };
 
         load();
-    }, [authorId]);
+    }, [authorId, auth.currentUser]);
+
+    const handleFollow = async () => {
+        if (!auth.currentUser || !authorId) return;
+        try {
+            const followerId = auth.currentUser.uid;
+            // Add to my following
+            await setDoc(doc(db, "users", followerId, "following", authorId), {
+                authorId: authorId,
+                followedAt: new Date()
+            });
+            // Add to author's followers
+            await setDoc(doc(db, "users", authorId, "followers", followerId), {
+                userId: followerId,
+                followedAt: new Date()
+            });
+            setIsFollowing(true);
+            setFollowerCount(prev => prev + 1);
+        } catch (error) {
+            console.error("Error following:", error);
+        }
+    };
+
+    const handleUnfollow = async () => {
+        if (!auth.currentUser || !authorId) return;
+        try {
+            const followerId = auth.currentUser.uid;
+            await deleteDoc(doc(db, "users", followerId, "following", authorId));
+            await deleteDoc(doc(db, "users", authorId, "followers", followerId));
+            setIsFollowing(false);
+            setFollowerCount(prev => prev - 1);
+        } catch (error) {
+            console.error("Error unfollowing:", error);
+        }
+    };
 
     // Aggregated Stats
     const totalLikes = [...stories, ...novels].reduce((acc, curr) => acc + (curr.likes || 0), 0);
@@ -92,6 +140,12 @@ export default function AuthorPage() {
         { id: "novels", label: `Novels (${novels.length})` },
         { id: "art", label: `Art (${art.length})` },
     ];
+
+    if (loading) return (
+        <div className="min-h-screen bg-black flex items-center justify-center text-zinc-700 font-black tracking-[0.5em] uppercase text-xs">
+            Summoning Archivist...
+        </div>
+    );
 
     return (
         <main className="min-h-screen bg-black text-zinc-100 font-sans pb-40">
@@ -142,7 +196,7 @@ export default function AuthorPage() {
                             {authorMetadata.username}
                         </h1>
                         <p className="text-zinc-500 text-[11px] uppercase tracking-[0.8em] font-black">
-                            Joined {authorMetadata.joinedDate}
+                            Joined {authorMetadata.joinedDate} • {followerCount} Followers
                         </p>
 
                         {/* Edit Profile Button for Owner */}
@@ -158,9 +212,17 @@ export default function AuthorPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-6 pt-4 pb-12">
-                        <button className="px-10 py-4 rounded-2xl bg-white text-black text-[12px] font-black uppercase tracking-[0.3em] hover:scale-105 active:scale-95 transition-all shadow-xl">
-                            Follow
-                        </button>
+                        {auth.currentUser?.uid !== authorId && (
+                            <button
+                                onClick={isFollowing ? handleUnfollow : handleFollow}
+                                className={`px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.3em] hover:scale-105 active:scale-95 transition-all shadow-xl ${isFollowing
+                                        ? "bg-zinc-800 text-white border border-white/10"
+                                        : "bg-white text-black"
+                                    }`}
+                            >
+                                {isFollowing ? "Following" : "Follow"}
+                            </button>
+                        )}
                         <button className="px-10 py-4 rounded-2xl border border-white/10 glass-panel text-white text-[12px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all">
                             Donate
                         </button>
@@ -263,6 +325,6 @@ export default function AuthorPage() {
                     </div>
                 </section>
             </div>
-        </main>
+        </main >
     );
 }

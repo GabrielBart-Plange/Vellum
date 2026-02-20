@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
+import SearchModal from "./SearchModal";
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const { user, signOut } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
@@ -35,6 +37,7 @@ export default function Navbar() {
 
     return (
         <>
+            <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
             <nav className="sticky top-0 z-[100] w-full glass-panel shadow-sm">
                 <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
                     {/* Logo */}
@@ -64,7 +67,8 @@ export default function Navbar() {
                             Archivist
                         </Link>
                         <button
-                            className="text-zinc-400 hover:text-white transition-colors hidden sm:block"
+                            onClick={() => setIsSearchOpen(true)}
+                            className="text-zinc-400 hover:text-white transition-colors"
                             title="Search"
                             aria-label="Search"
                         >

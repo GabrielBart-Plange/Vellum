@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, getDocs, orderBy, query, where, setDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, orderBy, query, where, setDoc, Timestamp, onSnapshot } from "firebase/firestore";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { increment, updateDoc } from "firebase/firestore";
+import LikeButton from "@/components/interactions/LikeButton";
 
 export default function NovelLandingPage() {
     const { id } = useParams<{ id: string }>();
@@ -19,15 +21,34 @@ export default function NovelLandingPage() {
     const [saved, setSaved] = useState(false);
 
     useEffect(() => {
+        let unsubscribeNovel: () => void;
+
         const load = async () => {
             if (!id) return;
             try {
+                // Real-time listener for novel data (engagement metrics)
+                unsubscribeNovel = onSnapshot(doc(db, "novels", id), (docSnap) => {
+                    if (docSnap.exists()) {
+                        setNovel(docSnap.data());
+                    } else {
+                        // Handle not found only on initial load or if explicitly cached as null
+                        // But onSnapshot might fire first with caching. 
+                        // If it doesn't exist, we might want to redirect.
+                        // For now, let's just handle local state update.
+                    }
+                }, (error) => {
+                    console.error("Error listening to novel:", error);
+                });
+
+                // We still need an initial check or we can rely on onSnapshot.
+                // But we need to load chapters and saved status too.
+
+                // Let's do a static fetch for the robust initial load of ancillary data
                 const docRef = doc(db, "novels", id);
                 const snap = await getDoc(docRef);
 
                 if (snap.exists()) {
-                    const data = snap.data();
-                    setNovel(data);
+                    // setNovel(snap.data()); // Included in onSnapshot above
 
                     // Load chapters
                     const chaptersRef = collection(db, "novels", id, "chapters");
@@ -55,7 +76,35 @@ export default function NovelLandingPage() {
         };
 
         load();
+
+        return () => {
+            if (unsubscribeNovel) unsubscribeNovel();
+        };
     }, [id, user]);
+
+    useEffect(() => {
+        // Increment View Count with basic deduplication
+        const incrementView = async () => {
+            if (!id) return;
+
+            const storageKey = `viewed_novel_${id}`;
+            const hasViewed = localStorage.getItem(storageKey);
+
+            if (hasViewed) return;
+
+            try {
+                const novelRef = doc(db, "novels", id);
+                await updateDoc(novelRef, {
+                    views: increment(1)
+                });
+                localStorage.setItem(storageKey, "true");
+            } catch (error) {
+                console.error("Error incrementing view:", error);
+            }
+        };
+
+        incrementView();
+    }, [id]);
 
     const handleSaveToLibrary = async () => {
         if (!user) {
@@ -122,10 +171,24 @@ export default function NovelLandingPage() {
                             <span className="px-4 py-1.5 rounded-full glass text-[10px] uppercase tracking-[0.3em] text-zinc-400 font-black">
                                 {novel.genre}
                             </span>
-                            <span className="px-4 py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-[10px] uppercase tracking-[0.3em] text-purple-400 font-black italic">
-                                Ongoing
+                            <span className={`px-4 py-1.5 rounded-full border text-[10px] uppercase tracking-[0.3em] font-black italic ${novel.status === "Completed"
+                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                                : "border-purple-500/30 bg-purple-500/10 text-purple-400"
+                                }`}>
+                                {novel.status || "Ongoing"}
                             </span>
                         </div>
+                        {/* Tags */}
+                        {novel.tags && novel.tags.length > 0 && (
+                            <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
+                                {novel.tags.map((tag: string) => (
+                                    <span key={tag} className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold px-2 py-0.5 rounded border border-white/5 bg-white/[0.02]">
+                                        {tag.startsWith('#') ? tag : `#${tag}`}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
                         <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-white uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                             {novel.title}
                         </h1>
@@ -148,8 +211,12 @@ export default function NovelLandingPage() {
 
                         <div className="space-y-2">
                             <p className="text-zinc-500 text-[9px] uppercase tracking-[0.3em] font-black">Engagement</p>
-                            <div className="flex items-center gap-3">
-                                <span className="text-zinc-100 uppercase font-black text-sm">{(novel.likes || 0).toLocaleString()} Likes</span>
+                            <div className="flex items-center gap-6">
+                                <LikeButton
+                                    contentType="novel"
+                                    contentId={id || ""}
+                                    initialLikeCount={novel.likes || 0}
+                                />
                                 <div className="h-1 w-1 bg-zinc-700 rounded-full" />
                                 <span className="text-zinc-100 uppercase font-black text-sm">{(novel.views || 0).toLocaleString()} Views</span>
                             </div>

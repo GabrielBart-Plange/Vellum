@@ -27,8 +27,10 @@ export default function DraftEditorPage() {
     const [saving, setSaving] = useState(false);
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState("");
+    const [description, setDescription] = useState("");
+    const [status, setStatus] = useState("Ongoing");
 
-    const hasSystemTag = tags.some(t => t.toLowerCase() === "@system");
+    const hasSystemTag = tags.some(t => t.toLowerCase() === "#system");
 
     // Unified data loading effect
     useEffect(() => {
@@ -73,6 +75,8 @@ export default function DraftEditorPage() {
                     setType(detectedType);
                     setContent(currentData.content || "");
                     setTags(currentData.tags || []);
+                    setDescription(currentData.description || "");
+                    setStatus(currentData.status || "Ongoing");
                     // Wait for type state to update then load chapters if needed
                 }
             } catch (err) {
@@ -128,6 +132,8 @@ export default function DraftEditorPage() {
                     coverImage,
                     type,
                     tags,
+                    description,
+                    status,
                     updatedAt: serverTimestamp(),
                 }, { merge: true });
 
@@ -152,7 +158,7 @@ export default function DraftEditorPage() {
         }, 2000);
 
         return () => clearTimeout(t);
-    }, [title, content, category, genre, coverImage, chapters, id, type, tags]);
+    }, [title, content, category, genre, coverImage, chapters, id, type, tags, description, status]);
 
     const publish = async () => {
         const user = auth.currentUser;
@@ -174,11 +180,13 @@ export default function DraftEditorPage() {
             genre,
             type,
             tags,
+            description,
+            status,
             published: true,
-            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
             publishedAt: serverTimestamp(),
             ...(type === "short" ? { content } : {}),
-        });
+        }, { merge: true });
 
         if (type === "novel" && chapters) {
             for (let i = 0; i < chapters.length; i++) {
@@ -315,13 +323,13 @@ export default function DraftEditorPage() {
                     <div className="glass-panel p-8 rounded-3xl space-y-6 border-white/5 relative">
                         <div className="flex justify-between items-center">
                             <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Smart Tags</label>
-                            <span className="text-[8px] text-[var(--reader-text)]/20 italic tracking-widest">@system for tools</span>
+                            <span className="text-[8px] text-[var(--reader-text)]/20 italic tracking-widest">#system for tools</span>
                         </div>
                         <div className="flex flex-wrap gap-2 min-h-24 content-start">
                             {tags.map((tag, idx) => (
                                 <span
                                     key={idx}
-                                    className={`px-3 py-1.5 text-[9px] uppercase tracking-[0.2em] rounded-full border transition-all flex items-center gap-3 ${tag.toLowerCase() === '@system'
+                                    className={`px-3 py-1.5 text-[9px] uppercase tracking-[0.2em] rounded-full border transition-all flex items-center gap-3 ${tag.toLowerCase() === '#system'
                                         ? 'border-[var(--accent-sakura)]/30 bg-[var(--accent-sakura)]/5 text-[var(--accent-sakura)] shadow-[0_0_15px_-5px_var(--accent-sakura)]'
                                         : 'border-white/5 bg-white/[0.02] text-[var(--reader-text)]/60'
                                         }`}
@@ -335,11 +343,12 @@ export default function DraftEditorPage() {
                                 onChange={(e) => setTagInput(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && tagInput.trim()) {
-                                        setTags([...tags, tagInput.trim().startsWith('@') ? tagInput.trim() : `@${tagInput.trim()}`]);
+                                        const formattedTag = tagInput.trim().startsWith('#') ? tagInput.trim() : `#${tagInput.trim()}`;
+                                        setTags([...tags, formattedTag]);
                                         setTagInput("");
                                     }
                                 }}
-                                placeholder="Add @tag..."
+                                placeholder="Add #tag..."
                                 className="bg-transparent border-none text-[10px] uppercase tracking-[0.2em] focus:outline-none text-white placeholder-white/10 w-24 ml-2"
                             />
                         </div>
@@ -367,8 +376,48 @@ export default function DraftEditorPage() {
                                 >
                                     <div className="w-1 h-1 rounded-full bg-amber-500" /> {`{Quest}`}
                                 </button>
+                                <button
+                                    onClick={() => {
+                                        const template = `\n|Status: STATUS| NAME: |/Status|\n`;
+                                        if (type === 'short') setContent(content + template);
+                                        else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
+                                    }}
+                                    className="bg-neutral-900 border border-white/10 text-[8px] uppercase tracking-[0.3em] px-4 py-2 font-bold rounded-full shadow-2xl hover:bg-white hover:text-black transition-all flex items-center gap-2"
+                                >
+                                    <div className="w-1 h-1 rounded-full bg-emerald-500" /> Status
+                                </button>
                             </div>
                         )}
+                    </div>
+
+                    {/* Status Block */}
+                    <div className="glass-panel p-8 rounded-3xl space-y-6 border-white/5">
+                        <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Archive Status</label>
+                        <div className="flex gap-2 p-1.5 bg-black/20 rounded-2xl border border-white/5">
+                            <button
+                                onClick={() => setStatus("Ongoing")}
+                                className={`flex-1 py-3 text-[9px] uppercase tracking-[0.2em] rounded-xl transition-all ${status === "Ongoing" ? "bg-white/5 text-white font-bold shadow-inner" : "text-[var(--reader-text)]/40 hover:text-white"}`}
+                            >
+                                Ongoing
+                            </button>
+                            <button
+                                onClick={() => setStatus("Completed")}
+                                className={`flex-1 py-3 text-[9px] uppercase tracking-[0.2em] rounded-xl transition-all ${status === "Completed" ? "bg-white/5 text-white font-bold shadow-inner" : "text-[var(--reader-text)]/40 hover:text-white"}`}
+                            >
+                                Completed
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Synopsis Block */}
+                    <div className="glass-panel p-8 rounded-3xl space-y-6 border-white/5">
+                        <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Archive Synopsis</label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Enter the chronicle summary..."
+                            className="w-full h-40 bg-white/[0.02] border border-white/5 p-4 rounded-2x text-sm text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all resize-none leading-relaxed"
+                        />
                     </div>
 
                     {/* Cover Asset Block */}

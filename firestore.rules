@@ -1,0 +1,142 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 📖 Stories
+    match /stories/{storyId} {
+      allow read: if resource.data.published == true
+        || (request.auth != null && resource.data.authorId == request.auth.uid);
+
+      allow create: if request.auth != null;
+
+      // Author can update/delete
+      allow update, delete: if request.auth != null
+        && resource.data.authorId == request.auth.uid;
+
+      // ✅ Allow public view increments, but auth for likes/comments
+      allow update: if request.resource.data.diff(resource.data).changedKeys().hasOnly(["views"])
+                    || (request.auth != null && request.resource.data.diff(resource.data).changedKeys().hasOnly(["likes", "commentCount", "views"]));
+
+      // 🔽 Subcollections
+      match /comments/{commentId} {
+        allow read: if get(/databases/$(database)/documents/stories/$(storyId))
+                        .data.published == true;
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null
+          && resource.data.userId == request.auth.uid;
+      }
+
+      match /likes/{likeId} {
+        allow read: if true;
+        allow write: if request.auth != null
+          && request.auth.uid == likeId;
+      }
+    }
+
+    // 📚 Novels
+    match /novels/{novelId} {
+      // FIX: Allow reading if resource is null (404) to avoid permission errors on client
+      allow read: if resource == null || resource.data.published == true
+        || (request.auth != null && resource.data.authorId == request.auth.uid);
+
+      allow create: if request.auth != null;
+
+      allow update, delete: if request.auth != null
+        && resource.data.authorId == request.auth.uid;
+
+      // ✅ Allow public view increments, but auth for likes/comments
+      allow update: if request.resource.data.diff(resource.data).changedKeys().hasOnly(["views"])
+                    || (request.auth != null && request.resource.data.diff(resource.data).changedKeys().hasOnly(["likes", "commentCount", "views"]));
+
+      // 🔽 Subcollections
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      }
+
+      match /likes/{likeId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == likeId;
+      }
+
+      match /chapters/{chapterId} {
+        // ✅ Author can read even if not published
+        allow read: if get(/databases/$(database)/documents/novels/$(novelId))
+                        .data.published == true
+                    || (request.auth != null
+                        && get(/databases/$(database)/documents/novels/$(novelId))
+                             .data.authorId == request.auth.uid);
+
+        // ✅ Author can create/edit/delete chapters
+        allow write: if request.auth != null
+          && get(/databases/$(database)/documents/novels/$(novelId))
+               .data.authorId == request.auth.uid;
+
+        // ✅ Allow public view increments, but auth for likes/comments
+        allow update: if request.resource.data.diff(resource.data).changedKeys().hasOnly(["views"])
+                      || (request.auth != null && request.resource.data.diff(resource.data).changedKeys().hasOnly(["likes", "commentCount", "views"]));
+
+        // 🔽 Chapter Subcollections
+        match /comments/{commentId} {
+          allow read: if true;
+          allow create: if request.auth != null;
+          allow delete: if request.auth != null
+            && resource.data.userId == request.auth.uid;
+        }
+
+        match /likes/{likeId} {
+          allow read: if true;
+          allow write: if request.auth != null
+            && request.auth.uid == likeId;
+        }
+      }
+    }
+
+    // 👤 User Profiles (Reader + Creator)
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      // Follow System
+      match /following/{authorId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      match /followers/{followerId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == followerId;
+      }
+
+      // Creator drafts
+      match /drafts/{draftId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+        match /{allChildren=**} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+
+      // Reader library + progress
+      match /likedStories/{storyId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      match /savedNovels/{novelId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      match /progress/{novelId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // 🎨 Art Gallery
+    match /art/{artId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null
+        && resource.data.authorId == request.auth.uid;
+    }
+  }
+}
