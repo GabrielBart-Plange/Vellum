@@ -15,11 +15,10 @@ export default function StoryPage() {
     const [story, setStory] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    // Removed local interaction state - now handled by LikeButton component
-
     // Theme Engine State
     const [theme, setTheme] = useState("void");
     const [fontSize, setFontSize] = useState(18);
+    const [fontFamily, setFontFamily] = useState("sans");
 
     // Scroll Progress State
     const [progress, setProgress] = useState(0);
@@ -41,8 +40,10 @@ export default function StoryPage() {
     useEffect(() => {
         const savedTheme = localStorage.getItem("reader-theme") || "void";
         const savedSize = localStorage.getItem("reader-font-size") || "18";
+        const savedFont = localStorage.getItem("reader-font-family") || "sans";
         setTheme(savedTheme);
         setFontSize(parseInt(savedSize));
+        setFontFamily(savedFont);
     }, []);
 
     useEffect(() => {
@@ -53,6 +54,10 @@ export default function StoryPage() {
     useEffect(() => {
         localStorage.setItem("reader-font-size", fontSize.toString());
     }, [fontSize]);
+
+    useEffect(() => {
+        localStorage.setItem("reader-font-family", fontFamily);
+    }, [fontFamily]);
 
     useEffect(() => {
         const load = async () => {
@@ -93,11 +98,14 @@ export default function StoryPage() {
                     style={{ width: `${progress}%` }}
                 />
             </div>
+
             <ReadingSettings
                 currentTheme={theme}
                 currentFontSize={fontSize}
+                currentFontFamily={fontFamily}
                 onThemeChange={setTheme}
                 onFontSizeChange={setFontSize}
+                onFontFamilyChange={setFontFamily}
             />
 
             <article className={`relative max-w-4xl mx-auto rounded-3xl overflow-hidden transition-all duration-700 ${theme === 'void' || theme === 'nebula' ? 'reader-container-glow border border-white/5' : ''} bg-[var(--reader-bg)]`}>
@@ -143,15 +151,13 @@ export default function StoryPage() {
                 </div>
 
                 <div className="px-12 md:px-16 pb-16">
-                    {/* Interaction Bar (Moescape style) - Screenshot 2026-02-06 054541.png */}
+                    {/* Interaction Bar (Moescape style) */}
                     <div className="flex items-center gap-4 py-8 border-b border-t transition-colors" style={{ borderColor: 'var(--reader-border)' }}>
-                        <LikeButton 
-                            contentType="story" 
-                            contentId={id} 
-                            initialLikeCount={story.likes || 0} 
+                        <LikeButton
+                            contentType="story"
+                            contentId={id}
+                            initialLikeCount={story.likes || 0}
                         />
-
-
 
                         <div className="flex-grow" />
 
@@ -169,14 +175,17 @@ export default function StoryPage() {
                         </button>
                     </div>
 
-                    <div className="leading-relaxed select-text pt-16" style={{ fontSize: `${fontSize}px`, lineHeight: '1.8' }}>
+                    <div
+                        className={`leading-relaxed select-text pt-16 ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}`}
+                        style={{ fontSize: `${fontSize}px`, lineHeight: '1.8' }}
+                    >
                         <SystemNotation content={story.content} fontSize={fontSize} />
                     </div>
 
-                    <CommentSection 
-                        contentType="story" 
-                        contentId={id} 
-                        initialCommentCount={story.commentCount || 0} 
+                    <CommentSection
+                        contentType="story"
+                        contentId={id}
+                        initialCommentCount={story.commentCount || 0}
                     />
 
                     <footer className="pt-24 text-center">
@@ -185,7 +194,6 @@ export default function StoryPage() {
                     </footer>
                 </div>
             </article>
-
         </main>
     );
 }
