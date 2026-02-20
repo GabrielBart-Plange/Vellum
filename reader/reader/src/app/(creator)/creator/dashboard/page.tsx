@@ -9,6 +9,8 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({
     drafts: 0,
     published: 0,
+    totalViews: 0,
+    totalLikes: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -33,9 +35,25 @@ export default function DashboardPage() {
         const qNovels = query(novelsRef, where("authorId", "==", user.uid), where("published", "==", true));
         const novelsSnap = await getDocs(qNovels);
 
+        // Aggregate Views and Likes
+        let totalViews = 0;
+        let totalLikes = 0;
+
+        storiesSnap.docs.forEach(d => {
+          totalViews += (d.data().views || 0);
+          totalLikes += (d.data().likes || 0);
+        });
+
+        novelsSnap.docs.forEach(d => {
+          totalViews += (d.data().views || 0);
+          totalLikes += (d.data().likes || 0);
+        });
+
         setStats({
           drafts: draftsSnap.size,
           published: storiesSnap.size + novelsSnap.size,
+          totalViews,
+          totalLikes,
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -76,7 +94,27 @@ export default function DashboardPage() {
             <span className="text-6xl font-extralight text-[var(--foreground)] group-hover:scale-110 transition-transform block origin-left">
               {loading ? "—" : stats.published}
             </span>
-            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Live in the Chronicles</span>
+            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Stories Live</span>
+          </div>
+        </div>
+
+        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-white/10 transition-all">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-blue-500/60 font-semibold">Total Impressions</p>
+          <div className="flex items-baseline gap-4">
+            <span className="text-6xl font-extralight text-[var(--foreground)] group-hover:scale-110 transition-transform block origin-left">
+              {loading ? "—" : stats.totalViews.toLocaleString()}
+            </span>
+            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Archive Views</span>
+          </div>
+        </div>
+
+        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-white/10 transition-all">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-red-500/60 font-semibold">Total Approval</p>
+          <div className="flex items-baseline gap-4">
+            <span className="text-6xl font-extralight text-[var(--foreground)] group-hover:scale-110 transition-transform block origin-left">
+              {loading ? "—" : stats.totalLikes}
+            </span>
+            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Likes Received</span>
           </div>
         </div>
       </div>

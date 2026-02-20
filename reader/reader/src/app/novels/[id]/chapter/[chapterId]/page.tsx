@@ -25,6 +25,7 @@ export default function ChapterReaderPage() {
     // Reading Transformation State
     const [theme, setTheme] = useState("void");
     const [fontSize, setFontSize] = useState(18);
+    const [fontFamily, setFontFamily] = useState("sans");
     const [progress, setProgress] = useState(0);
 
     // Removed local interaction state - now handled by LikeButton component
@@ -46,8 +47,10 @@ export default function ChapterReaderPage() {
     useEffect(() => {
         const savedTheme = localStorage.getItem("reader-theme") || "void";
         const savedSize = localStorage.getItem("reader-font-size") || "18";
+        const savedFont = localStorage.getItem("reader-font-family") || "sans";
         setTheme(savedTheme);
         setFontSize(parseInt(savedSize));
+        setFontFamily(savedFont);
     }, []);
 
     useEffect(() => {
@@ -58,6 +61,10 @@ export default function ChapterReaderPage() {
     useEffect(() => {
         localStorage.setItem("reader-font-size", fontSize.toString());
     }, [fontSize]);
+
+    useEffect(() => {
+        localStorage.setItem("reader-font-family", fontFamily);
+    }, [fontFamily]);
 
     useEffect(() => {
         // Increment View Count for Chapter with basic deduplication
@@ -178,8 +185,10 @@ export default function ChapterReaderPage() {
             <ReadingSettings
                 currentTheme={theme}
                 currentFontSize={fontSize}
+                currentFontFamily={fontFamily}
                 onThemeChange={setTheme}
                 onFontSizeChange={setFontSize}
+                onFontFamilyChange={setFontFamily}
             />
 
             {/* Premium Header - Inspired by CHAMPION design */}
@@ -235,7 +244,10 @@ export default function ChapterReaderPage() {
                 </div>
 
                 {/* Chapter Content */}
-                <div className="leading-relaxed select-text min-h-[50vh]" style={{ fontSize: `${fontSize}px`, lineHeight: '1.9' }}>
+                <div
+                    className={`leading-relaxed select-text min-h-[50vh] ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}`}
+                    style={{ fontSize: `${fontSize}px`, lineHeight: '1.9' }}
+                >
                     <SystemNotation content={chapter.content} fontSize={fontSize} />
                 </div>
 

@@ -13,6 +13,8 @@ interface SearchModalProps {
 
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedGenre, setSelectedGenre] = useState<string>("All");
+    const [selectedStatus, setSelectedStatus] = useState<string>("All");
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -24,6 +26,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         } else {
             document.body.style.overflow = "unset";
             setSearchTerm("");
+            setSelectedGenre("All");
+            setSelectedStatus("All");
             setResults([]);
         }
         return () => { document.body.style.overflow = "unset"; };
@@ -55,9 +59,15 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 );
 
                 const snap = await getDocs(q);
-                const hits = snap.docs
-                    .map(d => ({ id: d.id, ...d.data() } as any))
-                    .filter(n => n.title?.toLowerCase().includes(searchTerm.toLowerCase()));
+                let hits = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+
+                // Client-side filtering
+                hits = hits.filter(n => {
+                    const matchesTitle = n.title?.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesGenre = selectedGenre === "All" || n.genre === selectedGenre;
+                    const matchesStatus = selectedStatus === "All" || n.status === selectedStatus;
+                    return matchesTitle && matchesGenre && matchesStatus;
+                });
 
                 setResults(hits);
             } catch (error) {
@@ -69,7 +79,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
         const timeout = setTimeout(search, 500); // Debounce
         return () => clearTimeout(timeout);
-    }, [searchTerm]);
+    }, [searchTerm, selectedGenre, selectedStatus]);
 
     if (!isOpen) return null;
 
@@ -81,24 +91,52 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             />
 
             <div className="relative w-full max-w-2xl bg-[#0b0a0f] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[70vh]">
-                <div className="p-4 border-b border-white/5 flex items-center gap-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 ml-2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input
-                        className="flex-1 bg-transparent border-none text-lg text-white placeholder-zinc-600 focus:outline-none"
-                        placeholder="Search chronicles..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        autoFocus
-                    />
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-zinc-500 hover:text-white transition-colors"
-                    >
-                        <span className="text-xs uppercase font-bold tracking-widest">ESC</span>
-                    </button>
+                <div className="p-4 border-b border-white/5 flex flex-col gap-4">
+                    <div className="flex items-center gap-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 ml-2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input
+                            className="flex-1 bg-transparent border-none text-lg text-white placeholder-zinc-600 focus:outline-none"
+                            placeholder="Search archives..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            autoFocus
+                        />
+                        <button
+                            onClick={onClose}
+                            className="p-2 text-zinc-500 hover:text-white transition-colors"
+                        >
+                            <span className="text-xs uppercase font-bold tracking-widest">ESC</span>
+                        </button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pl-2">
+                        <div className="flex items-center gap-1.5 p-1 bg-white/[0.03] rounded-lg border border-white/5">
+                            {["All", "Fantasy", "Action", "Romance", "Sci-Fi"].map(genre => (
+                                <button
+                                    key={genre}
+                                    onClick={() => setSelectedGenre(genre)}
+                                    className={`px-3 py-1 text-[9px] uppercase tracking-widest font-black rounded-md transition-all ${selectedGenre === genre ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    {genre}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="h-4 w-px bg-white/10 mx-1" />
+                        <div className="flex items-center gap-1.5 p-1 bg-white/[0.03] rounded-lg border border-white/5">
+                            {["All", "Ongoing", "Completed"].map(status => (
+                                <button
+                                    key={status}
+                                    onClick={() => setSelectedStatus(status)}
+                                    className={`px-3 py-1 text-[9px] uppercase tracking-widest font-black rounded-md transition-all ${selectedStatus === status ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    {status}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="overflow-y-auto p-2 custom-scrollbar">

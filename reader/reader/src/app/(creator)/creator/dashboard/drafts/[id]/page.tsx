@@ -1,7 +1,7 @@
 "use client";
 
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, deleteDoc, updateDoc, serverTimestamp, collection, getDocs, orderBy, query, Timestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, updateDoc, serverTimestamp, collection, getDocs, orderBy, query, Timestamp, addDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ImageUpload from "@/components/creator/ImageUpload";
@@ -160,6 +160,38 @@ export default function DraftEditorPage() {
         return () => clearTimeout(t);
     }, [title, content, category, genre, coverImage, chapters, id, type, tags, description, status]);
 
+    const notifyFollowers = async (authorName: string, title: string, id: string, type: "novel" | "short") => {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        try {
+            const followersRef = collection(db, "users", user.uid, "followers");
+            const followersSnap = await getDocs(followersRef);
+
+            const notificationData = {
+                type: "new_release",
+                title: `${authorName} released a new chronicle!`,
+                message: `"${title}" has been published. Read it now!`,
+                link: `/novels/${id}`,
+                createdAt: serverTimestamp(),
+                read: false,
+                authorId: user.uid,
+                novelId: id,
+                contentType: type
+            };
+
+            const promises = followersSnap.docs.map(followerDoc => {
+                const followerId = followerDoc.id;
+                return addDoc(collection(db, "users", followerId, "notifications"), notificationData);
+            });
+
+            await Promise.all(promises);
+            console.log(`Notified ${followersSnap.size} followers.`);
+        } catch (e) {
+            console.error("Error notifying followers:", e);
+        }
+    };
+
     const publish = async () => {
         const user = auth.currentUser;
         if (!user) return;
@@ -203,6 +235,9 @@ export default function DraftEditorPage() {
                 });
             }
         }
+
+        await notifyFollowers(authorDisplayName, title, id, type);
+
         alert(`${type === "novel" ? "Novel" : "Short story"} published successfully!`);
     };
 

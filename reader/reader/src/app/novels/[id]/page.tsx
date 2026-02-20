@@ -15,6 +15,7 @@ export default function NovelLandingPage() {
     const { user } = useAuth();
     const [novel, setNovel] = useState<any>(null);
     const [chapters, setChapters] = useState<any[]>([]);
+    const [readingProgress, setReadingProgress] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showChapters, setShowChapters] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -64,6 +65,13 @@ export default function NovelLandingPage() {
                         const savedRef = doc(db, "users", user.uid, "savedNovels", id);
                         const savedSnap = await getDoc(savedRef);
                         setSaved(savedSnap.exists());
+
+                        // Load Reading Progress
+                        const progressRef = doc(db, "users", user.uid, "progress", id);
+                        const progressSnap = await getDoc(progressRef);
+                        if (progressSnap.exists()) {
+                            setReadingProgress(progressSnap.data());
+                        }
                     }
                 } else {
                     notFound();
@@ -230,6 +238,14 @@ export default function NovelLandingPage() {
                         >
                             Open Chronicles
                         </button>
+                        {readingProgress && (
+                            <Link
+                                href={`/novels/${id}/chapter/${readingProgress.currentChapterId}`}
+                                className="px-12 py-5 rounded-2xl bg-white text-black text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95"
+                            >
+                                Resume Archive
+                            </Link>
+                        )}
                         <button
                             onClick={handleSaveToLibrary}
                             disabled={saving}

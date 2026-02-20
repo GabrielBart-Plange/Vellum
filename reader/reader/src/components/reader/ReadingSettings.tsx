@@ -5,24 +5,26 @@ import { useState, useEffect } from "react";
 interface ReadingSettingsProps {
     onThemeChange: (theme: string) => void;
     onFontSizeChange: (size: number) => void;
+    onFontFamilyChange: (font: string) => void;
     currentTheme: string;
     currentFontSize: number;
+    currentFontFamily: string;
 }
 
 export default function ReadingSettings({
     onThemeChange,
     onFontSizeChange,
+    onFontFamilyChange,
     currentTheme,
-    currentFontSize
+    currentFontSize,
+    currentFontFamily
 }: ReadingSettingsProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     const themes = [
-        { id: "void", name: "The Void", bg: "#000000", text: "#d4d4d8" },
-        { id: "archive", name: "The Archive", bg: "#f5f2e9", text: "#2c2c2c" },
-        { id: "nebula", name: "The Nebula", bg: "#0c0b1e", text: "#c7d2fe" },
+        { id: "void", name: "The Void (OLED)", bg: "#000000", text: "#d4d4d8" },
+        { id: "archive", name: "The Archive (Sepia)", bg: "#f5f2e9", text: "#2c2c2c" },
         { id: "midnight", name: "The Midnight", bg: "#0f172a", text: "#e2e8f0" },
-        { id: "serene", name: "The Serene", bg: "#fff5f7", text: "#3d2c2e" },
         { id: "light", name: "The Light", bg: "#ffffff", text: "#1a1a1a" },
     ];
 
@@ -62,26 +64,46 @@ export default function ReadingSettings({
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Font Size</p>
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => onFontSizeChange(Math.max(12, currentFontSize - 2))}
-                                className="flex-1 border border-white/10 py-1 hover:bg-white/5 text-sm"
-                            >
-                                -
-                            </button>
-                            <span className="text-xs text-center w-8">{currentFontSize}px</span>
-                            <button
-                                onClick={() => onFontSizeChange(Math.min(32, currentFontSize + 2))}
-                                className="flex-1 border border-white/10 py-1 hover:bg-white/5 text-sm"
-                            >
-                                +
-                            </button>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                            <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Font Type</p>
+                            <div className="flex bg-white/5 rounded-lg p-1">
+                                <button
+                                    onClick={() => onFontFamilyChange("sans")}
+                                    className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all ${currentFontFamily === 'sans' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    SANS
+                                </button>
+                                <button
+                                    onClick={() => onFontFamilyChange("serif")}
+                                    className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all font-serif ${currentFontFamily === 'serif' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    SERIF
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Font Size</p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => onFontSizeChange(Math.max(12, currentFontSize - 2))}
+                                    className="w-8 border border-white/10 py-1 hover:bg-white/5 text-sm rounded"
+                                >
+                                    -
+                                </button>
+                                <span className="text-[10px] font-bold text-center w-6">{currentFontSize}</span>
+                                <button
+                                    onClick={() => onFontSizeChange(Math.min(32, currentFontSize + 2))}
+                                    className="w-8 border border-white/10 py-1 hover:bg-white/5 text-sm rounded"
+                                >
+                                    +
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="pt-2 border-t border-white/5">
+                    <div className="pt-2 border-t border-white/5 text-center">
                         <p className="text-[9px] text-gray-600 italic">Adjusting the lens of your chronicle...</p>
                     </div>
                 </div>
