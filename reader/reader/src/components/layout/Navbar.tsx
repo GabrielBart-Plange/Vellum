@@ -20,9 +20,6 @@ export default function Navbar() {
     const unreadCount = notifications.filter(n => !n.read).length;
     const creatorUrl = process.env.NEXT_PUBLIC_CREATOR_URL || "http://localhost:3000";
 
-    // Hide Navbar on Creator Dashboard to prevent overlap
-    if (pathname?.startsWith("/creator")) return null;
-
     const handleSignOut = async () => {
         try {
             await signOut();
@@ -67,6 +64,9 @@ export default function Navbar() {
         { name: "Library", href: "/library" },
         { name: "Ranking", href: "/ranking" },
     ];
+
+    // Hide Navbar on Creator Dashboard to prevent overlap
+    if (pathname?.startsWith("/creator")) return null;
 
     return (
         <>

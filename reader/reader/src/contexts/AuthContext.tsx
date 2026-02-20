@@ -150,14 +150,10 @@ async function syncReaderProfile(user: User): Promise<void> {
     try {
         const ref = doc(db, 'users', user.uid);
         const snap = await getDoc(ref);
-        const baseProfile = {
-            username: user.displayName || user.email?.split('@')[0] || 'Reader',
-            email: user.email || '',
-        };
-
         if (!snap.exists()) {
             await setDoc(ref, {
-                ...baseProfile,
+                username: user.displayName || user.email?.split('@')[0] || 'Reader',
+                email: user.email || '',
                 roles: ['reader'],
                 createdAt: serverTimestamp(),
             }, { merge: true });
@@ -165,11 +161,20 @@ async function syncReaderProfile(user: User): Promise<void> {
             const data = snap.data();
             const roles = Array.isArray(data.roles) ? data.roles : [];
             const nextRoles = roles.includes('reader') ? roles : [...roles, 'reader'];
-            await setDoc(ref, {
-                ...baseProfile,
+
+            // Only update email and roles, preserve custom username if it exists
+            const updatePayload: any = {
+                email: user.email || '',
                 roles: nextRoles,
                 updatedAt: serverTimestamp(),
-            }, { merge: true });
+            };
+
+            // Only set a default username if the field is currently missing/empty in Firestore
+            if (!data.username) {
+                updatePayload.username = user.displayName || user.email?.split('@')[0] || 'Reader';
+            }
+
+            await setDoc(ref, updatePayload, { merge: true });
         }
     } catch (error) {
         console.error("Reader profile sync failed:", error);
