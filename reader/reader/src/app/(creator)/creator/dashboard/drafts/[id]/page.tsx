@@ -1,11 +1,13 @@
 "use client";
 
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, deleteDoc, updateDoc, serverTimestamp, collection, getDocs, orderBy, query, Timestamp, addDoc } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { doc, getDoc, setDoc, deleteDoc, updateDoc, serverTimestamp, collection, getDocs, orderBy, query, Timestamp } from "firebase/firestore";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ImageUpload from "@/components/creator/ImageUpload";
 import Link from "next/link";
+import { progressTracking } from "@/lib/progressTracking";
+import { SMART_TAG_MACROS } from "@/lib/macroTemplates";
 
 export default function DraftEditorPage() {
     const GENRE_OPTIONS = {
@@ -31,6 +33,67 @@ export default function DraftEditorPage() {
     const [status, setStatus] = useState("Ongoing");
 
     const hasSystemTag = tags.some(t => t.toLowerCase() === "#system");
+    const activeMacroTags = tags.filter(t => Object.keys(SMART_TAG_MACROS).includes(t.toLowerCase()));
+
+    const editorRef = useRef<HTMLTextAreaElement>(null);
+
+    const handleInjectMacro = (templateText: string) => {
+        const textarea = editorRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+
+        const currentVal = type === 'short' ? content : (chapters[activeChapterIndex]?.content || "");
+
+        const newVal = currentVal.substring(0, start) + templateText + currentVal.substring(end);
+
+        if (type === 'short') {
+            setContent(newVal);
+        } else {
+            updateActiveChapter({ content: newVal });
+        }
+
+        const match = templateText.match(/\[(.*?)\]/);
+        if (match) {
+            const matchIndex = templateText.indexOf(match[0]);
+            const newCursorStart = start + matchIndex;
+            const newCursorEnd = newCursorStart + match[0].length;
+
+            setTimeout(() => {
+                textarea.focus();
+                textarea.setSelectionRange(newCursorStart, newCursorEnd);
+            }, 10);
+        } else {
+            setTimeout(() => {
+                textarea.focus();
+                textarea.setSelectionRange(start + templateText.length, start + templateText.length);
+            }, 10);
+        }
+    };
+
+    const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Tab') {
+            const textarea = editorRef.current;
+            if (!textarea) return;
+
+            const currentVal = textarea.value;
+            const cursorStart = textarea.selectionStart;
+
+            const regex = /\[.*?\]/g;
+            regex.lastIndex = cursorStart;
+            let match = regex.exec(currentVal);
+
+            if (match && match.index === cursorStart) {
+                match = regex.exec(currentVal);
+            }
+
+            if (match) {
+                e.preventDefault();
+                textarea.setSelectionRange(match.index, match.index + match[0].length);
+            }
+        }
+    };
 
     // Unified data loading effect
     useEffect(() => {
@@ -160,37 +223,6 @@ export default function DraftEditorPage() {
         return () => clearTimeout(t);
     }, [title, content, category, genre, coverImage, chapters, id, type, tags, description, status]);
 
-    const notifyFollowers = async (authorName: string, title: string, id: string, type: "novel" | "short") => {
-        const user = auth.currentUser;
-        if (!user) return;
-
-        try {
-            const followersRef = collection(db, "users", user.uid, "followers");
-            const followersSnap = await getDocs(followersRef);
-
-            const notificationData = {
-                type: "new_release",
-                title: `${authorName} released a new chronicle!`,
-                message: `"${title}" has been published. Read it now!`,
-                link: `/novels/${id}`,
-                createdAt: serverTimestamp(),
-                read: false,
-                authorId: user.uid,
-                novelId: id,
-                contentType: type
-            };
-
-            const promises = followersSnap.docs.map(followerDoc => {
-                const followerId = followerDoc.id;
-                return addDoc(collection(db, "users", followerId, "notifications"), notificationData);
-            });
-
-            await Promise.all(promises);
-            console.log(`Notified ${followersSnap.size} followers.`);
-        } catch (e) {
-            console.error("Error notifying followers:", e);
-        }
-    };
 
     const publish = async () => {
         const user = auth.currentUser;
@@ -202,8 +234,13 @@ export default function DraftEditorPage() {
             if (userSnap.exists() && userSnap.data().username) authorDisplayName = userSnap.data().username;
         } catch (e) { }
 
+        // Check if already published
         const collectionName = type === "novel" ? "novels" : "stories";
-        await setDoc(doc(db, collectionName, id), {
+        const contentRef = doc(db, collectionName, id);
+        const contentSnap = await getDoc(contentRef);
+        const isAlreadyPublished = contentSnap.exists() && contentSnap.data().published;
+
+        await setDoc(contentRef, {
             title,
             authorId: user.uid,
             authorName: authorDisplayName,
@@ -216,7 +253,7 @@ export default function DraftEditorPage() {
             status,
             published: true,
             updatedAt: serverTimestamp(),
-            publishedAt: serverTimestamp(),
+            publishedAt: isAlreadyPublished ? contentSnap.data().publishedAt : serverTimestamp(),
             ...(type === "short" ? { content } : {}),
         }, { merge: true });
 
@@ -236,9 +273,9 @@ export default function DraftEditorPage() {
             }
         }
 
-        await notifyFollowers(authorDisplayName, title, id, type);
+        await progressTracking.notifyFollowers(user.uid, authorDisplayName, title, id, type === 'novel' ? 'novel' : 'story', !isAlreadyPublished);
 
-        alert(`${type === "novel" ? "Novel" : "Short story"} published successfully!`);
+        alert(`${type === "novel" ? "Novel" : "Short story"} ${isAlreadyPublished ? "updated" : "published"} successfully!`);
     };
 
     // ... rest of help functions same ...
@@ -388,39 +425,25 @@ export default function DraftEditorPage() {
                             />
                         </div>
 
-                        {/* Floating System Toolbox */}
-                        {hasSystemTag && (
-                            <div className="absolute -top-6 -right-4 flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-500 z-20">
-                                <button
-                                    onClick={() => {
-                                        const template = `\n[System: Alert | Connection timed out.]\n`;
-                                        if (type === 'short') setContent(content + template);
-                                        else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
-                                    }}
-                                    className="bg-neutral-900 border border-white/10 text-[8px] uppercase tracking-[0.3em] px-4 py-2 font-bold rounded-full shadow-2xl hover:bg-white hover:text-black transition-all flex items-center gap-2"
-                                >
-                                    <div className="w-1 h-1 rounded-full bg-indigo-500" /> [System]
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        const template = `\n{Quest: Daily Quests | - 5km run\n- 50 push-ups}\n`;
-                                        if (type === 'short') setContent(content + template);
-                                        else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
-                                    }}
-                                    className="bg-neutral-900 border border-white/10 text-[8px] uppercase tracking-[0.3em] px-4 py-2 font-bold rounded-full shadow-2xl hover:bg-white hover:text-black transition-all flex items-center gap-2"
-                                >
-                                    <div className="w-1 h-1 rounded-full bg-amber-500" /> {`{Quest}`}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        const template = `\n|Status: STATUS| NAME: |/Status|\n`;
-                                        if (type === 'short') setContent(content + template);
-                                        else updateActiveChapter({ content: (chapters[activeChapterIndex]?.content || "") + template });
-                                    }}
-                                    className="bg-neutral-900 border border-white/10 text-[8px] uppercase tracking-[0.3em] px-4 py-2 font-bold rounded-full shadow-2xl hover:bg-white hover:text-black transition-all flex items-center gap-2"
-                                >
-                                    <div className="w-1 h-1 rounded-full bg-emerald-500" /> Status
-                                </button>
+                        {/* Floating System Toolboxes */}
+                        {activeMacroTags.length > 0 && (
+                            <div className="absolute -top-6 -right-4 flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-500 z-20 items-end">
+                                {activeMacroTags.map(tag => {
+                                    const macros = SMART_TAG_MACROS[tag.toLowerCase()];
+                                    return (
+                                        <div key={tag} className="flex gap-2 flex-wrap justify-end">
+                                            {macros.map(m => (
+                                                <button
+                                                    key={m.id}
+                                                    onClick={() => handleInjectMacro(m.text)}
+                                                    className="bg-neutral-900 border border-white/10 text-[8px] uppercase tracking-[0.3em] px-4 py-2 font-bold rounded-full shadow-2xl hover:bg-white hover:text-black transition-all flex items-center gap-2 whitespace-nowrap"
+                                                >
+                                                    <div className={`w-1 h-1 rounded-full ${m.color}`} /> {m.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )
+                                })}
                             </div>
                         )}
                     </div>
@@ -487,8 +510,10 @@ export default function DraftEditorPage() {
                         <div className="glass-panel p-1 rounded-[2.5rem] border-white/5 h-full min-h-[80vh] flex flex-col overflow-hidden">
                             <div className="absolute top-8 left-8 text-[9px] uppercase tracking-[0.5em] text-white/5 pointer-events-none">Narrative Flow</div>
                             <textarea
+                                ref={editorRef}
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
+                                onKeyDown={handleEditorKeyDown}
                                 placeholder="Start your legend…"
                                 className="flex-1 w-full bg-transparent p-12 resize-none text-xl font-light text-[var(--foreground)] focus:outline-none placeholder:text-white/5 leading-relaxed selection:bg-[var(--accent-sakura)]/20"
                             />
@@ -559,8 +584,10 @@ export default function DraftEditorPage() {
                                 </div>
                                 <div className="flex-1 flex flex-col min-h-0 relative">
                                     <textarea
+                                        ref={editorRef}
                                         value={chapters[activeChapterIndex]?.content || ""}
                                         onChange={(e) => updateActiveChapter({ content: e.target.value })}
+                                        onKeyDown={handleEditorKeyDown}
                                         placeholder="Weave your story..."
                                         className="flex-1 w-full bg-transparent resize-none text-xl font-light text-[var(--foreground)] focus:outline-none placeholder:text-white/5 leading-relaxed selection:bg-[var(--accent-sakura)]/20 scrollbar-hide"
                                     />

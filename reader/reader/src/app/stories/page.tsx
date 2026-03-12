@@ -4,21 +4,14 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import StoryCard from "@/components/cards/StoryCard";
-
-interface Story {
-    id: string;
-    title: string;
-    authorName?: string;
-    coverImage?: string;
-    imageUrl?: string;
-    genre?: string;
-    published: boolean;
-    createdAt: Date | { seconds: number; nanoseconds: number };
-}
+import DiscoveryFilter from "@/components/layout/DiscoveryFilter";
+import { Story } from "@/types";
 
 export default function StoriesListingPage() {
     const [stories, setStories] = useState<Story[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("All");
 
     useEffect(() => {
         const load = async () => {
@@ -30,19 +23,7 @@ export default function StoriesListingPage() {
                 );
                 const snap = await getDocs(q);
                 setStories(
-                    snap.docs.map(doc => {
-                        const data = doc.data();
-                        return {
-                            id: doc.id,
-                            title: data.title,
-                            authorName: data.authorName,
-                            coverImage: data.coverImage,
-                            imageUrl: data.imageUrl,
-                            genre: data.genre,
-                            published: data.published,
-                            createdAt: data.createdAt,
-                        } as Story;
-                    })
+                    snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Story))
                 );
             } catch (err) {
                 console.error("Error fetching stories:", err);
@@ -53,25 +34,39 @@ export default function StoriesListingPage() {
         load();
     }, []);
 
+    const filteredStories = stories.filter(story => {
+        const matchesSearch = story.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            story.authorName?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === "All" || story.genre === selectedCategory || story.category === selectedCategory || (story.tags && story.tags.includes(selectedCategory));
+        return matchesSearch && matchesCategory;
+    });
+
     return (
         <main className="min-h-screen bg-[#0b0a0f] pt-40 pb-24 px-8">
-            <div className="max-w-6xl mx-auto space-y-20">
+            <div className="max-w-7xl mx-auto space-y-20">
                 <header className="space-y-4 border-l-2 border-[var(--accent-sakura)] pl-8">
                     <p className="text-[11px] uppercase tracking-[0.8em] text-zinc-500 font-bold">Collection</p>
                     <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white italic uppercase leading-none">SHORT STORIES</h1>
                 </header>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-16">
+                <DiscoveryFilter
+                    categories={["Action", "Mystery", "Romance", "Fantasy", "Horror"]}
+                    onSearch={setSearchTerm}
+                    onCategoryChange={setSelectedCategory}
+                    placeholder="Search for lore, myths, or weavers..."
+                />
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-12">
                     {loading ? (
-                        Array.from({ length: 4 }).map((_, i) => (
+                        Array.from({ length: 12 }).map((_, i) => (
                             <div key={i} className="animate-pulse space-y-4">
-                                <div className="aspect-[3/4] bg-zinc-900/50 rounded-3xl" />
-                                <div className="h-4 bg-zinc-900/50 rounded w-3/4" />
-                                <div className="h-3 bg-zinc-900/50 rounded w-1/2" />
+                                <div className="aspect-[2/3] bg-zinc-900/50 rounded-lg" />
+                                <div className="h-3 bg-zinc-900/50 rounded w-3/4" />
+                                <div className="h-2 bg-zinc-900/50 rounded w-1/2" />
                             </div>
                         ))
-                    ) : stories.length > 0 ? (
-                        stories.map((story) => (
+                    ) : filteredStories.length > 0 ? (
+                        filteredStories.map((story) => (
                             <StoryCard
                                 key={story.id}
                                 id={story.id}
@@ -82,8 +77,12 @@ export default function StoriesListingPage() {
                             />
                         ))
                     ) : (
-                        <div className="col-span-full py-20 text-center">
-                            <p className="text-zinc-500 italic uppercase tracking-widest">The archives are vast but currently silent...</p>
+                        <div className="col-span-full py-20 text-center glass-panel rounded-3xl border-dashed border-white/5">
+                            <p className="text-zinc-500 italic uppercase tracking-widest text-xs">
+                                {searchTerm || selectedCategory !== "All"
+                                    ? "No tales match your current pursuit in the archives."
+                                    : "The archives are vast but currently silent..."}
+                            </p>
                         </div>
                     )}
                 </div>

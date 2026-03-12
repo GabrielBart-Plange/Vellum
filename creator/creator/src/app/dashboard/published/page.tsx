@@ -79,6 +79,14 @@ export default function PublishedPage() {
                                     >
                                         Edit
                                     </Link>
+                                    <a
+                                        href={`http://localhost:3000/${story.collectionName === "novels" ? "novels" : "stories"}/${story.id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-[var(--reader-text)] hover:text-blue-400"
+                                    >
+                                        View
+                                    </a>
                                     <button
                                         onClick={() => handleUnpublish(story.id, story.collectionName)}
                                         className="text-xs text-red-500 hover:text-red-400"
@@ -93,7 +101,7 @@ export default function PublishedPage() {
                             </p>
 
                             <div className="mt-auto pt-3 border-t border-[var(--reader-border)] flex justify-between text-xs text-[var(--reader-text)]/70">
-                                <span className="uppercase tracking-widest">{story.type || "Short"}</span>
+                                <span className="uppercase tracking-widest">{story.type || "short"}</span>
                                 <span>{story.genre}</span>
                                 <span>
                                     {story.publishedAt?.seconds

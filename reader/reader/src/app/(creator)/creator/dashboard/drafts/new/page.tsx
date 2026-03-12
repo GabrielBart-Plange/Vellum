@@ -146,8 +146,8 @@ export default function NewDraftPage() {
                     const textContent = await page.getTextContent();
 
                     // Group items by Y coordinate to reconstruct lines
-                    const lines: { [y: number]: any[] } = {};
-                    textContent.items.forEach((item: any) => {
+                    const lines: { [y: number]: { transform: number[], str: string }[] } = {};
+                    textContent.items.forEach((item: { transform: number[], str: string }) => {
                         const y = Math.round(item.transform[5]);
                         if (!lines[y]) lines[y] = [];
                         lines[y].push(item);
@@ -159,7 +159,7 @@ export default function NewDraftPage() {
                     sortedY.forEach(y => {
                         // Sort items within line by X
                         const lineItems = lines[y].sort((a, b) => a.transform[4] - b.transform[4]);
-                        rawText += lineItems.map((item: any) => item.str).join(" ") + "\n";
+                        rawText += lineItems.map((item: { transform: number[], str: string }) => item.str).join(" ") + "\n";
                     });
                     rawText += "\n"; // Page break
                 }

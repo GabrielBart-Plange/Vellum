@@ -1,31 +1,29 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useTheme, Theme } from "@/contexts/ThemeContext";
 
 interface ReadingSettingsProps {
-    onThemeChange: (theme: string) => void;
     onFontSizeChange: (size: number) => void;
     onFontFamilyChange: (font: string) => void;
-    currentTheme: string;
     currentFontSize: number;
     currentFontFamily: string;
 }
 
 export default function ReadingSettings({
-    onThemeChange,
     onFontSizeChange,
     onFontFamilyChange,
-    currentTheme,
     currentFontSize,
     currentFontFamily
 }: ReadingSettingsProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const { theme, setTheme } = useTheme();
 
-    const themes = [
+    const themes: { id: Theme; name: string; bg: string; text: string }[] = [
         { id: "void", name: "The Void (OLED)", bg: "#000000", text: "#d4d4d8" },
         { id: "archive", name: "The Archive (Sepia)", bg: "#f5f2e9", text: "#2c2c2c" },
         { id: "midnight", name: "The Midnight", bg: "#0f172a", text: "#e2e8f0" },
         { id: "light", name: "The Light", bg: "#ffffff", text: "#1a1a1a" },
+        { id: "nebula", name: "The Nebula", bg: "#110e20", text: "#c084fc" },
+        { id: "serene", name: "The Serene", bg: "#fff5f7", text: "#f472b6" },
     ];
 
     return (
@@ -34,7 +32,7 @@ export default function ReadingSettings({
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-xl group"
             >
-                <span className={`text-xl group-hover:rotate-45 transition-transform ${currentTheme === 'light' || currentTheme === 'archive' ? 'text-black' : 'text-white'}`}>⚙️</span>
+                <span className={`text-xl group-hover:rotate-45 transition-transform ${theme === 'light' || theme === 'archive' ? 'text-black' : 'text-white'}`}>⚙️</span>
             </button>
 
             {isOpen && (
@@ -55,10 +53,10 @@ export default function ReadingSettings({
                             {themes.map((t) => (
                                 <button
                                     key={t.id}
-                                    onClick={() => onThemeChange(t.id)}
+                                    onClick={() => setTheme(t.id)}
                                     title={t.name}
                                     style={{ backgroundColor: t.bg }}
-                                    className={`h-8 w-full border ${currentTheme === t.id ? 'border-white scale-110' : 'border-white/10 hover:border-white/30'} transition-all`}
+                                    className={`h-8 w-full border ${theme === t.id ? 'border-white scale-110' : 'border-white/10 hover:border-white/30'} transition-all`}
                                 />
                             ))}
                         </div>

@@ -64,7 +64,7 @@ export default function SignupPage() {
     };
 
     return (
-        <main className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="min-h-screen flex flex-col items-center justify-center p-6">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full" />
             </div>
@@ -141,6 +141,6 @@ export default function SignupPage() {
                     Existing User? <Link href="/login" className="text-white hover:text-blue-400 transition-colors">SignIn</Link>
                 </p>
             </div>
-        </main>
+        </div>
     );
 }

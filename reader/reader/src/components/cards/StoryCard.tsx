@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 interface StoryCardProps {
@@ -22,33 +23,41 @@ export default function StoryCard({
     hideAuthor = false,
 }: StoryCardProps) {
     const displayImage = coverImage || imageUrl || "https://placehold.co/400x600/1a1a1a/666666?text=Cover";
+
+    // Check if the image is external to use unoptimized for better performance with large assets if needed
+    const isExternal = displayImage.startsWith('http') && !displayImage.includes('localhost');
+
     const CardContent = (
-        <div className="group relative cursor-pointer flex flex-col gap-4">
+        <div className="group relative cursor-pointer flex flex-col gap-2">
             {/* Image Container */}
-            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-zinc-900 shadow-2xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.7)]">
-                <img
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-[var(--reader-border)] shadow-xl transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.8)]">
+                <Image
                     src={displayImage}
                     alt={title}
-                    className="h-full w-full object-cover opacity-90 transition-all duration-700 group-hover:opacity-100 group-hover:scale-110"
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 15vw"
+                    className="object-cover opacity-90 transition-all duration-700 group-hover:opacity-100 group-hover:scale-105"
+                    priority={false}
+                    unoptimized={isExternal}
                 />
                 {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
 
                 {/* Category Tag */}
-                <div className="absolute bottom-3 left-3 flex gap-2">
-                    <span className="rounded-full border border-white/40 glass-panel px-3 py-1 text-[9px] font-bold text-white uppercase tracking-widest backdrop-blur-md">
+                <div className="absolute bottom-2 left-2 flex gap-1">
+                    <span className="rounded-md border border-[var(--glass-border)] glass-panel px-2 py-0.5 text-[8px] font-bold text-[var(--reader-text)] uppercase tracking-wider backdrop-blur-sm">
                         {category}
                     </span>
                 </div>
             </div>
 
             {/* Content */}
-            <div className="space-y-1 px-1">
-                <h3 className="line-clamp-1 text-base font-bold text-zinc-100 group-hover:text-white transition-colors">
+            <div className="space-y-0.5 px-0.5">
+                <h3 className="line-clamp-1 text-[13px] font-bold text-[var(--reader-text)] transition-colors">
                     {title}
                 </h3>
                 {!hideAuthor && (
-                    <p className="text-[13px] font-medium text-zinc-500 group-hover:text-zinc-400 transition-colors">
+                    <p className="text-[11px] font-medium text-[var(--reader-text)]/50 group-hover:text-[var(--reader-text)]/70 transition-colors">
                         {author}
                     </p>
                 )}
@@ -56,7 +65,7 @@ export default function StoryCard({
         </div>
     );
 
-    const isNovel = type === "novel" || category === "Novel";
+    const isNovel = type === "novel" || category === "Novel" || category === "fiction" && !id; // Slightly broader heuristic
     const linkHref = isNovel ? `/novels/${id}` : `/stories/${id}`;
 
     return id ? (

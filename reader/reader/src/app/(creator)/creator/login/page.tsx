@@ -35,7 +35,7 @@ export default function LoginPage() {
             const credential = await signInWithEmailAndPassword(auth, email, password);
             await syncCreatorProfile(credential.user);
             router.push("/dashboard");
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Login Error:", err);
             setError("Invalid email or password.");
         } finally {

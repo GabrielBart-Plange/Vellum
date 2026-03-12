@@ -4,13 +4,13 @@ const creatorUrl = process.env.NEXT_PUBLIC_CREATOR_URL || "http://localhost:3000
 
 export default function PortalPage() {
     return (
-        <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 py-24">
+        <main className="min-h-screen text-[var(--reader-text)] pt-40 pb-24 px-8">
             <div className="w-full max-w-4xl space-y-10">
                 <header className="text-center space-y-4">
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-zinc-500 font-bold">Chronicles Portal</p>
+                    <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--reader-text-subtle)] font-bold">Vellum Portal</p>
                     <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight">Choose Your Path</h1>
                     <p className="text-zinc-400 max-w-2xl mx-auto">
-                        Enter the Reader realm to explore stories, or step into the Creator studio to craft new chronicles.
+                        Enter the Reader realm to explore stories, or step into the Creator studio to craft new works.
                     </p>
                 </header>
 
@@ -37,7 +37,7 @@ export default function PortalPage() {
                         <p className="text-[10px] uppercase tracking-[0.4em] text-purple-400 font-black">Creator</p>
                         <h2 className="text-2xl font-black uppercase tracking-tight mt-4">Enter the Studio</h2>
                         <p className="text-zinc-400 mt-3">
-                            Write, publish, and manage your visual chronicles.
+                            Write, publish, and manage your visual works.
                         </p>
                         <div className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] font-bold text-purple-400">
                             Open Creator
@@ -54,7 +54,7 @@ export default function PortalPage() {
                         <p className="text-[10px] uppercase tracking-[0.4em] text-[#5865F2] font-black">Community</p>
                         <h2 className="text-2xl font-black uppercase tracking-tight mt-4">Join the Nexus</h2>
                         <p className="text-zinc-400 mt-3">
-                            Connect with fellow chronicles and discuss the archives in real-time.
+                            Connect with fellow readers and discuss the archives in real-time.
                         </p>
                         <div className="mt-6 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] font-bold text-[#5865F2]">
                             Join Discord

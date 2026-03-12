@@ -1,0 +1,49 @@
+﻿
+> reader@0.1.0 test
+> jest src/contexts/__tests__/ThemeContext.test.tsx
+
+node.exe : PASS src/
+contexts/__tests__/T
+hemeContext.test.tsx
+At line:1 char:1
++ & "C:\Program File
+s\nodejs/node.exe" "
+C:\Users\gabba\AppDa
+ta\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo  
+            : NotS  
+  pecified: (PASS   
+  src/contex...o    
+ntext.test.tsx:    
+String) [], Rem    
+oteException
+    + FullyQualifie 
+   dErrorId : Nati  
+  veCommandError
+ 
+  ThemeContext
+    ÔêÜ provides 
+the default 'void' 
+theme (27 ms)
+    ÔêÜ updates the 
+theme and persists 
+to localStorage (11 
+ms)
+    ÔêÜ loads theme 
+from localStorage 
+on mount (3 ms)
+
+Test Suites: 1 
+passed, 1 total
+Tests:       3 
+passed, 3 total
+Snapshots:   0 total
+Time:        1.288 s
+Ran all test suites 
+matching src/context
+s/__tests__/ThemeCon
+text.test.tsx.

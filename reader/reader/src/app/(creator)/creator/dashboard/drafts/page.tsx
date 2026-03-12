@@ -47,7 +47,7 @@ export default function DraftsPage() {
 
     if (loading) {
         return (
-            <div className="text-[var(--reader-text)]">
+            <div className="text-[var(--reader-text-muted)]">
                 Loading drafts...
             </div>
         );
@@ -72,20 +72,20 @@ export default function DraftsPage() {
             <header className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h1 className="text-4xl tracking-[0.3em] font-light uppercase text-[var(--foreground)]">Drafts</h1>
-                    <p className="text-[var(--reader-text)]/40 text-[10px] uppercase tracking-[0.2em]">Your evolving archives</p>
+                    <p className="text-[var(--reader-text-muted)] text-[10px] uppercase tracking-[0.2em]">Your evolving archives</p>
                 </div>
 
                 <Link
                     href="/creator/dashboard/drafts/new"
-                    className="bg-[var(--accent-lime)] px-8 py-3 rounded-full text-[10px] uppercase tracking-[0.2em] font-bold text-white shadow-[0_0_20px_-5px_var(--glow-lime)] hover:scale-105 active:scale-95 transition-all"
+                    className="bg-[var(--reader-accent)] px-8 py-3 rounded-full text-[10px] uppercase tracking-[0.2em] font-bold text-white shadow-[0_0_20px_-5px_var(--reader-accent)] hover:scale-105 active:scale-95 transition-all"
                 >
                     New draft
                 </Link>
             </header>
 
             {drafts.length === 0 ? (
-                <div className="py-20 text-center glass-panel border-dashed border-white/5 rounded-3xl">
-                    <p className="text-[var(--reader-text)] italic tracking-wide">"The scroll is still blank. Begin your next chronicle."</p>
+                <div className="py-20 text-center glass-panel border-dashed border-[var(--reader-border)] rounded-3xl">
+                    <p className="text-[var(--reader-text-muted)] italic tracking-wide">"The scroll is still blank. Begin your next chronicle."</p>
                 </div>
             ) : (
                 <ul className="space-y-4">
@@ -93,22 +93,22 @@ export default function DraftsPage() {
                         <li key={d.id} className="group relative">
                             <Link
                                 href={`/creator/dashboard/drafts/${d.id}`}
-                                className="block glass-panel p-6 rounded-2xl hover:bg-white/[0.03] border-white/5 hover:border-white/10 transition-all group-hover:pl-8"
+                                className="block glass-panel p-6 rounded-2xl hover:bg-[var(--reader-surface-hover)] border-[var(--reader-border)] hover:border-[var(--reader-accent)]/30 transition-all group-hover:pl-8"
                             >
                                 <div className="flex justify-between items-center pr-12">
                                     <div>
-                                        <p className="text-[var(--foreground)] group-hover:text-[var(--accent-sakura)] transition-colors text-lg tracking-wide">{d.title || "Untitled"}</p>
+                                        <p className="text-[var(--foreground)] group-hover:text-[var(--reader-accent)] transition-colors text-lg tracking-wide">{d.title || "Untitled"}</p>
                                         <div className="flex items-center gap-3 mt-1">
-                                            <span className="text-[10px] text-[var(--reader-text)]/40 uppercase tracking-[0.2em] font-medium">
+                                            <span className="text-[10px] text-[var(--reader-text-muted)] uppercase tracking-[0.2em] font-medium">
                                                 {d.type === "short" ? "Short story" : "Novel"}
                                             </span>
-                                            <div className="h-1 w-1 rounded-full bg-white/10" />
-                                            <span className="text-[10px] text-[var(--reader-text)]/30 uppercase tracking-[0.2em]">In Progress</span>
+                                            <div className="h-1 w-1 rounded-full bg-[var(--reader-border)]" />
+                                            <span className="text-[10px] text-[var(--reader-text-subtle)] uppercase tracking-[0.2em]">In Progress</span>
                                         </div>
                                     </div>
 
                                     <div className="opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--reader-text)]/30"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--reader-text-subtle)]"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                     </div>
                                 </div>
                             </Link>

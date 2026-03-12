@@ -42,32 +42,47 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
             setLoading(true);
             try {
-                // Simple search: Title starts with searchTerm
-                // Note: Firestore is case-sensitive by default.
-                // For a robust search, we'd ideally have a lowercase field or an external search service.
-                // For now, we'll try to match standard capitalized titles.
-
-                const novelsRef = collection(db, "novels");
-
-                // We'll just fetch recent published novels and filter client-side for this demo 
-                // to avoid complex index requirements on 'published' + 'title' range queries immediately.
-                // If the dataset grows, this needs a proper index or dedicated search solution.
-                const q = query(
-                    novelsRef,
-                    where("published", "==", true),
-                    limit(50)
+                // Fetch from multiple collections
+                const collections = ["novels", "stories", "art"];
+                const promises = collections.map(col =>
+                    getDocs(query(collection(db, col), where("published", "==", true), limit(30)))
+                        .catch(() => ({ docs: [] })) // Handle missing collections or permission issues
                 );
 
-                const snap = await getDocs(q);
-                let hits = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+                // Art collection doesn't have a 'published' field in its current schema, so we query it differently
+                const [novelsSnap, storiesSnap, artSnap] = await Promise.all([
+                    getDocs(query(collection(db, "novels"), where("published", "==", true), limit(30))),
+                    getDocs(query(collection(db, "stories"), where("published", "==", true), limit(30))),
+                    getDocs(query(collection(db, "art"), orderBy("createdAt", "desc"), limit(30)))
+                ]);
+
+                const novels = novelsSnap.docs.map(d => ({ id: d.id, ...d.data(), type: 'novel' } as any));
+                const stories = storiesSnap.docs.map(d => ({ id: d.id, ...d.data(), type: 'story' } as any));
+                const art = artSnap.docs.map(d => ({ id: d.id, ...d.data(), type: 'art' } as any));
+
+                let hits = [...novels, ...stories, ...art];
 
                 // Client-side filtering
                 hits = hits.filter(n => {
-                    const matchesTitle = n.title?.toLowerCase().includes(searchTerm.toLowerCase());
-                    const matchesGenre = selectedGenre === "All" || n.genre === selectedGenre;
-                    const matchesStatus = selectedStatus === "All" || n.status === selectedStatus;
-                    return matchesTitle && matchesGenre && matchesStatus;
+                    const title = n.title || "";
+                    const description = n.description || "";
+                    const author = n.authorName || "";
+                    const term = searchTerm.toLowerCase();
+
+                    const matchesTerm = title.toLowerCase().includes(term) ||
+                        description.toLowerCase().includes(term) ||
+                        author.toLowerCase().includes(term);
+
+                    const matchesGenre = selectedGenre === "All" ||
+                        n.genre === selectedGenre ||
+                        n.category === selectedGenre ||
+                        (n.tags && n.tags.includes(selectedGenre));
+
+                    return matchesTerm && matchesGenre;
                 });
+
+                // Sort by most recent
+                hits.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
                 setResults(hits);
             } catch (error) {
@@ -146,32 +161,37 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         </div>
                     ) : searchTerm && results.length === 0 ? (
                         <div className="p-8 text-center text-zinc-600 text-sm">
-                            No chronicles found matching "{searchTerm}"
+                            No works found matching "{searchTerm}"
                         </div>
                     ) : (
                         <div className="space-y-1">
-                            {results.map(novel => (
+                            {results.map(item => (
                                 <Link
-                                    key={novel.id}
-                                    href={`/novels/${novel.id}`}
+                                    key={item.id}
+                                    href={item.type === 'art' ? `/art` : `/${item.type}s/${item.id}`}
                                     onClick={onClose}
                                     className="flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-colors group"
                                 >
                                     <div className="h-12 w-8 bg-zinc-800 rounded overflow-hidden flex-shrink-0">
-                                        {novel.coverImage ? (
-                                            <img src={novel.coverImage} className="w-full h-full object-cover" alt="" />
+                                        {(item.coverImage || item.imageUrl) ? (
+                                            <img src={item.coverImage || item.imageUrl} className="w-full h-full object-cover" alt="" />
                                         ) : (
-                                            <div className="w-full h-full bg-zinc-800" />
+                                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-[8px] text-zinc-600">NO IMG</div>
                                         )}
                                     </div>
-                                    <div>
+                                    <div className="flex-1">
                                         <h4 className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">
-                                            {novel.title}
+                                            {item.title}
                                         </h4>
                                         <p className="text-[10px] uppercase tracking-wider text-zinc-500">
-                                            {novel.authorName || "Unknown Author"} • {novel.genre || "Fiction"}
+                                            {item.authorName || "Unknown Author"} • <span className="text-purple-400/80">{item.type}</span> • {item.genre || item.category || "General"}
                                         </p>
                                     </div>
+                                    {item.type === 'art' && (
+                                        <div className="px-2 py-0.5 rounded border border-white/10 bg-white/5 text-[8px] uppercase font-black text-zinc-500">
+                                            Visual
+                                        </div>
+                                    )}
                                 </Link>
                             ))}
                         </div>

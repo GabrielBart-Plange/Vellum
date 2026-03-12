@@ -45,13 +45,13 @@ describe('LoginPage Property-Based Tests', () => {
     });
 
     /**
-     * Property 1: Successful authentication redirects to library
+     * Property 1: Successful authentication redirects to home
      * Validates: Requirements 1.5
      * 
      * This property verifies that for any valid user credentials, when authentication
-     * succeeds, the user should be redirected to the /library page (or returnUrl if provided).
+     * succeeds, the user should be redirected to the homepage (or returnUrl if provided).
      */
-    test('Property 1: Successful authentication redirects to library', async () => {
+    test('Property 1: Successful authentication redirects to home', async () => {
         await fc.assert(
             fc.asyncProperty(
                 fc.record({
@@ -59,7 +59,7 @@ describe('LoginPage Property-Based Tests', () => {
                     password: fc.string({ minLength: 6, maxLength: 128 }),
                     returnUrl: fc.option(
                         fc.oneof(
-                            fc.constant('/library'),
+                            fc.constant('/'),
                             fc.constant('/novels/123'),
                             fc.constant('/stories/456'),
                             fc.constant('/novels/123/chapter/456'),
@@ -101,7 +101,7 @@ describe('LoginPage Property-Based Tests', () => {
                     });
 
                     // Property assertion: User should be redirected
-                    const expectedRedirect = returnUrl || '/library';
+                    const expectedRedirect = returnUrl || '/';
                     await waitFor(() => {
                         expect(mockPush).toHaveBeenCalledWith(expectedRedirect);
                     });
@@ -187,12 +187,12 @@ describe('LoginPage Property-Based Tests', () => {
     });
 
     /**
-     * Property 1 (variant): Default redirect is always /library when no returnUrl
+     * Property 1 (variant): Default redirect is always / when no returnUrl
      * 
      * This variant specifically tests that when no returnUrl is provided,
-     * the default redirect is always /library, regardless of credentials.
+     * the default redirect is always /, regardless of credentials.
      */
-    test('Property 1 (variant): Default redirect is /library when no returnUrl', async () => {
+    test('Property 1 (variant): Default redirect is / when no returnUrl', async () => {
         await fc.assert(
             fc.asyncProperty(
                 fc.record({
@@ -229,9 +229,9 @@ describe('LoginPage Property-Based Tests', () => {
                         expect(mockSignIn).toHaveBeenCalled();
                     });
 
-                    // Property assertion: Must redirect to /library specifically
+                    // Property assertion: Must redirect to / specifically
                     await waitFor(() => {
-                        expect(mockPush).toHaveBeenCalledWith('/library');
+                        expect(mockPush).toHaveBeenCalledWith('/');
                     });
 
                     // Clean up after this iteration

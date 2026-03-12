@@ -2,6 +2,7 @@
 
 import { auth, db } from "@/lib/firebase";
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc, serverTimestamp, orderBy, Timestamp } from "firebase/firestore";
+import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import ImageUpload from "@/components/creator/ImageUpload";
 import { ArtPiece } from "@/types";
@@ -96,14 +97,14 @@ export default function ArtGalleryPage() {
             <header className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h1 className="text-4xl tracking-[0.3em] font-light uppercase text-[var(--foreground)]">Art Gallery</h1>
-                    <p className="text-[var(--reader-text)]/40 text-[10px] uppercase tracking-[0.2em]">Manage your visual chronicles</p>
+                    <p className="text-[var(--reader-text-muted)] text-[10px] uppercase tracking-[0.2em]">Manage your visual works</p>
                 </div>
 
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
                     className={`px-10 py-4 rounded-full text-[10px] uppercase tracking-[0.2em] font-bold transition-all ${showAddForm
-                            ? "glass-panel border-white/10 text-[var(--foreground)] hover:bg-white/5"
-                            : "bg-[var(--accent-lime)] text-white shadow-[0_0_20px_-5px_var(--glow-lime)] hover:scale-105"
+                        ? "glass-panel border-white/10 text-[var(--foreground)] hover:bg-white/5"
+                        : "bg-[var(--accent-lime)] text-white shadow-[0_0_20px_-5px_var(--glow-lime)] hover:scale-105"
                         }`}
                 >
                     {showAddForm ? "Discard Change" : "Add New Art"}
@@ -135,7 +136,7 @@ export default function ArtGalleryPage() {
                                     onChange={(e) => setNewImageUrl(e.target.value)}
                                     placeholder="https://example.com/art.jpg"
                                     required
-                                    className="w-full bg-white/[0.02] border border-white/5 p-4 rounded-xl text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all placeholder:text-white/10"
+                                    className="w-full bg-[var(--reader-surface)] border border-[var(--reader-border)] p-4 rounded-xl text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-accent)] transition-all placeholder:text-[var(--reader-text-subtle)]"
                                 />
                             </div>
                         </div>
@@ -145,7 +146,7 @@ export default function ArtGalleryPage() {
                                 value={newDescription}
                                 onChange={(e) => setNewDescription(e.target.value)}
                                 placeholder="A brief context for this piece..."
-                                className="w-full bg-white/[0.02] border border-white/5 p-4 rounded-xl text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all h-32 resize-none placeholder:text-white/10 leading-relaxed"
+                                className="w-full bg-[var(--reader-surface)] border border-[var(--reader-border)] p-4 rounded-xl text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-accent)] transition-all h-32 resize-none placeholder:text-[var(--reader-text-subtle)] leading-relaxed"
                             />
                         </div>
                     </div>
@@ -165,37 +166,40 @@ export default function ArtGalleryPage() {
                     ))}
                 </div>
             ) : art.length === 0 ? (
-                <div className="py-24 text-center glass-panel border-dashed border-white/5 rounded-3xl">
-                    <p className="text-[var(--reader-text)]/40 italic tracking-wide">"The gallery sits in silence. Populate it with your visions."</p>
+                <div className="py-24 text-center glass-panel border-dashed border-[var(--reader-border)] rounded-3xl">
+                    <p className="text-[var(--reader-text-muted)] italic tracking-wide">"The gallery sits in silence. Populate it with your visions."</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div className="grid grid-cols-1 gap-6">
                     {art.map((item) => (
-                        <div key={item.id} className="group glass-panel rounded-3xl overflow-hidden hover:border-white/10 transition-all">
-                            <div className="aspect-[4/5] overflow-hidden">
-                                <img
-                                    src={item.imageUrl}
-                                    alt={item.title}
-                                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 grayscale-[0.3] group-hover:grayscale-0"
-                                    onError={(e) => (e.currentTarget.src = "https://placehold.co/400x500/1a1a1a/666666?text=Image+Not+Found")}
-                                />
+                        <div key={item.id} className="bg-[var(--reader-surface)] border border-[var(--reader-border)] rounded-3xl p-6 group hover:border-[var(--reader-accent)]/30 transition-all flex items-center gap-6">
+                            <div className="w-20 h-24 bg-zinc-800 rounded-xl overflow-hidden flex-shrink-0">
+                                <img src={item.imageUrl} className="w-full h-full object-cover" alt={item.title} />
                             </div>
-                            <div className="p-8 space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-lg font-light text-[var(--foreground)] tracking-wide">{item.title}</h3>
-                                    <button
-                                        onClick={() => handleDeleteArt(item.id)}
-                                        className="text-[9px] text-red-900/40 hover:text-red-500 uppercase tracking-[0.2em] font-bold transition-all"
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-white font-bold truncate">{item.title}</h3>
                                 {item.description && (
-                                    <p className="text-xs text-[var(--reader-text)]/50 line-clamp-2 leading-relaxed font-light italic">
+                                    <p className="text-xs text-[var(--reader-text-muted)] line-clamp-1 leading-relaxed font-light italic mt-1">
                                         {item.description}
                                     </p>
                                 )}
+                                <div className="flex items-center gap-6 mt-3">
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] uppercase tracking-widest text-[var(--reader-text-subtle)] font-black">Saves</span>
+                                        <span className="text-[var(--foreground)] text-lg font-black">{item.saveCount || 0}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] uppercase tracking-widest text-[var(--reader-text-subtle)] font-black">Reposts</span>
+                                        <span className="text-[var(--foreground)] text-lg font-black">{item.repostCount || 0}</span>
+                                    </div>
+                                </div>
                             </div>
+                            <button
+                                onClick={() => handleDeleteArt(item.id)}
+                                className="p-4 rounded-2xl bg-red-500/5 hover:bg-red-500/10 text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                                <Trash2 className="w-5 h-5" />
+                            </button>
                         </div>
                     ))}
                 </div>

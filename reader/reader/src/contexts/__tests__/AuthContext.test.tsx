@@ -27,6 +27,43 @@ jest.mock('firebase/auth', () => ({
     signInWithEmailAndPassword: jest.fn(),
     signOut: jest.fn(),
     onAuthStateChanged: jest.fn(),
+    GoogleAuthProvider: jest.fn(),
+    signInWithPopup: jest.fn(),
+    sendPasswordResetEmail: jest.fn(),
+}));
+
+jest.mock('firebase/firestore', () => ({
+    doc: jest.fn(),
+    getDoc: jest.fn(),
+    setDoc: jest.fn(),
+    serverTimestamp: jest.fn(),
+}));
+
+jest.mock('@/lib/monetization/xpService', () => ({
+    getXPProfile: jest.fn().mockResolvedValue({
+        xp: 0,
+        level: 0,
+        isChronicler: false,
+        chroniclerStatus: 'none',
+        legacyPoints: 0,
+        updatedAt: { toMillis: () => Date.now() }
+    }),
+}));
+
+jest.mock('@/lib/monetization/coinService', () => ({
+    getEssenceWallet: jest.fn().mockResolvedValue({
+        balance: 0,
+        lifetimeEarned: 0,
+        lifetimeSpent: 0,
+        updatedAt: { toMillis: () => Date.now() }
+    }),
+}));
+
+jest.mock('@/lib/monetization/subscriptionService', () => ({
+    getSubscriptionTier: jest.fn().mockResolvedValue({
+        tier: 'free',
+        expiresAt: null
+    }),
 }));
 
 describe('AuthContext Unit Tests', () => {
@@ -78,10 +115,16 @@ describe('AuthContext Unit Tests', () => {
             });
 
             // Simulate Firebase updating the auth state
-            act(() => {
+            await act(async () => {
                 if (authCallback) {
-                    authCallback(mockUser as User);
+                    await (authCallback as any)(mockUser as User);
                 }
+            });
+
+            // Wait for user and monetization to load
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+                expect(result.current.monetizationLoading).toBe(false);
             });
 
             // Verify sign-in was called with correct credentials
@@ -331,15 +374,16 @@ describe('AuthContext Unit Tests', () => {
             });
 
             // Simulate auth state update
-            act(() => {
+            await act(async () => {
                 if (authCallback) {
-                    authCallback(mockUser as User);
+                    await (authCallback as any)(mockUser as User);
                 }
             });
 
             await waitFor(() => {
                 expect(result.current.error).toBeNull();
                 expect(result.current.user).not.toBeNull();
+                expect(result.current.monetizationLoading).toBe(false);
             });
         });
     });
@@ -358,10 +402,11 @@ describe('AuthContext Unit Tests', () => {
 
             const { result } = renderHook(() => useAuth(), { wrapper });
 
-            // Wait for user to be set
+            // Wait for user and monetization to load
             await waitFor(() => {
                 expect(result.current.user).not.toBeNull();
                 expect(result.current.loading).toBe(false);
+                expect(result.current.monetizationLoading).toBe(false);
             });
 
             // Perform sign-out
@@ -370,9 +415,9 @@ describe('AuthContext Unit Tests', () => {
             });
 
             // Simulate Firebase clearing the auth state
-            act(() => {
+            await act(async () => {
                 if (authCallback) {
-                    authCallback(null);
+                    await (authCallback as any)(null);
                 }
             });
 
@@ -409,6 +454,7 @@ describe('AuthContext Unit Tests', () => {
             await waitFor(() => {
                 expect(result.current.user).not.toBeNull();
                 expect(result.current.loading).toBe(false);
+                expect(result.current.monetizationLoading).toBe(false);
             });
 
             // Attempt sign-out

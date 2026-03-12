@@ -9,14 +9,17 @@ import ReadingSettings from "@/components/reader/ReadingSettings";
 import SystemNotation from "@/components/reader/SystemNotation";
 import LikeButton from "@/components/interactions/LikeButton";
 import CommentSection from "@/components/interactions/CommentSection";
+import { useTheme } from "@/contexts/ThemeContext";
+
+import { DocumentData } from "firebase/firestore";
 
 export default function StoryPage() {
     const { id } = useParams<{ id: string }>();
-    const [story, setStory] = useState<any>(null);
+    const [story, setStory] = useState<DocumentData | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Theme Engine State
-    const [theme, setTheme] = useState("void");
+    // Theme Engine State (Global + Readers specific)
+    const { theme, setTheme } = useTheme();
     const [fontSize, setFontSize] = useState(18);
     const [fontFamily, setFontFamily] = useState("sans");
 
@@ -38,18 +41,11 @@ export default function StoryPage() {
     }, []);
 
     useEffect(() => {
-        const savedTheme = localStorage.getItem("reader-theme") || "void";
         const savedSize = localStorage.getItem("reader-font-size") || "18";
         const savedFont = localStorage.getItem("reader-font-family") || "sans";
-        setTheme(savedTheme);
         setFontSize(parseInt(savedSize));
         setFontFamily(savedFont);
     }, []);
-
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("reader-theme", theme);
-    }, [theme]);
 
     useEffect(() => {
         localStorage.setItem("reader-font-size", fontSize.toString());
@@ -79,7 +75,7 @@ export default function StoryPage() {
     }, [id]);
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center text-gray-500 uppercase tracking-[0.8em] text-[10px]">
+        <div className="min-h-screen flex items-center justify-center text-[var(--reader-text)]/40 uppercase tracking-[0.8em] text-[10px]">
             Unveiling the scroll...
         </div>
     );
@@ -89,7 +85,6 @@ export default function StoryPage() {
     return (
         <main
             className="min-h-screen px-6 py-24 transition-colors duration-500 ease-in-out font-sans relative"
-            style={{ backgroundColor: 'var(--reader-bg)', color: 'var(--reader-text)' }}
         >
             {/* Reading Progress Line */}
             <div className="fixed top-0 left-0 w-full h-1 z-[150] pointer-events-none">
@@ -100,10 +95,8 @@ export default function StoryPage() {
             </div>
 
             <ReadingSettings
-                currentTheme={theme}
                 currentFontSize={fontSize}
                 currentFontFamily={fontFamily}
-                onThemeChange={setTheme}
                 onFontSizeChange={setFontSize}
                 onFontFamilyChange={setFontFamily}
             />
@@ -112,7 +105,7 @@ export default function StoryPage() {
                 {/* Immersive Header Image */}
                 <div className="relative h-[400px] w-full overflow-hidden">
                     <img
-                        src={story.coverImage || story.imageUrl || "https://placehold.co/1200x800/1a1a1a/666666?text=15+Chronicles"}
+                        src={story.coverImage || story.imageUrl || "https://placehold.co/1200x800/1a1a1a/666666?text=Vellum"}
                         className="w-full h-full object-cover opacity-30 blur-[2px] scale-105"
                         alt=""
                     />

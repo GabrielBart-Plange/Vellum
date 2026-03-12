@@ -114,7 +114,7 @@ describe('LoginPage Component', () => {
             });
         });
 
-        test('should redirect to /library on successful authentication', async () => {
+        test('should redirect to / on successful authentication', async () => {
             mockSignIn.mockResolvedValueOnce(undefined);
 
             render(<LoginPage />);
@@ -128,7 +128,7 @@ describe('LoginPage Component', () => {
             fireEvent.click(submitButton);
 
             await waitFor(() => {
-                expect(mockPush).toHaveBeenCalledWith('/library');
+                expect(mockPush).toHaveBeenCalledWith('/');
             });
         });
 
@@ -269,7 +269,7 @@ describe('LoginPage Component', () => {
             });
         });
 
-        test('should default to /library when no returnUrl is provided', async () => {
+        test('should default to / when no returnUrl is provided', async () => {
             mockSignIn.mockResolvedValueOnce(undefined);
             mockSearchParams.get.mockReturnValue(null);
 
@@ -284,7 +284,7 @@ describe('LoginPage Component', () => {
             fireEvent.click(submitButton);
 
             await waitFor(() => {
-                expect(mockPush).toHaveBeenCalledWith('/library');
+                expect(mockPush).toHaveBeenCalledWith('/');
             });
         });
     });

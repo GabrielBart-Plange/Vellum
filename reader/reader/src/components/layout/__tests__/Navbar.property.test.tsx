@@ -11,13 +11,14 @@ import Navbar from '../Navbar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { auth } from '@/lib/firebase';
 import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 // Mock Firebase modules
 jest.mock('@/lib/firebase', () => ({
     auth: {
         currentUser: null,
     },
+    db: {},
 }));
 
 jest.mock('firebase/auth', () => ({
@@ -27,14 +28,60 @@ jest.mock('firebase/auth', () => ({
     User: jest.fn(),
 }));
 
+jest.mock('firebase/firestore', () => ({
+    collection: jest.fn(() => ({})),
+    query: jest.fn(() => ({})),
+    orderBy: jest.fn(() => ({})),
+    onSnapshot: jest.fn((_q, onNext) => {
+        onNext?.({ docs: [] });
+        return jest.fn();
+    }),
+    where: jest.fn(() => ({})),
+    doc: jest.fn(() => ({})),
+    updateDoc: jest.fn(),
+    writeBatch: jest.fn(() => ({ update: jest.fn(), commit: jest.fn().mockResolvedValue(undefined) })),
+    limit: jest.fn(() => ({})),
+    getDoc: jest.fn().mockResolvedValue({ exists: () => false, data: () => ({}) }),
+    setDoc: jest.fn().mockResolvedValue(undefined),
+    serverTimestamp: jest.fn(() => ({ seconds: Date.now() / 1000 })),
+}));
+
+jest.mock('@/lib/monetization/xpService', () => ({
+    getXPProfile: jest.fn().mockResolvedValue({
+        xp: 0,
+        level: 0,
+        isChronicler: false,
+        chroniclerStatus: 'none',
+        legacyPoints: 0,
+        updatedAt: { toMillis: () => Date.now() }
+    }),
+}));
+
+jest.mock('@/lib/monetization/coinService', () => ({
+    getEssenceWallet: jest.fn().mockResolvedValue({
+        balance: 0,
+        lifetimeEarned: 0,
+        lifetimeSpent: 0,
+        updatedAt: { toMillis: () => Date.now() }
+    }),
+}));
+
+jest.mock('@/lib/monetization/subscriptionService', () => ({
+    getSubscriptionTier: jest.fn().mockResolvedValue({
+        tier: 'free',
+        expiresAt: null
+    }),
+}));
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
+    usePathname: jest.fn(),
 }));
 
 describe('Navbar Sign-Out Property-Based Tests', () => {
     let mockPush: jest.Mock;
-    let mockRouter: any;
+    let mockRouter: { push: jest.Mock; pathname?: string; query?: Record<string, string>; asPath?: string };
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -46,6 +93,7 @@ describe('Navbar Sign-Out Property-Based Tests', () => {
             asPath: '/',
         };
         (useRouter as jest.Mock).mockReturnValue(mockRouter);
+        (usePathname as jest.Mock).mockReturnValue('/');
     });
 
     /**

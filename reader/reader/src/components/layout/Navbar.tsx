@@ -23,9 +23,9 @@ export default function Navbar() {
     const handleSignOut = async () => {
         try {
             await signOut();
-            router.push('/');
+            router.push("/");
         } catch (error) {
-            console.error('Sign out error:', error);
+            console.error("Sign out error:", error);
         }
     };
 
@@ -40,8 +40,6 @@ export default function Navbar() {
             limit(20)
         );
 
-        console.log(`[Archive] Listening for: users/${user.uid}/notifications`);
-
         const unsubscribe = onSnapshot(q,
             (snap) => {
                 const results = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
@@ -50,7 +48,6 @@ export default function Navbar() {
             },
             (error) => {
                 console.error("Archive Listener Error:", error.code, error.message);
-                console.error("Debug Context - UID:", user.uid, "Path:", `users/${user.uid}/notifications`);
             }
         );
 
@@ -69,14 +66,15 @@ export default function Navbar() {
     const navLinks = [
         { name: "Stories", href: "/stories" },
         { name: "Novels", href: "/novels" },
+        { name: "Art", href: "/art" },
+        { name: "Settings", href: "/settings" },
         { name: "Profile", href: user ? `/authors/${user.uid}` : "/profile" },
         { name: "About", href: "/about" },
         { name: "Portal", href: "/portal" },
-        { name: "Library", href: "/library" },
+        { name: "Library", href: user ? `/authors/${user.uid}?tab=collections` : "/library" },
         { name: "Ranking", href: "/ranking" },
     ];
 
-    // Hide Navbar on Creator Dashboard to prevent overlap
     if (pathname?.startsWith("/creator")) return null;
 
     return (
@@ -85,7 +83,7 @@ export default function Navbar() {
             <nav className="sticky top-0 z-[100] w-full glass-panel shadow-sm">
                 <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
                     {/* Logo */}
-                    <Link href="/" className="text-xl font-bold tracking-tighter text-white hover:opacity-80 transition-opacity flex items-center gap-3">
+                    <Link href="/" className="text-xl font-bold tracking-tighter text-[var(--reader-text)] hover:opacity-80 transition-opacity flex items-center gap-3">
                         <div className="relative h-8 w-8 rounded-full bg-gradient-to-br from-[#8b0000] to-[#4a0000] flex items-center justify-center text-[14px] font-serif shadow-[0_2px_10px_rgba(139,0,0,0.5)] border border-[#a52a2a]/30 before:absolute before:inset-0 before:rounded-full before:bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2),transparent)] overflow-hidden">
                             <span className="relative z-10 text-[#aa8e45] drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">V</span>
                             <div className="absolute inset-0.5 rounded-full border border-black/10 opacity-30"></div>
@@ -94,9 +92,9 @@ export default function Navbar() {
                     </Link>
 
                     {/* Desktop Links */}
-                    <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-zinc-400">
+                    <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-[var(--reader-text-muted)]">
                         {navLinks.slice(0, 5).map((link) => (
-                            <Link key={link.name} href={link.href} className="hover:text-white transition-colors">
+                            <Link key={link.name} href={link.href} className="hover:text-[var(--reader-accent)] transition-colors">
                                 {link.name}
                             </Link>
                         ))}
@@ -106,13 +104,13 @@ export default function Navbar() {
                     <div className="flex items-center gap-4">
                         <Link
                             href="/creator/dashboard"
-                            className="hidden md:inline text-[12px] uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
+                            className="hidden md:inline text-[12px] uppercase tracking-widest text-[var(--reader-text-subtle)] hover:text-[var(--reader-text)] transition-colors"
                         >
                             Archivist
                         </Link>
                         <button
                             onClick={() => setIsSearchOpen(true)}
-                            className="text-zinc-400 hover:text-white transition-colors"
+                            className="text-[var(--reader-text-subtle)] hover:text-[var(--reader-text)] transition-colors"
                             title="Search"
                             aria-label="Search"
                         >
@@ -128,7 +126,7 @@ export default function Navbar() {
                                         setIsNotificationOpen(!isNotificationOpen);
                                         if (!isNotificationOpen) markAllRead();
                                     }}
-                                    className="text-zinc-400 hover:text-white transition-colors relative"
+                                    className="text-[var(--reader-text-subtle)] hover:text-[var(--reader-text)] transition-colors relative"
                                     title="Notifications"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -142,25 +140,25 @@ export default function Navbar() {
                                 </button>
 
                                 {isNotificationOpen && (
-                                    <div className="absolute right-0 mt-4 w-80 rounded-2xl bg-[#0b0a0f] border border-white/10 shadow-2xl p-4 animate-in fade-in zoom-in-95 duration-200 z-[150]">
-                                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5">
-                                            <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Archive Transmissions</span>
-                                            <button onClick={() => setIsNotificationOpen(false)} className="text-zinc-500 hover:text-white transition-colors">✕</button>
+                                    <div className="absolute right-0 mt-4 w-80 rounded-2xl bg-[var(--reader-bg)] border border-[var(--reader-border)] shadow-2xl p-4 animate-in fade-in zoom-in-95 duration-200 z-[150]">
+                                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--reader-border)]">
+                                            <span className="text-[10px] uppercase tracking-widest text-[var(--reader-text-subtle)] font-black">Archive Transmissions</span>
+                                            <button onClick={() => setIsNotificationOpen(false)} className="text-[var(--reader-text-subtle)] hover:text-[var(--reader-text)] transition-colors">\u2715</button>
                                         </div>
                                         <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2 leading-tight">
                                             {notifications.length === 0 ? (
-                                                <div className="py-8 text-center text-zinc-600 text-[10px] uppercase tracking-widest">No recent transmissions</div>
+                                                <div className="py-8 text-center text-[var(--reader-text-subtle)] text-[10px] uppercase tracking-widest">No recent transmissions</div>
                                             ) : (
                                                 notifications.map(n => (
                                                     <Link
                                                         key={n.id}
                                                         href={n.link}
                                                         onClick={() => setIsNotificationOpen(false)}
-                                                        className={`block p-3 rounded-xl hover:bg-white/5 transition-all space-y-1 ${!n.read ? 'border-l-2 border-purple-500' : ''}`}
+                                                        className={`block p-3 rounded-xl hover:bg-[var(--reader-text)]/5 transition-all space-y-1 ${!n.read ? "border-l-2 border-[var(--reader-accent)]" : ""}`}
                                                     >
-                                                        <p className="text-[11px] font-bold text-zinc-100 uppercase tracking-tight">{n.title}</p>
-                                                        <p className="text-[10px] text-zinc-400 line-clamp-2">{n.message}</p>
-                                                        <p className="text-[8px] text-zinc-600 uppercase font-black">{n.createdAt?.toDate ? new Date(n.createdAt.toDate()).toLocaleDateString() : 'Just now'}</p>
+                                                        <p className="text-[11px] font-bold text-[var(--reader-text)] uppercase tracking-tight">{n.title}</p>
+                                                        <p className="text-[10px] text-[var(--reader-text-muted)] line-clamp-2">{n.message}</p>
+                                                        <p className="text-[8px] text-[var(--reader-text-subtle)] uppercase font-black">{n.createdAt?.toDate ? new Date(n.createdAt.toDate()).toLocaleDateString() : "Just now"}</p>
                                                     </Link>
                                                 ))
                                             )}
@@ -188,7 +186,7 @@ export default function Navbar() {
                         {/* Mobile Menu Toggle */}
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="md:hidden text-white p-1 z-[110]"
+                            className="md:hidden text-[var(--reader-text)] p-1 z-[110]"
                         >
                             {isMenuOpen ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -205,7 +203,7 @@ export default function Navbar() {
             </nav>
 
             {/* Mobile Menu Overlay */}
-            <div className={`fixed inset-0 z-[90] bg-[#0b0a0f]/95 backdrop-blur-2xl transition-all duration-500 overflow-hidden ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'}`}>
+            <div className={`fixed inset-0 z-[90] bg-[var(--reader-bg)]/95 backdrop-blur-2xl transition-all duration-500 overflow-hidden ${isMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full"}`}>
                 {/* Nebula Glows */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full -z-10">
                     <div className="absolute top-[20%] right-[10%] w-[300px] h-[300px] bg-purple-600/10 blur-[100px] rounded-full" />
@@ -213,7 +211,7 @@ export default function Navbar() {
                 </div>
 
                 <div className="max-w-xl mx-auto px-6 pt-32 h-full flex flex-col">
-                    <h2 className="text-[10px] uppercase tracking-[0.6em] text-zinc-600 font-bold mb-8">Navigation Node</h2>
+                    <h2 className="text-[10px] uppercase tracking-[0.6em] text-[var(--reader-text-subtle)] font-bold mb-8">Navigation Node</h2>
 
                     <div className="grid grid-cols-2 gap-4">
                         {navLinks.map((link) => (
@@ -223,19 +221,19 @@ export default function Navbar() {
                                 onClick={() => setIsMenuOpen(false)}
                                 className="group p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-purple-500/30 transition-all text-center flex flex-col items-center gap-3"
                             >
-                                <span className="text-sm font-bold tracking-widest text-zinc-300 group-hover:text-white transition-colors">{link.name}</span>
+                                <span className="text-sm font-bold tracking-widest text-[var(--reader-text-muted)] group-hover:text-[var(--reader-text)] transition-colors">{link.name}</span>
                             </Link>
                         ))}
                         <Link
                             href="/creator/dashboard"
                             className="group p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-purple-500/30 transition-all text-center flex flex-col items-center gap-3"
                         >
-                            <span className="text-sm font-bold tracking-widest text-zinc-300 group-hover:text-white transition-colors">Archivist</span>
+                            <span className="text-sm font-bold tracking-widest text-[var(--reader-text-muted)] group-hover:text-[var(--reader-text)] transition-colors">Archivist</span>
                         </Link>
                     </div>
 
                     <div className="mt-auto mb-12 p-8 glass-panel rounded-3xl border border-white/5 text-center">
-                        <p className="text-[11px] uppercase tracking-[0.4em] text-zinc-500 mb-6 font-bold">Member Access</p>
+                        <p className="text-[11px] uppercase tracking-[0.4em] text-[var(--reader-text-subtle)] mb-6 font-bold">Member Access</p>
                         {user ? (
                             <button
                                 onClick={handleSignOut}

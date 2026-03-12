@@ -5,9 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { progressTracking } from "@/lib/progressTracking";
 import { LibraryData } from "@/types";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function LibraryPage() {
     const { user, loading: authLoading, signOut } = useAuth();
+    const { theme } = useTheme();
     const [libraryData, setLibraryData] = useState<LibraryData | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -31,9 +33,9 @@ export default function LibraryPage() {
 
     if (authLoading) {
         return (
-            <main className="min-h-screen bg-black pt-40 pb-24 px-8">
+            <main className="min-h-screen bg-[var(--reader-bg)] pt-40 pb-24 px-8 text-[var(--reader-text)]">
                 <div className="max-w-6xl mx-auto space-y-16">
-                    <div className="text-center text-zinc-500">Loading authentication...</div>
+                    <div className="text-center text-[var(--reader-text-muted)]">Loading authentication...</div>
                 </div>
             </main>
         );
@@ -51,21 +53,21 @@ export default function LibraryPage() {
 
     if (!user) {
         return (
-            <main className="min-h-screen bg-black pt-40 pb-24 px-8">
+            <main className="min-h-screen bg-[var(--reader-bg)] pt-40 pb-24 px-8 text-[var(--reader-text)]">
                 <div className="max-w-6xl mx-auto space-y-16">
-                    <header className="space-y-4 border-l-2 border-zinc-700 pl-8">
-                        <p className="text-[11px] uppercase tracking-[0.8em] text-zinc-500 font-bold">Personal</p>
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic">THE GRAND LIBRARY</h1>
+                    <header className="space-y-4 border-l-2 border-[var(--reader-border)] pl-8">
+                        <p className="text-[11px] uppercase tracking-[0.8em] text-[var(--reader-text-muted)] font-bold">Personal</p>
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic">THE GRAND LIBRARY</h1>
                     </header>
 
-                    <div className="glass-panel p-20 rounded-[40px] border border-white/5 text-center space-y-8">
-                        <div className="h-20 w-20 rounded-full border border-white/10 mx-auto flex items-center justify-center opacity-20">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-10 h-10 text-white">
+                    <div className="glass-panel p-20 rounded-[40px] border border-[var(--reader-border)] text-center space-y-8">
+                        <div className="h-20 w-20 rounded-full border border-[var(--reader-border)] mx-auto flex items-center justify-center opacity-20">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-10 h-10 text-[var(--reader-text)]">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
                             </svg>
                         </div>
-                        <p className="text-zinc-500 italic uppercase tracking-[0.4em] text-sm">Access your personal archive</p>
-                        <Link href="/login" className="inline-block px-10 py-4 rounded-full border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">
+                        <p className="text-[var(--reader-text-muted)] italic uppercase tracking-[0.4em] text-sm">Access your personal archive</p>
+                        <Link href="/login" className="inline-block px-10 py-4 rounded-full border border-[var(--reader-border)] text-[var(--reader-text)] text-[10px] font-black uppercase tracking-widest hover:bg-[var(--reader-surface)] transition-all">
                             Sign In to Access
                         </Link>
                     </div>
@@ -76,20 +78,20 @@ export default function LibraryPage() {
 
     if (loading) {
         return (
-            <main className="min-h-screen bg-black pt-40 pb-24 px-8">
+            <main className="min-h-screen bg-[var(--reader-bg)] pt-40 pb-24 px-8 text-[var(--reader-text)]">
                 <div className="max-w-6xl mx-auto space-y-16">
-                    <header className="space-y-4 border-l-2 border-zinc-700 pl-8">
-                        <p className="text-[11px] uppercase tracking-[0.8em] text-zinc-500 font-bold">Personal</p>
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic">THE GRAND LIBRARY</h1>
+                    <header className="space-y-4 border-l-2 border-[var(--reader-border)] pl-8">
+                        <p className="text-[11px] uppercase tracking-[0.8em] text-[var(--reader-text-muted)] font-bold">Personal</p>
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic">THE GRAND LIBRARY</h1>
                     </header>
 
-                    <div className="glass-panel p-20 rounded-[40px] border border-white/5 text-center space-y-8">
-                        <div className="h-20 w-20 rounded-full border border-white/10 mx-auto flex items-center justify-center opacity-20 animate-pulse">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-10 h-10 text-white">
+                    <div className="glass-panel p-20 rounded-[40px] border border-[var(--reader-border)] text-center space-y-8">
+                        <div className="h-20 w-20 rounded-full border border-[var(--reader-border)] mx-auto flex items-center justify-center opacity-20 animate-pulse">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-10 h-10 text-[var(--reader-text)]">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
                             </svg>
                         </div>
-                        <p className="text-zinc-500 italic uppercase tracking-[0.4em] text-sm">Retrieving your scrolls from the archive...</p>
+                        <p className="text-[var(--reader-text-muted)] italic uppercase tracking-[0.4em] text-sm">Retrieving your scrolls from the archive...</p>
                     </div>
                 </div>
             </main>
@@ -134,12 +136,12 @@ export default function LibraryPage() {
     }
 
     return (
-        <main className="min-h-screen bg-black pt-40 pb-24 px-8">
+        <main className="min-h-screen text-[var(--reader-text)] pt-40 pb-24 px-8">
             <div className="max-w-6xl mx-auto space-y-16">
-                <header className="space-y-4 border-l-2 border-zinc-700 pl-8">
-                    <p className="text-[11px] uppercase tracking-[0.8em] text-zinc-500 font-bold">Personal</p>
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic">THE GRAND LIBRARY</h1>
-                    <p className="text-zinc-500 max-w-2xl">Your personal collection of liked stories and reading progress</p>
+                <header className="space-y-4 border-l-2 border-[var(--reader-border)] pl-8">
+                    <p className="text-[11px] uppercase tracking-[0.8em] text-[var(--reader-text-muted)] font-bold">Personal</p>
+                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic">THE GRAND LIBRARY</h1>
+                    <p className="text-[var(--reader-text-muted)] max-w-2xl">Your personal collection of liked stories and reading progress</p>
                 </header>
                 <div className="flex justify-end">
                     <button
@@ -154,7 +156,7 @@ export default function LibraryPage() {
                     {/* Liked Stories Section */}
                     {libraryData?.likedStories.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-black text-white mb-8 uppercase tracking-tight border-l-2 border-purple-500 pl-4">Liked Stories</h2>
+                            <h2 className="text-2xl font-black text-[var(--reader-text)] mb-8 uppercase tracking-tight border-l-2 border-purple-500 pl-4">Liked Stories</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {libraryData.likedStories.map((story) => (
                                     <Link
@@ -168,8 +170,7 @@ export default function LibraryPage() {
                                                 alt={story.title}
                                                 className="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                                            <div className="absolute bottom-4 left-4 right-4">
+                                            <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
                                                 <h3 className="text-white font-bold text-lg group-hover:text-purple-400 transition-colors line-clamp-2">{story.title}</h3>
                                                 <p className="text-zinc-400 text-xs mt-1">by {story.authorName}</p>
                                             </div>
@@ -183,7 +184,7 @@ export default function LibraryPage() {
                     {/* Saved Novels Section */}
                     {libraryData?.savedNovels.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-black text-white mb-8 uppercase tracking-tight border-l-2 border-purple-500 pl-4">Saved Novels</h2>
+                            <h2 className="text-2xl font-black text-[var(--reader-text)] mb-8 uppercase tracking-tight border-l-2 border-purple-500 pl-4">Saved Novels</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {libraryData.savedNovels.map((novel) => (
                                     <Link
@@ -197,8 +198,7 @@ export default function LibraryPage() {
                                                 alt={novel.title}
                                                 className="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                                            <div className="absolute bottom-4 left-4 right-4">
+                                            <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
                                                 <h3 className="text-white font-bold text-lg group-hover:text-purple-400 transition-colors line-clamp-2">{novel.title}</h3>
                                                 <p className="text-zinc-400 text-xs mt-1">by {novel.authorName}</p>
                                             </div>
@@ -212,7 +212,7 @@ export default function LibraryPage() {
                     {/* Novels in Progress Section */}
                     {libraryData?.novelsInProgress.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-black text-white mb-8 uppercase tracking-tight border-l-2 border-blue-500 pl-4">Reading Progress</h2>
+                            <h2 className="text-2xl font-black text-[var(--reader-text)] mb-8 uppercase tracking-tight border-l-2 border-blue-500 pl-4">Reading Progress</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {libraryData.novelsInProgress.map((novel) => (
                                     <Link
@@ -220,7 +220,14 @@ export default function LibraryPage() {
                                         href={`/novels/${novel.id}/chapter/${novel.currentChapterId}`}
                                         className="group glass-panel rounded-2xl border border-white/5 overflow-hidden hover:border-blue-500/30 transition-all"
                                     >
-                                        <div className="flex gap-6 p-6">
+                                        <div className="relative py-8">
+                                            <div className="absolute inset-0 flex items-center">
+                                                <div className="w-full border-t border-[var(--reader-border)]"></div>
+                                            </div>
+                                            <div className="relative flex justify-center text-[10px] uppercase tracking-widest text-[var(--reader-text)]/40">
+                                                <span className="px-8" style={{ backgroundColor: 'var(--reader-bg)' }}>The Collection</span>
+                                            </div>
+                                        </div>                                        <div className="flex gap-6 p-6">
                                             <div className="flex-shrink-0">
                                                 <div className="w-24 h-32 bg-zinc-900 rounded-xl overflow-hidden">
                                                     <img

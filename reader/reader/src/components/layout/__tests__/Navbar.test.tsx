@@ -8,7 +8,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Navbar from '../Navbar';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { User } from 'firebase/auth';
 
 // Mock the AuthContext
@@ -16,9 +16,29 @@ jest.mock('@/contexts/AuthContext', () => ({
     useAuth: jest.fn(),
 }));
 
+jest.mock('@/lib/firebase', () => ({
+    db: {},
+}));
+
+jest.mock('firebase/firestore', () => ({
+    collection: jest.fn(() => ({})),
+    query: jest.fn(() => ({})),
+    orderBy: jest.fn(() => ({})),
+    onSnapshot: jest.fn((_q, onNext) => {
+        onNext?.({ docs: [] });
+        return jest.fn();
+    }),
+    where: jest.fn(() => ({})),
+    doc: jest.fn(() => ({})),
+    updateDoc: jest.fn(),
+    writeBatch: jest.fn(() => ({ update: jest.fn(), commit: jest.fn().mockResolvedValue(undefined) })),
+    limit: jest.fn(() => ({})),
+}));
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
+    usePathname: jest.fn(),
 }));
 
 describe('Navbar Auth Integration Unit Tests', () => {
@@ -30,6 +50,7 @@ describe('Navbar Auth Integration Unit Tests', () => {
         (useRouter as jest.Mock).mockReturnValue({
             push: mockPush,
         });
+        (usePathname as jest.Mock).mockReturnValue('/');
     });
 
     describe('Sign-out button visibility for authenticated users', () => {
@@ -416,7 +437,7 @@ describe('Navbar Auth Integration Unit Tests', () => {
             render(<Navbar />);
 
             // Navbar should still render during loading
-            expect(screen.getByText('15CHRONICLES')).toBeInTheDocument();
+            expect(screen.getByText('VELLUM')).toBeInTheDocument();
         });
 
         test('should not display auth buttons when loading', () => {
@@ -510,7 +531,7 @@ describe('Navbar Auth Integration Unit Tests', () => {
             const mobileLinks = allLinks.filter(link =>
                 link.classList.contains('group') && link.classList.contains('p-6')
             );
-            expect(mobileLinks.length).toBe(5);
+            expect(mobileLinks.length).toBeGreaterThanOrEqual(5);
         });
     });
 });

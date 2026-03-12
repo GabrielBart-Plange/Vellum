@@ -46,9 +46,9 @@ export default function ImageUpload({ onUploadComplete, label = "Upload Image", 
             } else {
                 throw new Error(result.error?.message || "Upload failed");
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("ImgBB Upload Error:", err);
-            setError(err.message || "Failed to upload image.");
+            setError((err as Error).message || "Failed to upload image.");
         } finally {
             setUploading(false);
         }
@@ -56,13 +56,13 @@ export default function ImageUpload({ onUploadComplete, label = "Upload Image", 
 
     return (
         <div className={`space-y-2 ${className}`}>
-            {label && <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold">{label}</label>}
+            {label && <label className="block text-[10px] uppercase tracking-widest text-[var(--reader-text-muted)] font-bold">{label}</label>}
 
-            <div className="relative group border border-white/10 bg-black hover:border-white/30 transition-colors rounded-sm overflow-hidden aspect-[4/5] max-w-[200px] flex items-center justify-center">
+            <div className="relative group border border-[var(--reader-border)] bg-[var(--reader-surface)] hover:border-[var(--reader-accent)] transition-colors rounded-sm overflow-hidden aspect-[4/5] max-w-[200px] flex items-center justify-center">
                 {preview ? (
                     <img src={preview} alt="Preview" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                 ) : (
-                    <div className="text-gray-600 group-hover:text-gray-400 text-center p-4">
+                    <div className="text-[var(--reader-text-muted)] group-hover:text-[var(--foreground)] text-center p-4">
                         <span className="block text-2xl mb-1">+</span>
                         <span className="text-[10px] uppercase tracking-tighter">Choose File</span>
                     </div>
@@ -77,14 +77,14 @@ export default function ImageUpload({ onUploadComplete, label = "Upload Image", 
                 />
 
                 {uploading && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    <div className="absolute inset-0 bg-[var(--reader-bg)]/60 flex items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-[var(--reader-border)] border-t-[var(--reader-accent)] rounded-full animate-spin" />
                     </div>
                 )}
             </div>
 
             {error && <p className="text-[10px] text-red-500 uppercase tracking-wide">{error}</p>}
-            {uploading && <p className="text-[10px] text-gray-500 uppercase tracking-widest animate-pulse">Uploading to chronicles...</p>}
+            {uploading && <p className="text-[10px] text-[var(--reader-text-muted)] uppercase tracking-widest animate-pulse">Uploading to Vellum...</p>}
         </div>
     );
 }

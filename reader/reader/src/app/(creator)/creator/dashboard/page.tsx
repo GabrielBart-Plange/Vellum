@@ -78,52 +78,52 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-white/10 transition-all">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-500/60 font-semibold">Drafts in progress</p>
+        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-[var(--reader-border)] hover:bg-[var(--reader-surface-hover)] transition-all">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-emerald-600 font-semibold">Drafts in progress</p>
           <div className="flex items-baseline gap-4">
             <span className="text-6xl font-extralight text-[var(--foreground)] group-hover:scale-110 transition-transform block origin-left">
               {loading ? "—" : stats.drafts}
             </span>
-            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Stories being told</span>
+            <span className="text-[var(--reader-text-muted)] text-xs uppercase tracking-widest font-medium">Stories being told</span>
           </div>
         </div>
 
-        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-white/10 transition-all">
+        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-[var(--reader-border)] hover:bg-[var(--reader-surface-hover)] transition-all">
           <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--reader-accent)] font-semibold">Published Works</p>
           <div className="flex items-baseline gap-4">
             <span className="text-6xl font-extralight text-[var(--foreground)] group-hover:scale-110 transition-transform block origin-left">
               {loading ? "—" : stats.published}
             </span>
-            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Stories Live</span>
+            <span className="text-[var(--reader-text-muted)] text-xs uppercase tracking-widest font-medium">Stories Live</span>
           </div>
         </div>
 
-        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-white/10 transition-all">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-blue-500/60 font-semibold">Total Impressions</p>
+        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-[var(--reader-border)] hover:bg-[var(--reader-surface-hover)] transition-all">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-blue-600 font-semibold">Total Impressions</p>
           <div className="flex items-baseline gap-4">
             <span className="text-6xl font-extralight text-[var(--foreground)] group-hover:scale-110 transition-transform block origin-left">
               {loading ? "—" : stats.totalViews.toLocaleString()}
             </span>
-            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Archive Views</span>
+            <span className="text-[var(--reader-text-muted)] text-xs uppercase tracking-widest font-medium">Archive Views</span>
           </div>
         </div>
 
-        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-white/10 transition-all">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-red-500/60 font-semibold">Total Approval</p>
+        <div className="glass-panel p-10 rounded-3xl space-y-4 group hover:border-[var(--reader-border)] hover:bg-[var(--reader-surface-hover)] transition-all">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-red-600 font-semibold">Total Approval</p>
           <div className="flex items-baseline gap-4">
             <span className="text-6xl font-extralight text-[var(--foreground)] group-hover:scale-110 transition-transform block origin-left">
               {loading ? "—" : stats.totalLikes}
             </span>
-            <span className="text-[var(--reader-text)]/40 text-xs uppercase tracking-widest font-medium">Likes Received</span>
+            <span className="text-[var(--reader-text-muted)] text-xs uppercase tracking-widest font-medium">Likes Received</span>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="space-y-8">
-        <h2 className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/30 font-bold flex items-center gap-4">
+        <h2 className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text-subtle)] font-bold flex items-center gap-4">
           <span className="flex-shrink-0">Quick Actions</span>
-          <div className="h-[1px] w-full bg-white/[0.05]" />
+          <div className="h-[1px] w-full bg-[var(--reader-border)]" />
         </h2>
 
         <div className="flex flex-wrap gap-6">
@@ -136,14 +136,14 @@ export default function DashboardPage() {
 
           <Link
             href="/creator/dashboard/drafts"
-            className="px-10 py-4 glass-panel border-white/10 text-[var(--foreground)] text-[10px] uppercase tracking-[0.2em] font-bold rounded-full hover:bg-white/5 transition-all"
+            className="px-10 py-4 glass-panel border-[var(--reader-border)] text-[var(--foreground)] text-[10px] uppercase tracking-[0.2em] font-bold rounded-full hover:bg-[var(--reader-surface)] transition-all"
           >
             View Drafts
           </Link>
 
           <Link
             href="/creator/dashboard/published"
-            className="px-10 py-4 glass-panel border-white/10 text-[var(--foreground)] text-[10px] uppercase tracking-[0.2em] font-bold rounded-full hover:bg-white/5 transition-all"
+            className="px-10 py-4 glass-panel border-[var(--reader-border)] text-[var(--foreground)] text-[10px] uppercase tracking-[0.2em] font-bold rounded-full hover:bg-[var(--reader-surface)] transition-all"
           >
             Manage Published
           </Link>
@@ -152,9 +152,9 @@ export default function DashboardPage() {
 
       {/* Atmospheric Footer Tip */}
       <footer className="pt-20">
-        <div className="p-8 rounded-3xl bg-white/[0.01] border border-white/5 max-w-2xl">
-          <p className="text-xs italic text-[var(--reader-text)]/50 leading-relaxed font-light">
-            "A professional writer is an amateur who didn't quit." — Your next great chronicle is just a chapter away within the Vellum Archives.
+        <div className="p-8 rounded-3xl bg-[var(--reader-surface)] border border-[var(--reader-border)] max-w-2xl">
+          <p className="text-xs italic text-[var(--reader-text-muted)] leading-relaxed font-light">
+            "A professional writer is an amateur who didn't quit." — Your next great masterpiece is just a chapter away within the Vellum Archives.
           </p>
         </div>
       </footer>

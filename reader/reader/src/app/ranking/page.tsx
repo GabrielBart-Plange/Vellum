@@ -2,7 +2,7 @@
 
 export default function RankingPage() {
     return (
-        <main className="min-h-screen bg-black pt-40 pb-24 px-8">
+        <main className="min-h-screen text-[var(--reader-text)] pb-40 px-6">
             <div className="max-w-6xl mx-auto space-y-16">
                 <header className="space-y-4 border-l-2 border-[var(--accent-lime)] pl-8">
                     <p className="text-[11px] uppercase tracking-[0.8em] text-zinc-500 font-bold">Prestige</p>

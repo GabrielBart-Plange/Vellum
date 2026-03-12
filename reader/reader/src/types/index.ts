@@ -12,6 +12,42 @@ export interface ReaderProfile {
   email: string;
   username: string;
   createdAt: Timestamp;
+  monetization?: MonetizationProfile;
+}
+
+// Monetization Types
+export type SubscriptionTier = 'free' | 'prime' | 'nexus';
+
+export interface XPProfile {
+  xp: number;
+  level: number;
+  isChronicler: boolean;
+  chroniclerStatus: 'none' | 'pending' | 'active';
+  legacyPoints: number;
+  updatedAt: Timestamp;
+}
+
+export interface EssenceWallet {
+  balance: number;
+  lifetimeEarned: number;
+  lifetimeSpent: number;
+  updatedAt: Timestamp;
+}
+
+export interface MonetizationProfile {
+  subscriptionTier: SubscriptionTier;
+  subscriptionExpiresAt: Timestamp | null;
+  xpProfile: XPProfile;
+  essenceWallet: EssenceWallet;
+}
+
+export interface CreatorMonetizationProfile {
+  archivistTier: 'apprentice' | 'journeyman' | 'senior' | 'master' | 'grand';
+  totalUniqueReaders: number;
+  totalChaptersPublished: number;
+  payoutBalance: number;
+  coinEarnings: number;
+  isMonetizationEnabled: boolean;
 }
 
 // Reading Progress
@@ -45,6 +81,8 @@ export interface LibraryData {
   likedStories: StoryReference[];
   savedNovels: NovelReference[];
   novelsInProgress: NovelProgressReference[];
+  savedArt: ArtPiece[];
+  repostedArt: ArtPiece[];
 }
 
 export interface StoryReference {
@@ -80,5 +118,54 @@ export interface ArtPiece {
   imageUrl: string;
   description?: string;
   authorId?: string;
+  authorName?: string;
   createdAt: Timestamp;
+  saveCount?: number;
+  repostCount?: number;
+  category?: string;
+  tags?: string[];
+}
+
+export interface Story {
+  id: string;
+  title: string;
+  description?: string;
+  authorId?: string;
+  authorName?: string;
+  coverImage?: string;
+  imageUrl?: string;
+  genre?: string;
+  category?: string;
+  tags?: string[];
+  published: boolean;
+  createdAt: Timestamp;
+  viewCount?: number;
+  likeCount?: number;
+}
+
+export interface Novel {
+  id: string;
+  title: string;
+  description?: string;
+  authorId?: string;
+  authorName?: string;
+  coverImage?: string;
+  genre?: string;
+  category?: string;
+  tags?: string[];
+  published: boolean;
+  createdAt: Timestamp;
+  viewCount?: number;
+  likeCount?: number;
+  chapterCount?: number;
+}
+
+export interface Repost {
+  id: string;
+  artId: string;
+  userId: string;
+  repostedAt: Timestamp;
+  artTitle: string;
+  artImageUrl: string;
+  authorName: string;
 }

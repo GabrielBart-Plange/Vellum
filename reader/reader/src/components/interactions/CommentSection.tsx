@@ -143,12 +143,15 @@ export default function CommentSection({
     }
   };
 
-  const toDate = (value: any): Date => {
+  const toDate = (value: { seconds?: number; toDate?: () => Date } | Date | string | number | unknown): Date => {
     if (!value) return new Date(0);
     if (value instanceof Date) return value;
-    if (typeof value.toDate === "function") return value.toDate();
-    if (typeof value.seconds === "number") return new Date(value.seconds * 1000);
-    return new Date(value);
+    const obj = value as { seconds?: number; toDate?: () => Date };
+    if (obj && typeof obj === 'object') {
+      if (typeof obj.toDate === "function") return obj.toDate();
+      if (typeof obj.seconds === "number") return new Date(obj.seconds * 1000);
+    }
+    return new Date(value as string | number);
   };
 
   const formatDate = (date: Date) => {

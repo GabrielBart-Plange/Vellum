@@ -1,0 +1,95 @@
+﻿ M creator/creator/eslint.config.mjs
+ M creator/creator/package.json
+ M creator/creator/src/app/signout/page.tsx
+ M firestore.rules
+ M reader/reader/eslint.config.mjs
+ M reader/reader/jest.config.js
+ M reader/reader/next.config.ts
+ M reader/reader/package-lock.json
+ M reader/reader/package.json
+ M reader/reader/src/__tests__/setup.ts
+ M reader/reader/src/app/(creator)/creator/dashboard/art/page.tsx
+ M reader/reader/src/app/(creator)/creator/dashboard/drafts/[id]/page.tsx
+ M reader/reader/src/app/(creator)/creator/dashboard/drafts/new/page.tsx
+ M reader/reader/src/app/(creator)/creator/dashboard/drafts/page.tsx
+ M reader/reader/src/app/(creator)/creator/dashboard/layout.tsx
+ M reader/reader/src/app/(creator)/creator/dashboard/page.tsx
+ M reader/reader/src/app/(creator)/creator/dashboard/profile/page.tsx
+ M reader/reader/src/app/(creator)/creator/dashboard/published/page.tsx
+ M reader/reader/src/app/(creator)/creator/dashboard/settings/page.tsx
+ M reader/reader/src/app/(creator)/creator/layout.tsx
+ M reader/reader/src/app/(creator)/creator/login/page.tsx
+ M reader/reader/src/app/(creator)/creator/portal/page.tsx
+ M reader/reader/src/app/(creator)/creator/signup/page.tsx
+ M reader/reader/src/app/about/page.tsx
+ M reader/reader/src/app/authors/[id]/page.tsx
+ M reader/reader/src/app/contact/page.tsx
+ M reader/reader/src/app/globals.css
+ M reader/reader/src/app/layout.tsx
+ M reader/reader/src/app/library/page.tsx
+ M reader/reader/src/app/login/__tests__/page.property.test.tsx
+ M reader/reader/src/app/login/__tests__/page.test.tsx
+ M reader/reader/src/app/login/page.tsx
+ M reader/reader/src/app/not-found.tsx
+ M reader/reader/src/app/novels/[id]/chapter/[chapterId]/page.tsx
+ M reader/reader/src/app/novels/[id]/page.tsx
+ M reader/reader/src/app/novels/page.tsx
+ M reader/reader/src/app/page.tsx
+ M reader/reader/src/app/portal/page.tsx
+ M reader/reader/src/app/privacy/page.tsx
+ M reader/reader/src/app/profile/page.tsx
+ M reader/reader/src/app/ranking/page.tsx
+ M reader/reader/src/app/signup/page.tsx
+ M reader/reader/src/app/stories/[id]/page.tsx
+ M reader/reader/src/app/stories/page.tsx
+ M reader/reader/src/app/terms/page.tsx
+ M reader/reader/src/components/cards/StoryCard.tsx
+ D reader/reader/src/components/creator/DraftCard.tsx
+ M reader/reader/src/components/creator/ImageUpload.tsx
+ M reader/reader/src/components/creator/Sidebar.tsx
+ D reader/reader/src/components/creator/StatCard.tsx
+ D reader/reader/src/components/creator/theme-provider.tsx
+ M reader/reader/src/components/home/GenreGrid.tsx
+ M reader/reader/src/components/home/Hero.tsx
+ M reader/reader/src/components/home/NovelsSection.tsx
+ M reader/reader/src/components/home/StoriesSection.tsx
+ M reader/reader/src/components/interactions/CommentSection.tsx
+ M reader/reader/src/components/interactions/LikeButton.tsx
+ M reader/reader/src/components/layout/Footer.tsx
+ M reader/reader/src/components/layout/Navbar.tsx
+ M reader/reader/src/components/layout/SearchModal.tsx
+ M reader/reader/src/components/layout/__tests__/Navbar.property.test.tsx
+ M reader/reader/src/components/layout/__tests__/Navbar.test.tsx
+ M reader/reader/src/components/reader/ReadingSettings.tsx
+ M reader/reader/src/contexts/AuthContext.tsx
+ M reader/reader/src/contexts/__tests__/AuthContext.test.tsx
+ M reader/reader/src/lib/progressTracking.ts
+ M reader/reader/src/types/index.ts
+?? backend/
+?? docs/
+?? git_changes.txt
+?? git_status_out.txt
+?? git_status_utf8.txt
+?? infra/
+?? planning/
+?? reader/reader/build.log
+?? reader/reader/eslint.json
+?? reader/reader/eslint_errors.json
+?? reader/reader/lint.log
+?? reader/reader/lint_results.txt
+?? reader/reader/src/app/art/
+?? reader/reader/src/app/settings/
+?? reader/reader/src/components/art/
+?? reader/reader/src/components/layout/DiscoveryFilter.tsx
+?? reader/reader/src/components/monetization/
+?? reader/reader/src/contexts/ThemeContext.tsx
+?? reader/reader/src/contexts/__tests__/ThemeContext.test.tsx
+?? reader/reader/src/lib/macroTemplates.ts
+?? reader/reader/src/lib/monetization/
+?? reader/reader/test_err.txt
+?? reader/reader/test_final.txt
+?? reader/reader/test_out.txt
+?? reader/reader/test_output.txt
+?? reader/reader/tsc_errors.txt
+?? reader/reader/tsc_output.txt
+?? scripts/

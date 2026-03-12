@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // 📖 Stories
     match /stories/{storyId} {
-      allow read: if resource.data.published == true
+      allow read: if resource == null || resource.data.published == true
         || (request.auth != null && (resource.data.authorId == request.auth.uid || resource.data.creatorId == request.auth.uid));
 
       allow create: if request.auth != null;
@@ -103,7 +103,19 @@ service cloud.firestore {
       // Prevent users from granting themselves admin, premium, or modifying balances
       allow update: if request.auth != null && request.auth.uid == userId
         && !request.resource.data.diff(resource.data).changedKeys()
-          .hasAny(['role', 'isPremium', 'essence', 'essenceBalance', 'payoutBalance', 'level9Status']);
+          .hasAny([
+            'role', 
+            'isPremium', 
+            'essence', 
+            'essenceBalance', 
+            'payoutBalance', 
+            'chroniclerStatus',
+            'xp',
+            'level',
+            'isChronicler',
+            'subscriptionTier',
+            'legacyPoints'
+          ]);
           
       // Follow System
       match /following/{authorId} {
@@ -114,6 +126,17 @@ service cloud.firestore {
       match /followers/{followerId} {
         allow read: if true;
         allow write: if request.auth != null && request.auth.uid == followerId;
+      }
+
+      // 💰 Monetization Subcollections
+      match /coinTransactions/{txId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false; // System-only (Cloud Functions)
+      }
+
+      match /subscriptions/{subId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false; // System-only (Webhook/Cloud Functions)
       }
 
       // Creator drafts
@@ -141,6 +164,16 @@ service cloud.firestore {
       match /progress/{novelId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+
+      match /savedArt/{artId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      match /reposts/{artId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     // 📣 Notifications (Top-level match for isolation)
@@ -155,6 +188,12 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null
         && (resource.data.authorId == request.auth.uid || resource.data.creatorId == request.auth.uid);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      }
     }
   }
 }

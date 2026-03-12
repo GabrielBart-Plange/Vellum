@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import StoryCard from "../cards/StoryCard";
+import ManagedAd from "../monetization/ManagedAd";
 
 export default function NovelsSection() {
     const [novels, setNovels] = useState<any[]>([]);
@@ -31,29 +32,31 @@ export default function NovelsSection() {
     }, []);
 
     return (
-        <section className="py-16 px-4 max-w-6xl mx-auto">
+        <section className="py-16 px-4 max-w-7xl mx-auto">
             <header className="mb-8 flex items-baseline justify-between border-b border-white/5 pb-4">
-                <h2 className="text-xl tracking-widest text-gray-200 uppercase font-light">
+                <h2 className="text-sm tracking-[0.4em] text-[var(--reader-text-subtle)] uppercase font-bold">
                     Featured Novels
                 </h2>
 
                 <a
                     href="/novels"
-                    className="text-xs font-medium uppercase tracking-wide text-gray-500 hover:text-white transition-colors"
+                    className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--reader-text-muted)] hover:text-[var(--reader-text)] transition-colors"
                 >
                     View all
                 </a>
             </header>
 
+            <ManagedAd zone="HOME_DISCOVERY" />
+
             {/* Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8">
                 {loading ? (
                     /* Loading Skeletons */
                     Array.from({ length: 4 }).map((_, i) => (
                         <div key={i} className="animate-pulse flex flex-col gap-3">
-                            <div className="aspect-[2/3] w-full rounded-md bg-zinc-900/50" />
-                            <div className="h-4 w-3/4 rounded bg-zinc-900/50" />
-                            <div className="h-3 w-1/2 rounded bg-zinc-900/50" />
+                            <div className="aspect-[2/3] w-full rounded-md bg-[var(--reader-surface)]" />
+                            <div className="h-4 w-3/4 rounded bg-[var(--reader-surface)]" />
+                            <div className="h-3 w-1/2 rounded bg-[var(--reader-surface)]" />
                         </div>
                     ))
                 ) : novels.length > 0 ? (

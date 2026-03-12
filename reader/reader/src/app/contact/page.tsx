@@ -2,7 +2,7 @@
 
 export default function ContactPage() {
     return (
-        <main className="min-h-screen bg-black pt-32 pb-24 px-8">
+        <main className="min-h-screen text-[var(--reader-text)] pt-40 pb-24 px-8">
             <div className="max-w-3xl mx-auto space-y-16">
                 <header className="space-y-4 border-l-2 border-[var(--accent-lime)] pl-8">
                     <p className="text-[11px] uppercase tracking-[0.8em] text-zinc-500 font-bold">Support</p>

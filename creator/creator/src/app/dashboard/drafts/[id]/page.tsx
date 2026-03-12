@@ -78,11 +78,23 @@ export default function DraftEditorPage() {
                     }
 
                     setCoverImage(currentData.coverImage || "");
-                    const detectedType = currentData.type || "short";
+
+                    // Robust type detection
+                    let detectedType = currentData.type;
+
+                    // If type is missing, infer it from the source collection
+                    if (!detectedType) {
+                        const novelSnap = await getDoc(doc(db, "novels", id));
+                        if (novelSnap.exists()) {
+                            detectedType = "novel";
+                        } else {
+                            detectedType = "short";
+                        }
+                    }
+
                     setType(detectedType);
                     setContent(currentData.content || "");
                     setTags(currentData.tags || []);
-                    // Wait for type state to update then load chapters if needed
                 }
             } catch (err) {
                 console.error("Critical Load Error:", err);

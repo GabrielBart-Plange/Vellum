@@ -45,7 +45,7 @@ export default function NotFound() {
             {/* Decorative Elements */}
             <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-4 opacity-20">
                 <div className="h-px w-12 bg-zinc-500" />
-                <span className="text-[10px] uppercase tracking-[0.6em] text-zinc-500 font-bold">15CHRONICLES ARCHIVES</span>
+                <span className="brand-highlight text-[10px] uppercase tracking-[0.6em]">VELLUM ARCHIVES</span>
                 <div className="h-px w-12 bg-zinc-500" />
             </div>
         </main>

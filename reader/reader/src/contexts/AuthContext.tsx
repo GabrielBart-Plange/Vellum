@@ -13,10 +13,16 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { MonetizationProfile } from '@/types';
+import { getXPProfile } from '@/lib/monetization/xpService';
+import { getEssenceWallet } from '@/lib/monetization/coinService';
+import { getSubscriptionTier } from '@/lib/monetization/subscriptionService';
 
 interface AuthContextType {
     user: User | null;
+    monetization: MonetizationProfile | null;
     loading: boolean;
+    monetizationLoading: boolean;
     signIn: (email: string, password: string) => Promise<void>;
     signInWithGoogle: () => Promise<void>;
     signOut: () => Promise<void>;
@@ -28,13 +34,44 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }): React.ReactElement {
     const [user, setUser] = useState<User | null>(null);
+    const [monetization, setMonetization] = useState<MonetizationProfile | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const [monetizationLoading, setMonetizationLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         // Subscribe to auth state changes
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
+
+            if (user) {
+                // Initialize/Sync profile first
+                await syncReaderProfile(user);
+
+                // Load monetization data (non-blocking for main login)
+                setMonetizationLoading(true);
+                try {
+                    const [xpResult, walletResult, subResult] = await Promise.all([
+                        getXPProfile(user.uid),
+                        getEssenceWallet(user.uid),
+                        getSubscriptionTier(user.uid)
+                    ]);
+
+                    setMonetization({
+                        subscriptionTier: subResult.tier,
+                        subscriptionExpiresAt: subResult.expiresAt,
+                        xpProfile: xpResult,
+                        essenceWallet: walletResult
+                    });
+                } catch (err) {
+                    console.error("Failed to load monetization profile:", err);
+                } finally {
+                    setMonetizationLoading(false);
+                }
+            } else {
+                setMonetization(null);
+            }
+
             setLoading(false);
         });
 
@@ -46,9 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
         try {
             setError(null);
             setLoading(true);
-            const credential = await signInWithEmailAndPassword(auth, email, password);
-            await syncReaderProfile(credential.user);
-            // User state will be updated by onAuthStateChanged
+            await signInWithEmailAndPassword(auth, email, password);
+            // User state and profile sync handled by onAuthStateChanged
         } catch (err) {
             const authError = err as AuthError;
             setError(getAuthErrorMessage(authError));
@@ -63,9 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
             setError(null);
             setLoading(true);
             const provider = new GoogleAuthProvider();
-            const credential = await signInWithPopup(auth, provider);
-            await syncReaderProfile(credential.user);
-            // User state will be updated by onAuthStateChanged
+            await signInWithPopup(auth, provider);
+            // User state and profile sync handled by onAuthStateChanged
         } catch (err) {
             const authError = err as AuthError;
             setError(getAuthErrorMessage(authError));
@@ -80,14 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
             setError(null);
             setLoading(true);
 
-            // Broadcast logout event to other tabs/apps immediately
-            // This ensures Creator app signs out even if network to Firebase is flaky
             const authChannel = new BroadcastChannel('auth_sync');
             authChannel.postMessage({ type: 'LOGOUT' });
             authChannel.close();
 
             await firebaseSignOut(auth);
-            // User state will be updated by onAuthStateChanged
+            setMonetization(null);
         } catch (err) {
             const authError = err as AuthError;
             setError(getAuthErrorMessage(authError));
@@ -113,7 +146,9 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
 
     const value: AuthContextType = {
         user,
+        monetization,
         loading,
+        monetizationLoading,
         signIn,
         signInWithGoogle,
         signOut,
@@ -150,7 +185,8 @@ async function syncReaderProfile(user: User): Promise<void> {
     try {
         const ref = doc(db, 'users', user.uid);
         const snap = await getDoc(ref);
-        if (!snap.exists()) {
+        const hasExistsMethod = typeof (snap as { exists?: unknown } | undefined)?.exists === 'function';
+        if (!hasExistsMethod || !(snap as { exists: () => boolean }).exists()) {
             await setDoc(ref, {
                 username: user.displayName || user.email?.split('@')[0] || 'Reader',
                 email: user.email || '',
@@ -158,12 +194,12 @@ async function syncReaderProfile(user: User): Promise<void> {
                 createdAt: serverTimestamp(),
             }, { merge: true });
         } else {
-            const data = snap.data();
+            const data = (snap as { data: () => Record<string, unknown> }).data();
             const roles = Array.isArray(data.roles) ? data.roles : [];
             const nextRoles = roles.includes('reader') ? roles : [...roles, 'reader'];
 
             // Only update email and roles, preserve custom username if it exists
-            const updatePayload: any = {
+            const updatePayload: { email: string; roles: string[]; updatedAt: ReturnType<typeof serverTimestamp>; username?: string } = {
                 email: user.email || '',
                 roles: nextRoles,
                 updatedAt: serverTimestamp(),

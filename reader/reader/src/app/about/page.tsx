@@ -2,13 +2,13 @@
 
 export default function AboutPage() {
     return (
-        <main className="min-h-screen bg-black pt-32 pb-24 px-8 text-center">
+        <main className="min-h-screen text-[var(--reader-text)] pt-40 pb-24 px-8 text-center">
             <div className="max-w-4xl mx-auto space-y-12">
                 <header className="space-y-4">
                     <p className="text-[11px] uppercase tracking-[1em] text-[var(--accent-sakura)] font-black">History</p>
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic">THE PROJECT</h1>
+                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic">THE PROJECT</h1>
                 </header>
-                <div className="space-y-8 text-zinc-400 text-lg leading-relaxed font-light">
+                <div className="space-y-8 text-lg leading-relaxed font-light">
                     <p>
                         Vellum is a decentralized archive of creative storytelling.
                         We believe in the power of the written word, preserved for eternity.

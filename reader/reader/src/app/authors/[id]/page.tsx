@@ -6,25 +6,33 @@ import { db, auth } from "@/lib/firebase";
 import { useParams } from "next/navigation";
 import StoryCard from "@/components/cards/StoryCard";
 import Link from "next/link";
-import { ArtPiece } from "@/types";
+import Image from "next/image";
+import { ArtPiece, LibraryData } from "@/types";
+import { progressTracking } from "@/lib/progressTracking";
+import ArtCard from "@/components/art/ArtCard";
+import { useAuth } from "@/contexts/AuthContext";
+import WalletCard from "@/components/monetization/WalletCard";
 
-export default function AuthorPage() {
-    // Note: Next.js 15+ needs params awaited if it's a page prop, 
-    // but useParams() in client components is still synchronous for now or handled by React.
+export default function UserPage() {
     const { id: authorId } = useParams<{ id: string }>();
+    const { user } = useAuth();
     const [stories, setStories] = useState<any[]>([]);
     const [novels, setNovels] = useState<any[]>([]);
     const [art, setArt] = useState<ArtPiece[]>([]);
+    const [libraryData, setLibraryData] = useState<LibraryData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<"stories" | "novels" | "art">("stories");
+    const [activeTab, setActiveTab] = useState<"stories" | "novels" | "art" | "collections" | "saved_art" | "reposts" | "progress" | "wallet">("stories");
 
-    // Author Identity
+    const isOwner = user?.uid === authorId;
+
+    // User Identity
     const [authorMetadata, setAuthorMetadata] = useState({
-        username: "Unknown Author",
+        username: "Unknown User",
         bio: "",
         avatarUrl: "",
         bannerUrl: "",
         joinedDate: "",
+        supportLink: "",
     });
 
     // Follow System
@@ -35,17 +43,18 @@ export default function AuthorPage() {
         const load = async () => {
             if (!authorId) return;
             try {
-                // 1. Fetch Author Metadata
+                // 1. Fetch User Metadata
                 const userRef = doc(db, "users", authorId);
                 const userSnap = await getDoc(userRef);
                 if (userSnap.exists()) {
                     const data = userSnap.data();
                     setAuthorMetadata({
-                        username: data.username || data.displayName || "Unknown Author",
+                        username: data.username || data.displayName || "Unknown User",
                         avatarUrl: data.avatarUrl,
                         bannerUrl: data.bannerUrl,
-                        bio: data.bio || "This author has not yet unrolled their scroll of biography.",
+                        bio: data.bio || "This user has not yet unrolled their scroll of biography.",
                         joinedDate: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : "06/01/2026",
+                        supportLink: data.supportLink || "",
                     });
                 }
 
@@ -54,8 +63,8 @@ export default function AuthorPage() {
                 const followersSnap = await getDocs(followersRef);
                 setFollowerCount(followersSnap.size);
 
-                if (auth.currentUser) {
-                    const followDoc = await getDoc(doc(db, "users", auth.currentUser.uid, "following", authorId));
+                if (user) {
+                    const followDoc = await getDoc(doc(db, "users", user.uid, "following", authorId));
                     setIsFollowing(followDoc.exists());
                 }
 
@@ -88,20 +97,26 @@ export default function AuthorPage() {
                 const artSnap = await getDocs(qArt);
                 setArt(artSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ArtPiece)));
 
+                // 5. Fetch Library Data if owner
+                if (isOwner) {
+                    const data = await progressTracking.getUserLibrary(authorId);
+                    setLibraryData(data);
+                }
+
             } catch (error) {
-                console.error("Error fetching author profile:", error);
+                console.error("Error fetching user profile:", error);
             } finally {
                 setLoading(false);
             }
         };
 
         load();
-    }, [authorId, auth.currentUser]);
+    }, [authorId, isOwner]);
 
     const handleFollow = async () => {
-        if (!auth.currentUser || !authorId) return;
+        if (!user || !authorId) return;
         try {
-            const followerId = auth.currentUser.uid;
+            const followerId = user.uid;
             // Add to my following
             await setDoc(doc(db, "users", followerId, "following", authorId), {
                 authorId: authorId,
@@ -120,9 +135,9 @@ export default function AuthorPage() {
     };
 
     const handleUnfollow = async () => {
-        if (!auth.currentUser || !authorId) return;
+        if (!user || !authorId) return;
         try {
-            const followerId = auth.currentUser.uid;
+            const followerId = user.uid;
             await deleteDoc(doc(db, "users", followerId, "following", authorId));
             await deleteDoc(doc(db, "users", authorId, "followers", followerId));
             setIsFollowing(false);
@@ -140,7 +155,14 @@ export default function AuthorPage() {
         { id: "stories", label: `Stories (${stories.length})` },
         { id: "novels", label: `Novels (${novels.length})` },
         { id: "art", label: `Art (${art.length})` },
+        ...(isOwner ? [
+            { id: "collections", label: "Collections" },
+            { id: "wallet", label: "Wallet" },
+            { id: "saved_art", label: `Saved Art (${libraryData?.savedArt.length || 0})` },
+            { id: "reposts", label: `Reposts (${libraryData?.repostedArt.length || 0})` },
+        ] : [])
     ];
+
 
     if (loading) return (
         <div className="min-h-screen bg-black flex items-center justify-center text-zinc-700 font-black tracking-[0.5em] uppercase text-xs">
@@ -149,115 +171,119 @@ export default function AuthorPage() {
     );
 
     return (
-        <main className="min-h-screen bg-black text-zinc-100 font-sans pb-40">
-            {/* Immersive Author Hero */}
-            <div className="relative h-[65vh] md:h-[75vh] w-full overflow-hidden flex items-center justify-center">
-                {authorMetadata.bannerUrl ? (
-                    <img
-                        src={authorMetadata.bannerUrl}
-                        className="absolute inset-0 w-full h-full object-cover opacity-40 scale-105 blur-[2px]"
-                        alt="Profile Banner"
-                    />
-                ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#0b0a0f] via-purple-900/10 to-transparent" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        <main className="min-h-screen text-[var(--reader-text)] font-sans pb-40">
+            {/* Hero Section */}
+            <div className="relative min-h-[600px] w-full flex flex-col items-center justify-center pt-20 pb-12 overflow-hidden">
+                {/* Background Glow */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-900/20 blur-[120px] rounded-full" />
+                </div>
 
-                {/* mesh-gradient style effect */}
-                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-600/10 blur-[120px] rounded-full animate-pulse" />
-                <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-600/5 blur-[100px] rounded-full" />
-
-                {/* Identity Center */}
-                <div className="relative z-10 text-center space-y-8 max-w-4xl mx-auto px-8 py-20">
-                    <div className="inline-block relative">
-                        <div className="h-32 w-32 md:h-44 md:w-44 rounded-full border-2 border-white/10 bg-zinc-900 overflow-hidden mx-auto shadow-[0_0_50px_-10px_rgba(139,92,246,0.3)]">
+                <div className="relative z-10 flex flex-col items-center gap-8 w-full max-w-4xl px-6 text-center">
+                    {/* Avatar with Level Badge and Edit Button */}
+                    <div className="relative group/avatar">
+                        <div className="relative w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden border border-white/5 bg-zinc-900 shadow-2xl">
                             {authorMetadata.avatarUrl ? (
-                                <img src={authorMetadata.avatarUrl} className="w-full h-full object-cover" alt="Profile" />
+                                <Image
+                                    src={authorMetadata.avatarUrl}
+                                    alt={authorMetadata.username}
+                                    fill
+                                    className="object-cover"
+                                />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-zinc-700 bg-zinc-800 font-black text-6xl">
-                                    ?
+                                <div className="w-full h-full flex items-center justify-center text-zinc-800 font-black text-6xl">
+                                    {authorMetadata.username.charAt(0)}
                                 </div>
                             )}
+
+                            {isOwner && (
+                                <Link
+                                    href="/settings"
+                                    className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                    </svg>
+                                </Link>
+                            )}
                         </div>
-                        <div className="absolute -bottom-2 -right-2 h-10 w-10 bg-[var(--accent-lime)] text-white rounded-full flex items-center justify-center font-black text-[10px] uppercase shadow-lg border-2 border-black">
-                            LV. 9
+
+                        {/* Level Badge */}
+                        <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 bg-[#5a7d00] border-2 border-black px-4 py-1 rounded-full shadow-lg">
+                            <span className="text-[10px] md:text-xs font-black text-white italic tracking-tighter">LV. 9</span>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-center gap-3">
-                            <span className="px-4 py-1.5 rounded-full border border-white/10 glass text-[10px] uppercase tracking-[0.4em] text-zinc-400 font-black">
-                                Archivist
-                            </span>
-                            <span className="px-4 py-1.5 rounded-full border border-[var(--accent-sakura)]/20 bg-[var(--accent-sakura)]/5 text-[10px] uppercase tracking-[0.4em] text-[var(--accent-sakura)] font-black">
-                                Verified
-                            </span>
-                        </div>
-                        <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] leading-none pb-2">
+                    {/* Tags */}
+                    <div className="flex gap-4">
+                        <span className="px-8 py-2.5 rounded-full border border-white/10 bg-white/[0.03] text-[9px] uppercase tracking-[0.4em] font-black text-zinc-500">Archivist</span>
+                        <span className="px-8 py-2.5 rounded-full border border-purple-500/20 bg-purple-500/5 text-[9px] uppercase tracking-[0.4em] font-black text-purple-400">Verified</span>
+                    </div>
+
+                    {/* Identity */}
+                    <div className="space-y-4 max-w-full overflow-hidden">
+                        <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white uppercase italic leading-none break-words">
                             {authorMetadata.username}
                         </h1>
-                        <p className="text-zinc-500 text-[11px] uppercase tracking-[0.8em] font-black">
-                            Joined {authorMetadata.joinedDate} • {followerCount} Followers
+                        <p className="text-[10px] md:text-[11px] uppercase tracking-[0.5em] text-zinc-600 font-bold">
+                            Joined {authorMetadata.joinedDate} &nbsp; • &nbsp; {followerCount} Followers
                         </p>
-
-                        {/* Edit Profile Button for Owner */}
-                        {auth.currentUser?.uid === authorId && (
-                            <Link
-                                href="/profile"
-                                className="inline-flex items-center gap-2 px-4 py-2 mt-4 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-[10px] uppercase tracking-widest text-zinc-300 transition-colors"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                                Edit Profile
-                            </Link>
-                        )}
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-center gap-6 pt-4 pb-12">
-                        {auth.currentUser?.uid !== authorId && (
+                    {/* Actions */}
+                    <div className="flex flex-col items-center gap-8 mt-6 w-full">
+                        {!isOwner && (
                             <button
                                 onClick={isFollowing ? handleUnfollow : handleFollow}
-                                className={`px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.3em] hover:scale-105 active:scale-95 transition-all shadow-xl ${isFollowing
-                                    ? "bg-zinc-800 text-white border border-white/10"
-                                    : "bg-white text-black"
+                                className={`px-12 py-4 text-[10px] font-black uppercase tracking-[0.4em] transition-all rounded-xl ${isFollowing
+                                    ? "bg-zinc-900 text-zinc-500 border border-white/10"
+                                    : "bg-white text-black hover:scale-105 shadow-[0_0_40px_-10px_rgba(255,255,255,0.4)]"
                                     }`}
                             >
-                                {isFollowing ? "Following" : "Follow"}
+                                {isFollowing ? "Joined" : "Join Circle"}
                             </button>
                         )}
-                        <button className="px-10 py-4 rounded-2xl border border-white/10 glass-panel text-white text-[12px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all">
-                            Donate
+
+
+                        <button
+                            onClick={() => {
+                                if (authorMetadata.supportLink) {
+                                    window.open(authorMetadata.supportLink, '_blank', 'noopener,noreferrer');
+                                } else {
+                                    alert("This archivist hasn't unrolled their support scroll yet.");
+                                }
+                            }}
+                            className={`px-16 py-5 border text-[11px] font-black uppercase tracking-[0.5em] transition-all rounded-3xl w-full max-w-[320px] shadow-2xl ${authorMetadata.supportLink
+                                ? "bg-white text-black hover:scale-105"
+                                : "bg-zinc-950 border-white/5 text-zinc-700 cursor-not-allowed"
+                                }`}
+                        >
+                            {authorMetadata.supportLink ? "Support Archivist" : "Support Locked"}
                         </button>
+
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-8 md:px-16 relative z-20 space-y-24">
-                {/* Stats Grid - Inspired by premium profiles */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="glass border border-white/5 p-8 rounded-3xl space-y-2 group hover:border-white/10 transition-all">
-                        <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 font-black group-hover:text-zinc-400 transition-colors">Total Books</p>
-                        <div className="flex items-end gap-2">
-                            <p className="text-3xl font-black text-white">{novels.length + stories.length}</p>
-                        </div>
+            <div className="max-w-6xl mx-auto px-8 md:px-16 relative z-20 space-y-24 -mt-10">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="bg-zinc-900/20 border border-white/5 p-10 rounded-3xl space-y-5 flex flex-col justify-center min-h-[160px]">
+                        <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-600 font-black">Total Books</p>
+                        <p className="text-5xl font-black text-white">{novels.length}</p>
                     </div>
-                    <div className="glass border border-white/5 p-8 rounded-3xl space-y-2 group hover:border-white/10 transition-all">
-                        <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 font-black group-hover:text-zinc-400 transition-colors">Total Likes</p>
-                        <div className="flex items-end gap-2">
-                            <p className="text-3xl font-black text-white">{totalLikes.toLocaleString()}</p>
-                        </div>
+                    <div className="bg-zinc-900/20 border border-white/5 p-10 rounded-3xl space-y-5 flex flex-col justify-center min-h-[160px]">
+                        <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-600 font-black">Total Likes</p>
+                        <p className="text-5xl font-black text-white">{totalLikes.toLocaleString()}</p>
                     </div>
-                    <div className="glass border border-white/5 p-8 rounded-3xl space-y-2 group hover:border-white/10 transition-all">
-                        <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 font-black group-hover:text-zinc-400 transition-colors">Total Views</p>
-                        <div className="flex items-end gap-2">
-                            <p className="text-3xl font-black text-white">{totalViews.toLocaleString()}</p>
-                        </div>
+                    <div className="bg-zinc-900/20 border border-white/5 p-10 rounded-3xl space-y-5 flex flex-col justify-center min-h-[160px]">
+                        <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-600 font-black">Total Views</p>
+                        <p className="text-5xl font-black text-white">{totalViews.toLocaleString()}</p>
                     </div>
-                    <div className="glass border border-white/5 p-8 rounded-3xl space-y-2 group hover:border-white/10 transition-all">
-                        <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 font-black group-hover:text-zinc-400 transition-colors">Creations</p>
-                        <div className="flex items-end gap-2">
-                            <p className="text-3xl font-black text-white">{novels.length}</p>
-                            <span className="text-[10px] uppercase tracking-widest text-zinc-600 pb-1 font-black">Units</span>
-                        </div>
+                    <div className="bg-zinc-900/20 border border-white/5 p-10 rounded-3xl space-y-5 flex flex-col justify-center min-h-[160px]">
+                        <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-600 font-black">Creations</p>
+                        <p className="text-5xl font-black text-white">{stories.length + novels.length + art.length}</p>
                     </div>
                 </div>
 
@@ -270,6 +296,7 @@ export default function AuthorPage() {
                                 "{authorMetadata.bio || "The archives are currently being unrolled for this chronicle. Check back soon for the full synopsis."}"
                             </p>
                         </div>
+
 
                         <div className="space-y-8 glass p-8 rounded-3xl border border-white/5">
                             <h2 className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 font-black">Archive Stats</h2>
@@ -295,32 +322,88 @@ export default function AuthorPage() {
                     {/* Creations Feed */}
                     <div className="lg:col-span-2 space-y-12">
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                            <div className="flex gap-8">
+                            <div className="flex flex-wrap gap-x-8 gap-y-4">
                                 {tabs.map(tab => (
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as any)}
-                                        className={`pb-4 text-[11px] uppercase tracking-[0.4em] font-black transition-all border-b-2 ${activeTab === tab.id
+                                        className={`pb-4 text-[11px] uppercase tracking-[0.4em] font-black transition-all border-b-2 whitespace-nowrap ${activeTab === tab.id
                                             ? 'border-white text-white'
                                             : 'border-transparent text-zinc-600 hover:text-zinc-400'
                                             }`}
                                     >
-                                        {tab.id.toUpperCase()}
+                                        {tab.label.toUpperCase()}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
                             {activeTab === "stories" && stories.map(s => <StoryCard key={s.id} {...s} hideAuthor={true} />)}
                             {activeTab === "novels" && novels.map(n => <StoryCard key={n.id} {...n} hideAuthor={true} type="novel" />)}
                             {activeTab === "art" && art.map(item => (
-                                <div key={item.id} className="group glass rounded-3xl overflow-hidden border border-white/5 hover:border-white/20 transition-all">
-                                    <img src={item.imageUrl} className="w-full aspect-square object-cover transition-transform group-hover:scale-105 duration-700" alt="" />
-                                    <div className="p-6">
-                                        <p className="text-[10px] uppercase tracking-[0.3em] font-black text-zinc-500">{item.title}</p>
-                                    </div>
+                                <ArtCard
+                                    key={item.id}
+                                    art={item}
+                                    isSavedInitially={libraryData?.savedArt?.some(a => a.id === item.id) || false}
+                                    isRepostedInitially={libraryData?.repostedArt?.some(a => a.id === item.id) || false}
+                                />
+                            ))}
+
+                            {activeTab === "wallet" && (
+                                <div className="col-span-full max-w-2xl mx-auto w-full">
+                                    <h3 className="text-zinc-500 text-[10px] uppercase tracking-widest font-black mb-8">Essence Management</h3>
+                                    <WalletCard />
                                 </div>
+                            )}
+
+                            {activeTab === "collections" && libraryData && (
+
+                                <div className="col-span-full space-y-12">
+                                    {libraryData.likedStories.length > 0 && (
+                                        <div className="space-y-6">
+                                            <h3 className="text-zinc-500 text-[10px] uppercase tracking-widest font-black">Liked Stories</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {libraryData.likedStories.map(s => <StoryCard key={s.id} {...s} />)}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {libraryData.savedNovels.length > 0 && (
+                                        <div className="space-y-6">
+                                            <h3 className="text-zinc-500 text-[10px] uppercase tracking-widest font-black">Saved Novels</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {libraryData.savedNovels.map(n => <StoryCard key={n.id} {...n} type="novel" />)}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {libraryData.novelsInProgress.length > 0 && (
+                                        <div className="space-y-6">
+                                            <h3 className="text-zinc-500 text-[10px] uppercase tracking-widest font-black">In Progress</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                                                {/* Mapping for reading progress would go here, simplified for now */}
+                                                {libraryData.novelsInProgress.map(n => (
+                                                    <Link key={n.id} href={`/novels/${n.id}/chapter/${n.currentChapterId}`} className="glass-panel p-6 rounded-2xl flex gap-4 hover:border-white/20 transition-all">
+                                                        <div className="w-16 h-20 bg-zinc-900 rounded-lg overflow-hidden flex-shrink-0">
+                                                            <img src={n.coverImage} className="w-full h-full object-cover opacity-60" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h4 className="text-white text-sm font-bold truncate">{n.title}</h4>
+                                                            <p className="text-zinc-500 text-[10px] uppercase tracking-widest mt-1">{n.progressPercentage}% Complete</p>
+                                                        </div>
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === "saved_art" && libraryData?.savedArt.map(item => (
+                                <ArtCard key={item.id} art={item} isSavedInitially={true} />
+                            ))}
+
+                            {activeTab === "reposts" && libraryData?.repostedArt.map(item => (
+                                <ArtCard key={item.id} art={item} isRepostedInitially={true} />
                             ))}
                         </div>
                     </div>

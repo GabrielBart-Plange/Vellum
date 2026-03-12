@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, getDocs, orderBy, query, where, onSnapshot, increment, updateDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, orderBy, query, where, onSnapshot, increment, updateDoc, DocumentData } from "firebase/firestore";
 import Link from "next/link";
 
 import ReadingSettings from "@/components/reader/ReadingSettings";
@@ -11,19 +11,23 @@ import SystemNotation from "@/components/reader/SystemNotation";
 import LikeButton from "@/components/interactions/LikeButton";
 import CommentSection from "@/components/interactions/CommentSection";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { progressTracking } from "@/lib/progressTracking";
+import ManagedAd from "@/components/monetization/ManagedAd";
+import TipButton from "@/components/interactions/TipButton";
+
 
 export default function ChapterReaderPage() {
     const { id: novelId, chapterId } = useParams<{ id: string, chapterId: string }>();
     const { user } = useAuth();
-    const [novel, setNovel] = useState<any>(null);
-    const [chapter, setChapter] = useState<any>(null);
-    const [allChapters, setAllChapters] = useState<any[]>([]);
+    const [novel, setNovel] = useState<DocumentData | null>(null);
+    const [chapter, setChapter] = useState<DocumentData | null>(null);
+    const [allChapters, setAllChapters] = useState<DocumentData[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     // Reading Transformation State
-    const [theme, setTheme] = useState("void");
+    const { theme, setTheme } = useTheme();
     const [fontSize, setFontSize] = useState(18);
     const [fontFamily, setFontFamily] = useState("sans");
     const [progress, setProgress] = useState(0);
@@ -45,18 +49,11 @@ export default function ChapterReaderPage() {
     }, []);
 
     useEffect(() => {
-        const savedTheme = localStorage.getItem("reader-theme") || "void";
         const savedSize = localStorage.getItem("reader-font-size") || "18";
         const savedFont = localStorage.getItem("reader-font-family") || "sans";
-        setTheme(savedTheme);
         setFontSize(parseInt(savedSize));
         setFontFamily(savedFont);
     }, []);
-
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("reader-theme", theme);
-    }, [theme]);
 
     useEffect(() => {
         localStorage.setItem("reader-font-size", fontSize.toString());
@@ -96,7 +93,7 @@ export default function ChapterReaderPage() {
                 // Load Novel Metadata (Static is fine for metadata, but we might want real-time later. For now keep static to minimize reads if not needed, but consistency suggested real-time)
                 // Actually user said "engagement to record real-time", specifically for metrics. 
                 const novelSnap = await getDoc(doc(db, "novels", novelId));
-                let novelData: any = null;
+                let novelData: DocumentData | null = null;
                 if (novelSnap.exists()) {
                     novelData = novelSnap.data();
                     setNovel(novelData);
@@ -158,7 +155,7 @@ export default function ChapterReaderPage() {
     }, [novelId, chapterId, router, user]);
 
     if (loading) return (
-        <div className="min-h-screen bg-black flex items-center justify-center text-gray-500 uppercase tracking-widest text-xs">
+        <div className="min-h-screen flex items-center justify-center text-[var(--reader-text)]/40 uppercase tracking-widest text-xs">
             Summoning the ink...
         </div>
     );
@@ -172,7 +169,6 @@ export default function ChapterReaderPage() {
     return (
         <main
             className="min-h-screen pb-40 transition-colors duration-500 ease-in-out font-sans relative"
-            style={{ backgroundColor: 'var(--reader-bg)', color: 'var(--reader-text)' }}
         >
             {/* Reading Progress Line */}
             <div className="fixed top-0 left-0 w-full h-1 z-[150] pointer-events-none">
@@ -182,10 +178,8 @@ export default function ChapterReaderPage() {
                 />
             </div>
             <ReadingSettings
-                currentTheme={theme}
                 currentFontSize={fontSize}
                 currentFontFamily={fontFamily}
-                onThemeChange={setTheme}
                 onFontSizeChange={setFontSize}
                 onFontFamilyChange={setFontFamily}
             />
@@ -226,7 +220,13 @@ export default function ChapterReaderPage() {
                         initialLikeCount={chapter.likes || 0}
                     />
 
+                    <TipButton
+                        creatorId={novel.authorId}
+                        creatorName={novel.authorName}
+                    />
+
                     <div className="flex-grow" />
+
 
                     <div className="hidden md:flex items-center gap-6">
                         {prevChapter && (
@@ -257,6 +257,8 @@ export default function ChapterReaderPage() {
                     initialCommentCount={chapter.commentCount || 0}
                 />
 
+                <ManagedAd zone="READER_AFTER_CHAPTER" />
+
                 {/* Footer Navigation */}
                 <footer className="pt-32 space-y-16">
                     <div className="h-px w-full" style={{ backgroundColor: 'var(--reader-border)' }} />
@@ -265,10 +267,10 @@ export default function ChapterReaderPage() {
                         {prevChapter ? (
                             <Link
                                 href={`/novels/${novelId}/chapter/${prevChapter.id}`}
-                                className="flex-1 group p-8 glass-panel border border-white/5 rounded-3xl transition-all space-y-3 hover:border-purple-500/30"
+                                className="flex-1 group p-8 glass-panel border border-[var(--reader-border)] rounded-3xl transition-all space-y-3 hover:border-[var(--reader-accent)]/30"
                                 style={{ backgroundColor: 'var(--reader-footer-bg)' }}
                             >
-                                <p className="text-[9px] uppercase tracking-[0.4em] text-zinc-500 font-black">Previous Unit</p>
+                                <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-black">Previous Unit</p>
                                 <p className="text-lg font-black group-hover:text-[var(--reader-accent)] transition-colors uppercase">{prevChapter.title}</p>
                             </Link>
                         ) : <div className="flex-1" />}
@@ -276,10 +278,10 @@ export default function ChapterReaderPage() {
                         {nextChapter ? (
                             <Link
                                 href={`/novels/${novelId}/chapter/${nextChapter.id}`}
-                                className="flex-1 group p-8 glass-panel border border-white/5 rounded-3xl transition-all space-y-3 text-right hover:border-purple-500/30"
+                                className="flex-1 group p-8 glass-panel border border-[var(--reader-border)] rounded-3xl transition-all space-y-3 text-right hover:border-[var(--reader-accent)]/30"
                                 style={{ backgroundColor: 'var(--reader-footer-bg)' }}
                             >
-                                <p className="text-[9px] uppercase tracking-[0.4em] text-zinc-500 font-black">Next Unit</p>
+                                <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-black">Next Unit</p>
                                 <p className="text-lg font-black group-hover:text-[var(--reader-accent)] transition-colors uppercase">{nextChapter.title}</p>
                             </Link>
                         ) : (

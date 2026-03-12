@@ -80,13 +80,13 @@ export default function ProfilePage() {
                 <h1 className="text-2xl tracking-[0.2em] font-light uppercase text-[var(--foreground)]">
                     Creator Profile
                 </h1>
-                <p className="text-[var(--reader-text)]/70 max-w-lg leading-relaxed text-sm">
-                    This is your public identity within the Chronicles. Your banner and avatar will be shown on your author profile in the reader.
+                <p className="text-[var(--reader-text-muted)] max-w-lg leading-relaxed text-sm">
+                    This is your public identity within Vellum. Your banner and avatar will be shown on your author profile in the reader.
                 </p>
             </header>
 
             <div className="max-w-4xl space-y-8">
-                <div className="border border-[var(--reader-border)] bg-[var(--reader-border)]/10 p-8 rounded-sm space-y-12">
+                <div className="border border-[var(--reader-border)] bg-[var(--reader-surface)] p-8 rounded-sm space-y-12">
 
                     {/* Public Info */}
                     <div className="grid md:grid-cols-2 gap-12">
@@ -99,9 +99,9 @@ export default function ProfilePage() {
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     placeholder="e.g. Chronicler_42"
-                                    className="w-full bg-[var(--background)] border border-[var(--reader-border)] p-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors text-sm"
+                                    className="w-full bg-[var(--reader-bg)] border border-[var(--reader-border)] p-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-accent)] transition-colors text-sm"
                                 />
-                                <p className="text-[10px] text-[var(--reader-text)]/70 tracking-wider">This name appears on all your published work.</p>
+                                <p className="text-[10px] text-[var(--reader-text-muted)] tracking-wider">This name appears on all your published work.</p>
                             </div>
 
                             <div className="space-y-3">
@@ -112,7 +112,7 @@ export default function ProfilePage() {
                                     value={bio}
                                     onChange={(e) => setBio(e.target.value)}
                                     placeholder="Tell your readers about yourself..."
-                                    className="w-full bg-[var(--background)] border border-[var(--reader-border)] p-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-text)] transition-colors h-40 resize-none text-sm leading-relaxed"
+                                    className="w-full bg-[var(--reader-bg)] border border-[var(--reader-border)] p-3 text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-accent)] transition-colors h-40 resize-none text-sm leading-relaxed"
                                 />
                             </div>
                         </div>
@@ -152,13 +152,13 @@ export default function ProfilePage() {
 
                     <div className="pt-8 border-t border-[var(--reader-border)] flex items-center justify-between">
                         <div className="space-y-1">
-                            <p className="text-[10px] uppercase tracking-widest text-[var(--reader-text)]">Connected as</p>
+                            <p className="text-[10px] uppercase tracking-widest text-[var(--reader-text-muted)]">Connected as</p>
                             <p className="text-sm font-medium text-[var(--foreground)]">{user.email}</p>
                         </div>
                         <button
                             onClick={handleSaveProfile}
                             disabled={saving}
-                            className="px-12 py-3 bg-[var(--foreground)] text-[var(--background)] text-xs uppercase tracking-[0.2em] font-bold hover:opacity-90 disabled:opacity-50 transition-all shadow-xl"
+                            className="px-12 py-3 bg-[var(--reader-accent)] text-white text-xs uppercase tracking-[0.2em] font-bold hover:opacity-90 disabled:opacity-50 transition-all shadow-xl"
                         >
                             {saving ? "Synchronizing..." : "Update Profile"}
                         </button>
@@ -181,10 +181,10 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] uppercase tracking-[0.3em] text-[var(--reader-text)] font-bold">
+                        <label className="text-[10px] uppercase tracking-[0.3em] text-[var(--reader-text-muted)] font-bold">
                             Account Created
                         </label>
-                        <p className="text-sm text-[var(--reader-text)]/70">
+                        <p className="text-sm text-[var(--reader-text-muted)]">
                             {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'Unknown'}
                         </p>
                     </div>
@@ -200,8 +200,8 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            <footer className="pt-12 text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]">
-                Chronicles Identity Management v1.0
+            <footer className="pt-12 text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text-muted)]">
+                Vellum Identity Management v1.0
             </footer>
         </section>
     );

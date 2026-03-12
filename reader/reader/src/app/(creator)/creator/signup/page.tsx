@@ -34,9 +34,9 @@ export default function SignupPage() {
             await sendEmailVerification(user);
             console.log("User registered and profile created.");
             router.push("/verify-email");
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Signup Error:", err);
-            setError(err.message || "Failed to create account.");
+            setError((err as Error).message || "Failed to create account.");
         } finally {
             setLoading(false);
         }
@@ -51,9 +51,9 @@ export default function SignupPage() {
             const credential = await signInWithPopup(auth, provider);
             await syncCreatorProfile(credential.user, credential.user.displayName || undefined);
             router.push("/dashboard");
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Google Signup Error:", err);
-            setError(err.message || "Failed to sign up with Google.");
+            setError((err as Error).message || "Failed to sign up with Google.");
         } finally {
             setLoading(false);
         }
