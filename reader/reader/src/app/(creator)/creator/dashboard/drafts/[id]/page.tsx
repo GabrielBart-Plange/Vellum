@@ -134,7 +134,18 @@ export default function DraftEditorPage() {
                     }
 
                     setCoverImage(currentData.coverImage || "");
-                    const detectedType = currentData.type || "short";
+                    
+                    // Robust type detection setup
+                    let detectedType = currentData.type;
+                    if (!detectedType) {
+                        const novelSnap = await getDoc(doc(db, "novels", id));
+                        if (novelSnap.exists()) {
+                            detectedType = "novel";
+                        } else {
+                            detectedType = "short";
+                        }
+                    }
+                    
                     setType(detectedType);
                     setContent(currentData.content || "");
                     setTags(currentData.tags || []);
@@ -414,10 +425,13 @@ export default function DraftEditorPage() {
                                 value={tagInput}
                                 onChange={(e) => setTagInput(e.target.value)}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && tagInput.trim()) {
-                                        const formattedTag = tagInput.trim().startsWith('#') ? tagInput.trim() : `#${tagInput.trim()}`;
-                                        setTags([...tags, formattedTag]);
-                                        setTagInput("");
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault(); // Prevent accidental form submission or scrolling
+                                        if (tagInput.trim()) {
+                                            const formattedTag = tagInput.trim().startsWith('#') ? tagInput.trim() : `#${tagInput.trim()}`;
+                                            setTags([...tags, formattedTag]);
+                                            setTagInput("");
+                                        }
                                     }
                                 }}
                                 placeholder="Add #tag..."

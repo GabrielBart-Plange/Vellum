@@ -113,6 +113,14 @@ export default function PublishedPage() {
                                         >
                                             Edit
                                         </Link>
+                                        <a
+                                            href={`/${story.collectionName === "novels" ? "novels" : "stories"}/${story.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[10px] uppercase tracking-widest text-[var(--reader-text-muted)] hover:text-blue-400 transition-colors"
+                                        >
+                                            View
+                                        </a>
                                         <button
                                             onClick={() => handleUnpublish(story.id, story.collectionName)}
                                             className="text-[10px] uppercase tracking-widest text-red-500/40 hover:text-red-500 transition-colors"
