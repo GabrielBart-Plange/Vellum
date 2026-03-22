@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { notFound, useParams } from "next/navigation";
 import ReadingSettings from "@/components/reader/ReadingSettings";
@@ -10,13 +10,20 @@ import SystemNotation from "@/components/reader/SystemNotation";
 import LikeButton from "@/components/interactions/LikeButton";
 import CommentSection from "@/components/interactions/CommentSection";
 import { useTheme } from "@/contexts/ThemeContext";
+import { getStoryStatus, unlockStory } from "@/lib/monetization/coinService";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { DocumentData } from "firebase/firestore";
 
 export default function StoryPage() {
     const { id } = useParams<{ id: string }>();
     const [story, setStory] = useState<DocumentData | null>(null);
+    const [storyId, setStoryId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isLocked, setIsLocked] = useState(false);
+    const [unlockPrice, setUnlockPrice] = useState(0);
+    const [unlocking, setUnlocking] = useState(false);
+    const { user } = useAuth();
 
     // Theme Engine State (Global + Readers specific)
     const { theme, setTheme } = useTheme();
@@ -59,11 +66,74 @@ export default function StoryPage() {
         const load = async () => {
             if (!id) return;
             try {
-                const ref = doc(db, "stories", id);
-                const snap = await getDoc(ref);
+                // 1. Try to find by ID first (Firestore ID)
+                let docId = id;
+                let docRef = doc(db, "stories", docId);
+                let snap = await getDoc(docRef);
+
+                // 2. If not found by ID, try collection queries (alphanumericId or slug)
+                if (!snap.exists()) {
+                    // Check if it's an alphanumeric ID (e.g., A1, B2)
+                    const isAlphaNumeric = /^[A-Z][0-9]+$/i.test(id);
+                    
+                    if (isAlphaNumeric) {
+                        const qAlpha = query(
+                            collection(db, "stories"), 
+                            where("alphanumericId", "==", id.toUpperCase()), 
+                            where("published", "==", true)
+                        );
+                        const qSnap = await getDocs(qAlpha);
+                        if (!qSnap.empty) {
+                            snap = qSnap.docs[0];
+                        }
+                    }
+
+                    // If still not found, try slug
+                    if (!snap.exists()) {
+                        const qSlug = query(
+                            collection(db, "stories"), 
+                            where("slug", "==", id), 
+                            where("published", "==", true)
+                        );
+                        const qSnap = await getDocs(qSlug);
+                        if (!qSnap.empty) {
+                            snap = qSnap.docs[0];
+                        }
+                    }
+                }
+
                 if (snap.exists() && snap.data().published) {
                     const data = snap.data();
+                    setStoryId(snap.id);
                     setStory(data);
+
+                    // Check Lock Status
+                    if (data.isPremium) {
+                        if (user) {
+                            // 1. Author Bypass
+                            if (user.uid === data.authorId || user.uid === data.creatorId) {
+                                setIsLocked(false);
+                            } else {
+                                // 2. Check for explicit unlock record in Firestore (client-side)
+                                const unlockRef = doc(db, "users", user.uid, "unlockedStories", snap.id);
+                                const unlockSnap = await getDoc(unlockRef);
+
+                                if (unlockSnap.exists()) {
+                                    setIsLocked(false);
+                                } else {
+                                    // 3. Backend status check (as fallback/primary for centralized logic)
+                                    const status = await getStoryStatus(user.uid, snap.id);
+                                    setIsLocked(status.locked);
+                                    setUnlockPrice(status.price || data.price || 10);
+                                }
+                            }
+                        } else {
+                            setIsLocked(true);
+                            setUnlockPrice(data.price || 10);
+                        }
+                    } else {
+                        setIsLocked(false);
+                    }
                 }
             } catch (err) {
                 console.error("Error loading story:", err);
@@ -148,7 +218,7 @@ export default function StoryPage() {
                     <div className="flex items-center gap-4 py-8 border-b border-t transition-colors" style={{ borderColor: 'var(--reader-border)' }}>
                         <LikeButton
                             contentType="story"
-                            contentId={id}
+                            contentId={storyId || ""}
                             initialLikeCount={story.likes || 0}
                         />
 
@@ -169,15 +239,57 @@ export default function StoryPage() {
                     </div>
 
                     <div
-                        className={`leading-relaxed select-text pt-16 ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}`}
+                        className={`leading-relaxed select-text pt-16 relative ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}`}
                         style={{ fontSize: `${fontSize}px`, lineHeight: '1.8' }}
                     >
-                        <SystemNotation content={story.content} fontSize={fontSize} />
+                        {isLocked ? (
+                            <div className="relative py-20 px-6 rounded-3xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-md text-center space-y-8 animate-in fade-in zoom-in duration-500">
+                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent z-0" />
+                                <div className="relative z-10 space-y-6">
+                                    <div className="flex justify-center">
+                                        <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center animate-pulse">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--reader-accent)]">
+                                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-xl font-black uppercase tracking-widest text-white">This Chronicle is Locked</h3>
+                                        <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold max-w-sm mx-auto">
+                                            The archivists have restricted access. Support the chronicler to reveal the ink.
+                                        </p>
+                                    </div>
+                                    {user ? (
+                                        <div className="space-y-4">
+                                            <button
+                                                onClick={async () => {
+                                                    setUnlocking(true);
+                                                    const success = await unlockStory(user.uid, storyId!);
+                                                    if (success) setIsLocked(false);
+                                                    else alert("Unlock failed. Check your Inklet balance.");
+                                                    setUnlocking(false);
+                                                }}
+                                                disabled={unlocking}
+                                                className="bg-white text-black px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[var(--reader-accent)] hover:text-white transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                                            >
+                                                {unlocking ? "Decoding Scroll..." : `Unlock for ${unlockPrice} Inklets`}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <Link href={`/login?returnUrl=/stories/${id}`} className="inline-block bg-white text-black px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all font-bold">
+                                            Login to Unlock
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <SystemNotation content={story.content} fontSize={fontSize} />
+                        )}
                     </div>
 
                     <CommentSection
                         contentType="story"
-                        contentId={id}
+                        contentId={storyId || ""}
                         initialCommentCount={story.commentCount || 0}
                     />
 

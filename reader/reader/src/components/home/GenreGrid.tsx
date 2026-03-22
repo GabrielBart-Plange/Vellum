@@ -19,7 +19,7 @@ export default function GenreGrid() {
                 {GENRES.map((genre) => (
                     <Link
                         key={genre.name}
-                        href={`/novels?genre=${genre.name}`}
+                        href={`/genre/${genre.name.toLowerCase()}`}
                         className="group relative h-48 rounded-2xl overflow-hidden border border-white/5 transition-all duration-500 hover:border-white/10"
                     >
                         {/* Stacked Image Effect Placeholder */}

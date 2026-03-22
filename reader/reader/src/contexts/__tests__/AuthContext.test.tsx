@@ -51,7 +51,7 @@ jest.mock('@/lib/monetization/xpService', () => ({
 }));
 
 jest.mock('@/lib/monetization/coinService', () => ({
-    getEssenceWallet: jest.fn().mockResolvedValue({
+    getInkletWallet: jest.fn().mockResolvedValue({
         balance: 0,
         lifetimeEarned: 0,
         lifetimeSpent: 0,

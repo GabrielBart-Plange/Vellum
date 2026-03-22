@@ -3,23 +3,24 @@
 This backlog translates the Monetization Strategy shell into executable work items with clear acceptance criteria and owners. It focuses on a lean, testable MVP path and phased rollout plan (M1 → M6).
 
 ## Epics
-- Epic 1: Plausible MVP payments (Coins & Tips) wiring
+- Epic 1: Plausible MVP payments (Inklets & Tips) wiring
 - Epic 2: Subscriptions MVP (Vellum Prime) and revenue pool plumbing
 - Epic 3: XP, Levels, and Ascension MVP (Level 0–9 UI and Level 10 go-live)
-- Epic 4: Creator monetization bubbles (payouts, coin-to-creator routing)
+- Epic 4: Creator monetization bubbles (payouts, Inklet-to-creator routing)
 - Epic 5: Denormalization & Firestore read-storm mitigation
 - Epic 6: Gateways routing & currency display rules (GHS-first)
+- Epic 7: Vellux (Golden Tickets) - Gold, Diamond, Platinum
 
 ## Phase-wise User Stories (high level)
 
-### Phase M1 – Coins & Tips MVP
-- As a reader, I can purchase Essence Coins and use them to tip authors.
-- As a creator, I can receive coins as tips and view a basic earnings report.
+### Phase M1 – Inklets & Tips MVP
+- As a reader, I can purchase Inklets and use them to tip authors.
+- As a creator, I can receive Inklets as tips and view a basic earnings report.
 - As a reader, I see ads in the Free tier and no ads in paid tiers.
 - Acceptance criteria:
-  - Coin purchases complete via Paystack/Stripe routing for the target region.
+  - Inklet purchases complete via Paystack/Stripe routing for the target region.
   - Tip transactions update the creator balance and transaction history.
-  - Basic analytics for coin adoption are collected (purchases, tips).
+  - Basic analytics for Inklet adoption are collected (purchases, tips).
 
 ### Phase M2 – Prime Subscriptions MVP
 - As a reader, I can subscribe to Vellum Prime (GHS 15/mo, USD equivalent) and access ad-free reading with early access.
@@ -50,9 +51,9 @@ This backlog translates the Monetization Strategy shell into executable work ite
   - Privilege chapters priced and accessible to eligible creators.
 
 ## Data & API surface (starter)
-- Core entities: Users, Stories, Chapters, Reads, Subscriptions, Coins, XP, Ascensions, Chroniclers, Payments, Revenue, Admin/config.
+- Core entities: Users, Stories, Chapters, Reads, Subscriptions, Inklets, Vellux (Gold/Diamond/Platinum), XP, Ascensions, Chroniclers, Payments, Revenue, Admin/config.
 - MVP endpoints (placeholder):
-  - POST /api/payments/coins/purchase
+  - POST /api/payments/inklets/purchase
   - POST /api/payments/subscription
   - POST /api/reads/track
   - POST /api/ascensions/trigger

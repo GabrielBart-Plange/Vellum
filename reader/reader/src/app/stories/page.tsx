@@ -70,6 +70,8 @@ export default function StoriesListingPage() {
                             <StoryCard
                                 key={story.id}
                                 id={story.id}
+                                slug={story.slug}
+                                alphanumericId={story.alphanumericId}
                                 title={story.title}
                                 author={story.authorName || "Unknown Author"}
                                 imageUrl={story.coverImage || story.imageUrl}

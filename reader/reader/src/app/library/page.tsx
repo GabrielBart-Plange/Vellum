@@ -125,7 +125,7 @@ export default function LibraryPage() {
                             <Link href="/stories" className="px-6 py-3 rounded-xl border border-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-all">
                                 Browse Stories
                             </Link>
-                            <Link href="/novels" className="px-6 py-3 rounded-xl border border-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-all">
+                            <Link href="/novel" className="px-6 py-3 rounded-xl border border-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-all">
                                 Browse Novels
                             </Link>
                         </div>
@@ -161,7 +161,7 @@ export default function LibraryPage() {
                                 {libraryData.likedStories.map((story) => (
                                     <Link
                                         key={story.id}
-                                        href={`/stories/${story.id}`}
+                                        href={`/stories/${story.alphanumericId || story.slug || story.id}`}
                                         className="group glass-panel rounded-2xl border border-white/5 overflow-hidden hover:border-purple-500/30 transition-all"
                                     >
                                         <div className="aspect-video bg-zinc-900 relative overflow-hidden">
@@ -189,7 +189,7 @@ export default function LibraryPage() {
                                 {libraryData.savedNovels.map((novel) => (
                                     <Link
                                         key={novel.id}
-                                        href={`/novels/${novel.id}`}
+                                        href={`/novel/${novel.numericalId || novel.slug || novel.id}`}
                                         className="group glass-panel rounded-2xl border border-white/5 overflow-hidden hover:border-purple-500/30 transition-all"
                                     >
                                         <div className="aspect-[3/4] bg-zinc-900 relative overflow-hidden">
@@ -217,7 +217,7 @@ export default function LibraryPage() {
                                 {libraryData.novelsInProgress.map((novel) => (
                                     <Link
                                         key={novel.id}
-                                        href={`/novels/${novel.id}/chapter/${novel.currentChapterId}`}
+                                        href={`/chapter/${novel.numericalId || novel.slug || novel.id}-${novel.chapterOrder || 1}`}
                                         className="group glass-panel rounded-2xl border border-white/5 overflow-hidden hover:border-blue-500/30 transition-all"
                                     >
                                         <div className="relative py-8">

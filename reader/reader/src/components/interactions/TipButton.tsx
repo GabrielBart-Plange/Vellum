@@ -17,8 +17,8 @@ export default function TipButton({ creatorId, creatorName }: TipButtonProps) {
     const handleTip = async (amount: number) => {
         if (!user || !monetization) return;
 
-        if (monetization.essenceWallet.balance < amount) {
-            alert("Insufficient Essence. Please top up your wallet.");
+        if (monetization.inkletWallet.balance < amount) {
+            alert("Insufficient Inklets. Please top up your wallet.");
             return;
         }
 
@@ -27,7 +27,7 @@ export default function TipButton({ creatorId, creatorName }: TipButtonProps) {
             const success = await tipCreator(user.uid, user.displayName || "User", creatorId, amount);
             if (success) {
                 // Success feedback
-                alert(`You sent ${amount} Essence to ${creatorName}!`);
+                alert(`You sent ${amount} Inklets to ${creatorName}!`);
                 setShowOptions(false);
             } else {
                 alert("Transaction failed. Please try again.");
@@ -71,7 +71,7 @@ export default function TipButton({ creatorId, creatorName }: TipButtonProps) {
                         onClick={() => setShowOptions(false)}
                         className="w-12 h-12 rounded-xl bg-white/5 hover:bg-red-500/20 text-zinc-500 hover:text-red-500 transition-all flex items-center justify-center text-lg"
                     >
-                        \u2715
+                        ✕
                     </button>
                 </div>
             )}

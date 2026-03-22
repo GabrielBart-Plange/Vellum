@@ -3,7 +3,9 @@
 This document sketches the minimal API surface required to support the MVP monetization flows. Implementations should align with the data model in Firestore and gateway integrations.
 
 Endpoints (placeholders):
-- POST /api/payments/coins/purchase
+- POST /api/payments/gilt/purchase
+- POST /api/payments/inklets/purchase
+- POST /api/payments/vellux/purchase
 - POST /api/payments/subscription
 - POST /api/reads/track
 - POST /api/ascensions/trigger
@@ -11,7 +13,8 @@ Endpoints (placeholders):
 - POST /api/creators/:id/tip
 
 Key payloads (examples):
-- coins purchase: { userId, amountCoins, gateway, currency }
+- inklets purchase: { userId, amountInklets, gateway, currency }
+- vellux purchase: { userId, tier: 'Gold'|'Diamond'|'Platinum', gateway, currency }
 - subscription: { userId, tier }
 - track read: { userId, chapterId, action: 'read'|'comment'|'review' }
 - ascension: { userId, action }

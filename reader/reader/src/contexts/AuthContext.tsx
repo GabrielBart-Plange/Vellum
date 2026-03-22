@@ -15,7 +15,7 @@ import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { MonetizationProfile } from '@/types';
 import { getXPProfile } from '@/lib/monetization/xpService';
-import { getEssenceWallet } from '@/lib/monetization/coinService';
+import { getInkletWallet } from '@/lib/monetization/coinService';
 import { getSubscriptionTier } from '@/lib/monetization/subscriptionService';
 
 interface AuthContextType {
@@ -53,15 +53,21 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
                 try {
                     const [xpResult, walletResult, subResult] = await Promise.all([
                         getXPProfile(user.uid),
-                        getEssenceWallet(user.uid),
+                        getInkletWallet(user.uid),
                         getSubscriptionTier(user.uid)
                     ]);
+
+                    // For now, Vellux wallets are initialized empty if not in Firestore
+                    // We can add a getVelluxWallets service later if needed
+                    const velluxWallets = (walletResult as any).velluxWallets || [];
 
                     setMonetization({
                         subscriptionTier: subResult.tier,
                         subscriptionExpiresAt: subResult.expiresAt,
                         xpProfile: xpResult,
-                        essenceWallet: walletResult
+                        giltBalance: (walletResult as any).giltBalance ?? 0,
+                        inkletWallet: walletResult,
+                        velluxWallets: velluxWallets
                     });
                 } catch (err) {
                     console.error("Failed to load monetization profile:", err);

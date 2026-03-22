@@ -13,5 +13,8 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
+// Use a singleton pattern for Auth to avoid re-initialization errors in Next.js/Turbopack
+import { Auth } from "firebase/auth";
+let cachedAuth: Auth | null = null;
+export const auth = getApps().length > 0 && cachedAuth ? cachedAuth : (cachedAuth = getAuth(app));
 export const db = getFirestore(app);

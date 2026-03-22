@@ -65,7 +65,8 @@ export default function Navbar() {
 
     const navLinks = [
         { name: "Stories", href: "/stories" },
-        { name: "Novels", href: "/novels" },
+        { name: "Novels", href: "/novel" },
+        { name: "Nexus", href: "/nexus" },
         { name: "Art", href: "/art" },
         { name: "Settings", href: "/settings" },
         { name: "Profile", href: user ? `/authors/${user.uid}` : "/profile" },
@@ -106,7 +107,7 @@ export default function Navbar() {
                             href="/creator/dashboard"
                             className="hidden md:inline text-[12px] uppercase tracking-widest text-[var(--reader-text-subtle)] hover:text-[var(--reader-text)] transition-colors"
                         >
-                            Archivist
+                            Creator
                         </Link>
                         <button
                             onClick={() => setIsSearchOpen(true)}
@@ -143,7 +144,7 @@ export default function Navbar() {
                                     <div className="absolute right-0 mt-4 w-80 rounded-2xl bg-[var(--reader-bg)] border border-[var(--reader-border)] shadow-2xl p-4 animate-in fade-in zoom-in-95 duration-200 z-[150]">
                                         <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--reader-border)]">
                                             <span className="text-[10px] uppercase tracking-widest text-[var(--reader-text-subtle)] font-black">Archive Transmissions</span>
-                                            <button onClick={() => setIsNotificationOpen(false)} className="text-[var(--reader-text-subtle)] hover:text-[var(--reader-text)] transition-colors">\u2715</button>
+                                            <button onClick={() => setIsNotificationOpen(false)} className="text-[var(--reader-text-subtle)] hover:text-[var(--reader-text)] transition-colors">✕</button>
                                         </div>
                                         <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2 leading-tight">
                                             {notifications.length === 0 ? (
@@ -228,7 +229,7 @@ export default function Navbar() {
                             href="/creator/dashboard"
                             className="group p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-purple-500/30 transition-all text-center flex flex-col items-center gap-3"
                         >
-                            <span className="text-sm font-bold tracking-widest text-[var(--reader-text-muted)] group-hover:text-[var(--reader-text)] transition-colors">Archivist</span>
+                            <span className="text-sm font-bold tracking-widest text-[var(--reader-text-muted)] group-hover:text-[var(--reader-text)] transition-colors">Creator</span>
                         </Link>
                     </div>
 

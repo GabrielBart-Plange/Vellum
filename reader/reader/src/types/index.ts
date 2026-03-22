@@ -27,18 +27,28 @@ export interface XPProfile {
   updatedAt: Timestamp;
 }
 
-export interface EssenceWallet {
+export interface InkletWallet {
   balance: number;
   lifetimeEarned: number;
   lifetimeSpent: number;
   updatedAt: Timestamp;
 }
 
+export type VelluxTier = 'gold' | 'diamond' | 'platinum';
+
+export interface VelluxWallet {
+  tier: VelluxTier;
+  amount: number;
+  lastReceivedAt: Timestamp;
+}
+
 export interface MonetizationProfile {
   subscriptionTier: SubscriptionTier;
   subscriptionExpiresAt: Timestamp | null;
   xpProfile: XPProfile;
-  essenceWallet: EssenceWallet;
+  giltBalance: number;
+  inkletWallet: InkletWallet;
+  velluxWallets: VelluxWallet[];
 }
 
 export interface CreatorMonetizationProfile {
@@ -46,18 +56,21 @@ export interface CreatorMonetizationProfile {
   totalUniqueReaders: number;
   totalChaptersPublished: number;
   payoutBalance: number;
-  coinEarnings: number;
+  inkletEarnings: number;
   isMonetizationEnabled: boolean;
 }
 
 // Reading Progress
 export interface ReadingProgress {
   novelId: string;
+  numericalId?: number;
+  slug?: string;
   novelTitle?: string;
   coverImage?: string;
   authorName?: string;
   currentChapterId: string;
   currentChapterTitle?: string;
+  chapterOrder?: number;
   progressPercentage: number;
   lastReadAt: Timestamp;
 }
@@ -87,6 +100,8 @@ export interface LibraryData {
 
 export interface StoryReference {
   id: string;
+  alphanumericId?: string;
+  slug?: string;
   title: string;
   coverImage: string;
   authorName: string;
@@ -95,17 +110,22 @@ export interface StoryReference {
 
 export interface NovelProgressReference {
   id: string;
+  numericalId?: number;
+  slug?: string;
   title: string;
   coverImage: string;
   authorName: string;
   currentChapterId: string;
   currentChapterTitle: string;
+  chapterOrder?: number;
   progressPercentage: number;
   lastReadAt: Timestamp;
 }
 
 export interface NovelReference {
   id: string;
+  numericalId?: number;
+  slug?: string;
   title: string;
   coverImage: string;
   authorName: string;
@@ -128,6 +148,8 @@ export interface ArtPiece {
 
 export interface Story {
   id: string;
+  alphanumericId?: string;
+  slug?: string;
   title: string;
   description?: string;
   authorId?: string;
@@ -145,6 +167,8 @@ export interface Story {
 
 export interface Novel {
   id: string;
+  numericalId?: number;
+  slug?: string;
   title: string;
   description?: string;
   authorId?: string;

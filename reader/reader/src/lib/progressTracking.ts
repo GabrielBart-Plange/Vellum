@@ -40,7 +40,9 @@ interface ProgressTrackingService {
     chapterId: string,
     chapterTitle: string,
     currentChapterOrder: number,
-    totalChapters: number
+    totalChapters: number,
+    numericalId?: number,
+    slug?: string
   ) => Promise<void>;
   getProgress: (userId: string, novelId: string) => Promise<ReadingProgress | null>;
   getUserLibrary: (userId: string) => Promise<LibraryData>;
@@ -52,9 +54,9 @@ interface ProgressTrackingService {
   undoRepostArtPiece: (userId: string, artId: string) => Promise<void>;
 
   // Novel/Story Engagement
-  likeContent: (userId: string, username: string, contentId: string, contentType: 'story' | 'novel' | 'chapter', title: string, authorId: string, coverImage?: string, authorName?: string) => Promise<void>;
+  likeContent: (userId: string, username: string, contentId: string, contentType: 'story' | 'novel' | 'chapter', title: string, authorId: string, coverImage?: string, authorName?: string, alphanumericId?: string, slug?: string, numericalId?: number) => Promise<void>;
   unlikeContent: (userId: string, contentId: string, contentType: 'story' | 'novel' | 'chapter', authorId: string) => Promise<void>;
-  saveNovel: (userId: string, novelId: string, title: string, coverImage: string, authorName: string, authorId: string) => Promise<void>;
+  saveNovel: (userId: string, novelId: string, title: string, coverImage: string, authorName: string, authorId: string, numericalId?: number, slug?: string) => Promise<void>;
   unsaveNovel: (userId: string, novelId: string) => Promise<void>;
 
   // Notification methods
@@ -72,7 +74,9 @@ export const progressTracking: ProgressTrackingService = {
     chapterId: string,
     chapterTitle: string,
     currentChapterOrder: number,
-    totalChapters: number
+    totalChapters: number,
+    numericalId?: number,
+    slug?: string
   ): Promise<void> => {
     try {
       const progressRef = doc(db, "users", userId, "progress", novelId);
@@ -82,16 +86,20 @@ export const progressTracking: ProgressTrackingService = {
         ? Math.min(Math.round(((currentChapterOrder + 1) / totalChapters) * 100), 100)
         : 0;
 
-      const progressData: ReadingProgress = {
+      const progressData: any = {
         novelId,
         novelTitle,
         coverImage,
         authorName,
         currentChapterId: chapterId,
         currentChapterTitle: chapterTitle,
+        chapterOrder: currentChapterOrder,
         progressPercentage,
-        lastReadAt: Timestamp.now()
+        lastReadAt: Timestamp.now(),
       };
+
+      if (numericalId !== undefined) progressData.numericalId = numericalId;
+      if (slug !== undefined) progressData.slug = slug;
 
       await setDoc(progressRef, progressData);
     } catch (error) {
@@ -117,8 +125,11 @@ export const progressTracking: ProgressTrackingService = {
           authorName: data.authorName,
           currentChapterId: data.currentChapterId,
           currentChapterTitle: data.currentChapterTitle,
+          chapterOrder: data.chapterOrder,
           progressPercentage: data.progressPercentage,
-          lastReadAt: data.lastReadAt
+          lastReadAt: data.lastReadAt,
+          numericalId: data.numericalId,
+          slug: data.slug
         } as ReadingProgress;
       }
 
@@ -141,7 +152,9 @@ export const progressTracking: ProgressTrackingService = {
         title: doc.data().title,
         coverImage: doc.data().coverImage,
         authorName: doc.data().authorName,
-        likedAt: doc.data().likedAt || Timestamp.now()
+        likedAt: doc.data().likedAt || Timestamp.now(),
+        alphanumericId: doc.data().alphanumericId,
+        slug: doc.data().slug
       }));
 
       // Get saved novels
@@ -154,7 +167,9 @@ export const progressTracking: ProgressTrackingService = {
         title: doc.data().title,
         coverImage: doc.data().coverImage,
         authorName: doc.data().authorName,
-        savedAt: doc.data().savedAt || Timestamp.now()
+        savedAt: doc.data().savedAt || Timestamp.now(),
+        numericalId: doc.data().numericalId,
+        slug: doc.data().slug
       }));
 
       // Get novels in progress
@@ -170,8 +185,11 @@ export const progressTracking: ProgressTrackingService = {
           authorName: progressData.authorName || "Unknown Author",
           currentChapterId: progressData.currentChapterId,
           currentChapterTitle: progressData.currentChapterTitle || "Unknown Chapter",
+          chapterOrder: progressData.chapterOrder,
           progressPercentage: progressData.progressPercentage,
-          lastReadAt: progressData.lastReadAt
+          lastReadAt: progressData.lastReadAt,
+          numericalId: (progressData as any).numericalId,
+          slug: (progressData as any).slug
         };
       });
 
@@ -299,7 +317,7 @@ export const progressTracking: ProgressTrackingService = {
     }
   },
 
-  likeContent: async (userId, username, contentId, contentType, title, authorId, coverImage, authorName) => {
+  likeContent: async (userId, username, contentId, contentType, title, authorId, coverImage, authorName, alphanumericId, slug, numericalId) => {
     try {
       const path = contentType === 'story' ? `stories/${contentId}/likes/${userId}` : `novels/${contentId}/likes/${userId}`;
       await setDoc(doc(db, path), { userId, likedAt: Timestamp.now() });
@@ -309,12 +327,17 @@ export const progressTracking: ProgressTrackingService = {
 
       // If it's a story, add to likedStories in user library
       if (contentType === 'story') {
-        await setDoc(doc(db, "users", userId, "likedStories", contentId), {
+        const likedData: any = {
           title,
           coverImage: coverImage || "",
           authorName: authorName || "Unknown Author",
-          likedAt: Timestamp.now()
-        }, { merge: true });
+          likedAt: Timestamp.now(),
+        };
+        if (alphanumericId !== undefined) likedData.alphanumericId = alphanumericId;
+        if (slug !== undefined) likedData.slug = slug;
+        if (numericalId !== undefined) likedData.numericalId = numericalId;
+
+        await setDoc(doc(db, "users", userId, "likedStories", contentId), likedData, { merge: true });
       }
 
       if (authorId && authorId !== userId) {
@@ -327,7 +350,7 @@ export const progressTracking: ProgressTrackingService = {
           contentType,
           contentTitle: title,
           message: `liked your ${contentType} "${title}"`,
-          link: `/${contentType}s/${contentId}`
+          link: `/${contentType}/${contentId}`
         });
       }
     } catch (error) {
@@ -348,14 +371,18 @@ export const progressTracking: ProgressTrackingService = {
     }
   },
 
-  saveNovel: async (userId, novelId, title, coverImage, authorName, authorId) => {
+  saveNovel: async (userId, novelId, title, coverImage, authorName, authorId, numericalId, slug) => {
     try {
-      await setDoc(doc(db, "users", userId, "savedNovels", novelId), {
+      const novelData: any = {
         title,
         coverImage,
         authorName,
-        savedAt: Timestamp.now()
-      });
+        savedAt: Timestamp.now(),
+      };
+      if (numericalId !== undefined) novelData.numericalId = numericalId;
+      if (slug !== undefined) novelData.slug = slug;
+
+      await setDoc(doc(db, "users", userId, "savedNovels", novelId), novelData);
 
       if (authorId && authorId !== userId) {
         await progressTracking.triggerNotification({
@@ -367,7 +394,7 @@ export const progressTracking: ProgressTrackingService = {
           contentType: 'novel',
           contentTitle: title,
           message: `added your novel "${title}" to their library`,
-          link: `/novels/${novelId}`
+          link: `/novel/${novelId}`
         });
       }
     } catch (error) {
@@ -405,7 +432,7 @@ export const progressTracking: ProgressTrackingService = {
           contentType,
           contentTitle: title,
           message,
-          link: `/${contentType}s/${contentId}`
+          link: `/${contentType}/${contentId}`
         });
       });
 

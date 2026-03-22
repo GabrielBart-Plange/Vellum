@@ -7,7 +7,7 @@ import StoryCard from "@/components/cards/StoryCard";
 import DiscoveryFilter from "@/components/layout/DiscoveryFilter";
 import { Novel } from "@/types";
 
-export default function NovelsListingPage() {
+export default function NovelListingPage() {
     const [novels, setNovels] = useState<Novel[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -68,6 +68,7 @@ export default function NovelsListingPage() {
                             <StoryCard
                                 key={novel.id}
                                 id={novel.id}
+                                slug={novel.slug}
                                 title={novel.title}
                                 author={novel.authorName || "Unknown Author"}
                                 imageUrl={novel.coverImage}

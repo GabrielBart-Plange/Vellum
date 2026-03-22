@@ -11,10 +11,11 @@ import LikeButton from "@/components/interactions/LikeButton";
 import { progressTracking } from "@/lib/progressTracking";
 
 export default function NovelLandingPage() {
-    const { id } = useParams<{ id: string }>();
+    const { slug } = useParams<{ slug: string }>();
     const router = useRouter();
     const { user } = useAuth();
     const [novel, setNovel] = useState<DocumentData | null>(null);
+    const [novelId, setNovelId] = useState<string | null>(null);
     const [chapters, setChapters] = useState<DocumentData[]>([]);
     const [readingProgress, setReadingProgress] = useState<DocumentData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -26,49 +27,66 @@ export default function NovelLandingPage() {
         let unsubscribeNovel: () => void;
 
         const load = async () => {
-            if (!id) return;
+            if (!slug) return;
             try {
-                // Real-time listener for novel data (engagement metrics)
-                unsubscribeNovel = onSnapshot(doc(db, "novels", id), (docSnap) => {
-                    if (docSnap.exists()) {
-                        setNovel(docSnap.data());
+                // 1. Try to find by ID first (backward compatibility)
+                let docId = slug;
+                let docRef = doc(db, "novels", docId);
+                let snap = await getDoc(docRef);
+
+                // 2. If not found by ID, try to find by slug field or numericalId
+                if (!snap.exists()) {
+                    // 2a. Try slug
+                    const qSlug = query(collection(db, "novels"), where("slug", "==", slug), where("published", "==", true));
+                    const querySlugSnap = await getDocs(qSlug);
+                    if (!querySlugSnap.empty) {
+                        snap = querySlugSnap.docs[0];
+                        docId = snap.id;
+                        docRef = doc(db, "novels", docId);
                     } else {
-                        // Handle not found only on initial load or if explicitly cached as null
-                        // But onSnapshot might fire first with caching. 
-                        // If it doesn't exist, we might want to redirect.
-                        // For now, let's just handle local state update.
+                            // 2b. Try numericalId if slug is a number
+                            const maybeNum = parseInt(slug);
+                            if (!isNaN(maybeNum)) {
+                                const qNum = query(collection(db, "novels"), where("numericalId", "==", maybeNum), where("published", "==", true));
+                                const queryNumSnap = await getDocs(qNum);
+                            if (!queryNumSnap.empty) {
+                                snap = queryNumSnap.docs[0];
+                                docId = snap.id;
+                                docRef = doc(db, "novels", docId);
+                            }
+                        }
                     }
-                }, (error) => {
-                    console.error("Error listening to novel:", error);
-                });
-
-                // We still need an initial check or we can rely on onSnapshot.
-                // But we need to load chapters and saved status too.
-
-                // Let's do a static fetch for the robust initial load of ancillary data
-                const docRef = doc(db, "novels", id);
-                const snap = await getDoc(docRef);
+                }
 
                 if (snap.exists()) {
-                    // setNovel(snap.data()); // Included in onSnapshot above
+                    setNovelId(docId);
+                    const initialData = snap.data();
+                    setNovel(initialData);
+
+                    // Real-time listener for engagement metrics
+                    unsubscribeNovel = onSnapshot(docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            setNovel(docSnap.data());
+                        }
+                    });
 
                     // Load chapters
-                    const chaptersRef = collection(db, "novels", id, "chapters");
-                    const q = query(
+                    const chaptersRef = collection(db, "novels", docId, "chapters");
+                    const chaptersQuery = query(
                         chaptersRef,
                         where("published", "==", true),
                         orderBy("order", "asc")
                     );
-                    const chaptersSnap = await getDocs(q);
+                    const chaptersSnap = await getDocs(chaptersQuery);
                     setChapters(chaptersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
                     if (user) {
-                        const savedRef = doc(db, "users", user.uid, "savedNovels", id);
+                        const savedRef = doc(db, "users", user.uid, "savedNovels", docId);
                         const savedSnap = await getDoc(savedRef);
                         setSaved(savedSnap.exists());
 
                         // Load Reading Progress
-                        const progressRef = doc(db, "users", user.uid, "progress", id);
+                        const progressRef = doc(db, "users", user.uid, "progress", docId);
                         const progressSnap = await getDoc(progressRef);
                         if (progressSnap.exists()) {
                             setReadingProgress(progressSnap.data());
@@ -89,20 +107,20 @@ export default function NovelLandingPage() {
         return () => {
             if (unsubscribeNovel) unsubscribeNovel();
         };
-    }, [id, user]);
+    }, [slug, user]);
 
     useEffect(() => {
         // Increment View Count with basic deduplication
         const incrementView = async () => {
-            if (!id) return;
+            if (!novelId) return;
 
-            const storageKey = `viewed_novel_${id}`;
+            const storageKey = `viewed_novel_${novelId}`;
             const hasViewed = localStorage.getItem(storageKey);
 
             if (hasViewed) return;
 
             try {
-                const novelRef = doc(db, "novels", id);
+                const novelRef = doc(db, "novels", novelId);
                 await updateDoc(novelRef, {
                     views: increment(1)
                 });
@@ -113,7 +131,7 @@ export default function NovelLandingPage() {
         };
 
         incrementView();
-    }, [id]);
+    }, [novelId]);
 
     const handleSaveToLibrary = async () => {
         if (!user) {
@@ -121,21 +139,23 @@ export default function NovelLandingPage() {
             return;
         }
 
-        if (!novel || !id) return;
+        if (!novel || !novelId) return;
 
         setSaving(true);
         try {
             if (saved) {
-                await progressTracking.unsaveNovel(user.uid, id);
+                await progressTracking.unsaveNovel(user.uid, novelId);
                 setSaved(false);
             } else {
                 await progressTracking.saveNovel(
                     user.uid,
-                    id,
+                    novelId,
                     novel.title || "Untitled",
                     novel.coverImage || "",
                     novel.authorName || "Unknown Author",
-                    novel.authorId || novel.creatorId
+                    novel.authorId || novel.creatorId,
+                    novel.numericalId,
+                    novel.slug
                 );
                 setSaved(true);
             }
@@ -230,7 +250,7 @@ export default function NovelLandingPage() {
                             <div className="flex items-center gap-6">
                                 <LikeButton
                                     contentType="novel"
-                                    contentId={id || ""}
+                                    contentId={novelId || ""}
                                     initialLikeCount={novel.likes || 0}
                                 />
                                 <div className="h-1 w-1 bg-[var(--reader-border)] rounded-full" />
@@ -248,7 +268,7 @@ export default function NovelLandingPage() {
                         </button>
                         {readingProgress && (
                             <Link
-                                href={`/novels/${id}/chapter/${readingProgress.currentChapterId}`}
+                                href={`/chapter/${novel.numericalId || novel.slug || slug}-${readingProgress.chapterOrder || 1}`}
                                 className="px-12 py-5 rounded-2xl bg-white text-black text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95"
                             >
                                 Resume Archive
@@ -298,7 +318,7 @@ export default function NovelLandingPage() {
                                 {chapters.map((chapter, index) => (
                                     <Link
                                         key={chapter.id}
-                                        href={`/novels/${id}/chapter/${chapter.id}`}
+                                        href={`/chapter/${novel.numericalId || novel.slug || slug}-${chapter.order}`}
                                         className="group p-6 glass-panel border border-white/5 rounded-2xl hover:border-purple-500/40 hover:bg-white/[0.05] transition-all duration-500"
                                     >
                                         <div className="space-y-2">

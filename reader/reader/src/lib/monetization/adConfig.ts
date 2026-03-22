@@ -17,7 +17,7 @@ export interface MockAd {
     cta: string;
     link: string;
     image?: string;
-    type: 'subscription' | 'coin' | 'featured' | 'internal';
+    type: 'subscription' | 'inklet' | 'featured' | 'internal';
 }
 
 export const MOCK_ADS: MockAd[] = [
@@ -30,19 +30,19 @@ export const MOCK_ADS: MockAd[] = [
         type: 'subscription',
     },
     {
-        id: 'coin-pack-1',
-        title: 'Essence Coins Available',
-        description: 'Unlock early access chapters and tip creators with Essence Coins.',
-        cta: 'Get Coins',
+        id: 'inklet-pack-1',
+        title: 'Inklets Available',
+        description: 'Unlock early access chapters and tip creators with Inklets (FastPasses).',
+        cta: 'Get Inklets',
         link: '/premium',
-        type: 'coin',
+        type: 'inklet',
     },
     {
         id: 'featured-story-1',
         title: 'New Chronicle: The Void Walkers',
         description: 'A dark mystery that challenges everything you know about the archive.',
         cta: 'Read Now',
-        link: '/novels/void-walkers',
+        link: '/novel/void-walkers',
         type: 'featured',
     }
 ];

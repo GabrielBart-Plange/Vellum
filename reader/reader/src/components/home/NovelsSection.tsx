@@ -39,7 +39,7 @@ export default function NovelsSection() {
                 </h2>
 
                 <a
-                    href="/novels"
+                    href="/novel"
                     className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--reader-text-muted)] hover:text-[var(--reader-text)] transition-colors"
                 >
                     View all
@@ -64,6 +64,7 @@ export default function NovelsSection() {
                         <StoryCard
                             key={novel.id}
                             id={novel.id}
+                            slug={novel.slug}
                             title={novel.title}
                             author={novel.authorName || "Unknown Author"}
                             imageUrl={novel.coverImage || "https://placehold.co/400x600/1a1a1a/666666?text=Cover"}

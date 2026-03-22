@@ -31,6 +31,8 @@ export default function DraftEditorPage() {
     const [tagInput, setTagInput] = useState("");
     const [description, setDescription] = useState("");
     const [status, setStatus] = useState("Ongoing");
+    const [isPremium, setIsPremium] = useState(false);
+    const [price, setPrice] = useState(10);
 
     const hasSystemTag = tags.some(t => t.toLowerCase() === "#system");
     const activeMacroTags = tags.filter(t => Object.keys(SMART_TAG_MACROS).includes(t.toLowerCase()));
@@ -151,6 +153,8 @@ export default function DraftEditorPage() {
                     setTags(currentData.tags || []);
                     setDescription(currentData.description || "");
                     setStatus(currentData.status || "Ongoing");
+                    setIsPremium(currentData.isPremium || false);
+                    setPrice(currentData.price || 10);
                     // Wait for type state to update then load chapters if needed
                 }
             } catch (err) {
@@ -208,6 +212,8 @@ export default function DraftEditorPage() {
                     tags,
                     description,
                     status,
+                    isPremium: type === "short" ? isPremium : false,
+                    price: type === "short" ? price : 0,
                     updatedAt: serverTimestamp(),
                 }, { merge: true });
 
@@ -219,6 +225,8 @@ export default function DraftEditorPage() {
                         await setDoc(chapRef, {
                             title: chapter.title || "Untitled Chapter",
                             content: chapter.content || "",
+                            isPremium: (chapter as any).isPremium || false,
+                            price: (chapter as any).price || 0,
                             order: i,
                             updatedAt: serverTimestamp(),
                         }, { merge: true });
@@ -265,7 +273,7 @@ export default function DraftEditorPage() {
             published: true,
             updatedAt: serverTimestamp(),
             publishedAt: isAlreadyPublished ? contentSnap.data().publishedAt : serverTimestamp(),
-            ...(type === "short" ? { content } : {}),
+            ...(type === "short" ? { content, isPremium, price } : {}),
         }, { merge: true });
 
         if (type === "novel" && chapters) {
@@ -275,6 +283,8 @@ export default function DraftEditorPage() {
                 await setDoc(doc(db, "novels", id, "chapters", chapter.id), {
                     title: chapter.title || "Untitled",
                     content: chapter.content || "",
+                    isPremium: (chapter as any).isPremium || false,
+                    price: (chapter as any).price || 0,
                     order: i,
                     authorId: user.uid,
                     novelId: id,
@@ -481,6 +491,33 @@ export default function DraftEditorPage() {
                         </div>
                     </div>
 
+                    {/* Short Story Monetization */}
+                    {type === "short" && (
+                        <div className="glass-panel p-8 rounded-3xl space-y-6 border-white/5">
+                            <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Monetization Settings</label>
+                            <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/5">
+                                <span className="text-[10px] uppercase tracking-widest text-white/60">Premium Story</span>
+                                <button
+                                    onClick={() => setIsPremium(!isPremium)}
+                                    className={`w-12 h-6 rounded-full transition-all relative ${isPremium ? "bg-[var(--accent-lime)]" : "bg-white/10"}`}
+                                >
+                                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isPremium ? "left-7" : "left-1"}`} />
+                                </button>
+                            </div>
+                            {isPremium && (
+                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <p className="text-[10px] uppercase tracking-widest text-white/40 ml-1">Price (Inklets)</p>
+                                    <input
+                                        type="number"
+                                        value={price}
+                                        onChange={(e) => setPrice(Number(e.target.value))}
+                                        className="w-full bg-black/20 border border-white/5 p-4 rounded-2xl text-xs text-white focus:outline-none focus:border-[var(--accent-lime)] transition-all"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Synopsis Block */}
                     <div className="glass-panel p-8 rounded-3xl space-y-6 border-white/5">
                         <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Archive Synopsis</label>
@@ -580,7 +617,36 @@ export default function DraftEditorPage() {
                             {/* Refined Chapter Editor */}
                             <div className="flex-1 flex flex-col gap-8 min-h-0 bg-white/[0.01] rounded-[2.5rem] border border-white/5 p-12 overflow-hidden relative">
                                 <div className="space-y-4">
-                                    <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/30 font-bold ml-1">Chapter Title</label>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/30 font-bold ml-1">Chapter Settings</label>
+                                        <div className="flex items-center gap-4 bg-black/20 p-2 rounded-full border border-white/5">
+                                            <span className="text-[8px] uppercase tracking-widest text-white/40 ml-2">Premium</span>
+                                            <button
+                                                onClick={() => {
+                                                    const newChapters = [...chapters];
+                                                    const ch = newChapters[activeChapterIndex] as any;
+                                                    ch.isPremium = !ch.isPremium;
+                                                    if (ch.isPremium && !ch.price) ch.price = 10;
+                                                    setChapters(newChapters);
+                                                }}
+                                                className={`w-8 h-4 rounded-full transition-all relative ${chapters[activeChapterIndex] && (chapters[activeChapterIndex] as any).isPremium ? "bg-[var(--accent-lime)]" : "bg-white/10"}`}
+                                            >
+                                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${(chapters[activeChapterIndex] as any)?.isPremium ? "left-4.5" : "left-0.5"}`} />
+                                            </button>
+                                            {(chapters[activeChapterIndex] as any)?.isPremium && (
+                                                <input
+                                                    type="number"
+                                                    value={(chapters[activeChapterIndex] as any).price || 10}
+                                                    onChange={(e) => {
+                                                        const newChapters = [...chapters];
+                                                        (newChapters[activeChapterIndex] as any).price = Number(e.target.value);
+                                                        setChapters(newChapters);
+                                                    }}
+                                                    className="w-12 bg-transparent border-none p-0 text-[10px] text-white focus:outline-none text-center font-bold"
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
                                     <div className="flex items-center justify-between gap-6 group">
                                         <input
                                             value={chapters[activeChapterIndex]?.title || ""}

@@ -352,7 +352,7 @@ export default function UserPage() {
 
                             {activeTab === "wallet" && (
                                 <div className="col-span-full max-w-2xl mx-auto w-full">
-                                    <h3 className="text-zinc-500 text-[10px] uppercase tracking-widest font-black mb-8">Essence Management</h3>
+                                    <h3 className="text-zinc-500 text-[10px] uppercase tracking-widest font-black mb-8">Inklet & Vellux Management</h3>
                                     <WalletCard />
                                 </div>
                             )}
@@ -382,7 +382,7 @@ export default function UserPage() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                                                 {/* Mapping for reading progress would go here, simplified for now */}
                                                 {libraryData.novelsInProgress.map(n => (
-                                                    <Link key={n.id} href={`/novels/${n.id}/chapter/${n.currentChapterId}`} className="glass-panel p-6 rounded-2xl flex gap-4 hover:border-white/20 transition-all">
+                                                    <Link key={n.id} href={`/chapter/${n.id}-${n.chapterOrder || 1}`} className="glass-panel p-6 rounded-2xl flex gap-4 hover:border-white/20 transition-all">
                                                         <div className="w-16 h-20 bg-zinc-900 rounded-lg overflow-hidden flex-shrink-0">
                                                             <img src={n.coverImage} className="w-full h-full object-cover opacity-60" />
                                                         </div>

@@ -1,0 +1,8 @@
+discord.py
+python-dotenv
+sqlalchemy
+fastapi
+uvicorn
+ollama
+mistralai
+aiosqlite

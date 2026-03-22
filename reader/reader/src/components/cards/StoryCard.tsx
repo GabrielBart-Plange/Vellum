@@ -3,6 +3,8 @@ import Link from "next/link";
 
 interface StoryCardProps {
     id?: string;
+    slug?: string;
+    alphanumericId?: string;
     title?: string;
     author?: string;
     imageUrl?: string;
@@ -14,6 +16,8 @@ interface StoryCardProps {
 
 export default function StoryCard({
     id,
+    slug,
+    alphanumericId,
     title = "Untitled Story",
     author = "Unknown Author",
     imageUrl,
@@ -66,7 +70,8 @@ export default function StoryCard({
     );
 
     const isNovel = type === "novel" || category === "Novel" || category === "fiction" && !id; // Slightly broader heuristic
-    const linkHref = isNovel ? `/novels/${id}` : `/stories/${id}`;
+    const identifier = alphanumericId || slug || id;
+    const linkHref = isNovel ? `/novel/${identifier}` : `/stories/${identifier}`;
 
     return id ? (
         <Link href={linkHref} className="block">

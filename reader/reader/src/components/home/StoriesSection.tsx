@@ -64,6 +64,7 @@ export default function StoriesSection() {
                         <StoryCard
                             key={story.id}
                             id={story.id}
+                            slug={story.slug}
                             title={story.title}
                             author={story.authorName || "Unknown Author"}
                             imageUrl={story.coverImage || "https://placehold.co/400x600/1a1a1a/666666?text=Cover"}

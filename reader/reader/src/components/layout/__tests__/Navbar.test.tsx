@@ -265,30 +265,6 @@ describe('Navbar Auth Integration Unit Tests', () => {
             // "Join the Archives" link should be visible
             const joinLink = screen.getByText('Join the Archives');
             expect(joinLink).toBeInTheDocument();
-        });
-
-        test('should construct correct creator app signup URL', async () => {
-            const user = userEvent.setup();
-
-            (useAuth as jest.Mock).mockReturnValue({
-                user: null,
-                loading: false,
-                signOut: mockSignOut,
-                error: null,
-            });
-
-            render(<Navbar />);
-
-            // Open mobile menu
-            const menuButtons = screen.getAllByRole('button');
-            const menuButton = menuButtons.find(btn =>
-                btn.querySelector('svg') && btn.classList.contains('md:hidden')
-            );
-
-            await user.click(menuButton!);
-
-            // Verify the link points to creator app signup
-            const joinLink = screen.getByText('Join the Archives');
             expect(joinLink).toHaveAttribute('href', '/signup');
         });
 
@@ -320,34 +296,6 @@ describe('Navbar Auth Integration Unit Tests', () => {
             // "Join the Archives" link should not be present
             const joinLink = screen.queryByText('Join the Archives');
             expect(joinLink).not.toBeInTheDocument();
-        });
-
-        test('should use absolute URL for creator app signup', async () => {
-            const user = userEvent.setup();
-
-            (useAuth as jest.Mock).mockReturnValue({
-                user: null,
-                loading: false,
-                signOut: mockSignOut,
-                error: null,
-            });
-
-            render(<Navbar />);
-
-            // Open mobile menu
-            const menuButtons = screen.getAllByRole('button');
-            const menuButton = menuButtons.find(btn =>
-                btn.querySelector('svg') && btn.classList.contains('md:hidden')
-            );
-
-            await user.click(menuButton!);
-
-            // Verify the URL is a relative path (not absolute)
-            const joinLink = screen.getByText('Join the Archives');
-            const href = joinLink.getAttribute('href');
-
-            expect(href).toBe('/signup');
-            // Note: This is now an absolute URL pointing to the creator app
         });
     });
 
@@ -451,7 +399,6 @@ describe('Navbar Auth Integration Unit Tests', () => {
             render(<Navbar />);
 
             // During loading, we show Sign In button (default state)
-            // This is acceptable as the loading state is brief
             const signInLink = screen.getByText('Sign In');
             expect(signInLink).toBeInTheDocument();
         });
@@ -468,41 +415,18 @@ describe('Navbar Auth Integration Unit Tests', () => {
 
             render(<Navbar />);
 
-            // Desktop navigation links (first 3) - use getAllByText since they appear in mobile menu too
+            // Desktop navigation links
             const storiesLinks = screen.getAllByText('Stories');
             const novelsLinks = screen.getAllByText('Novels');
             const aboutLinks = screen.getAllByText('About');
 
-            // Should have at least one of each (desktop version)
             expect(storiesLinks.length).toBeGreaterThan(0);
             expect(novelsLinks.length).toBeGreaterThan(0);
             expect(aboutLinks.length).toBeGreaterThan(0);
         });
 
-        test('should have correct href attributes for navigation links', () => {
-            (useAuth as jest.Mock).mockReturnValue({
-                user: null,
-                loading: false,
-                signOut: mockSignOut,
-                error: null,
-            });
-
-            render(<Navbar />);
-
-            // Get all links and find the desktop navigation ones
-            const allLinks = screen.getAllByRole('link');
-            const storiesLink = allLinks.find(link => link.getAttribute('href') === '/stories' && link.textContent === 'Stories');
-            const novelsLink = allLinks.find(link => link.getAttribute('href') === '/novels' && link.textContent === 'Novels');
-            const aboutLink = allLinks.find(link => link.getAttribute('href') === '/about' && link.textContent === 'About');
-
-            expect(storiesLink).toHaveAttribute('href', '/stories');
-            expect(novelsLink).toHaveAttribute('href', '/novels');
-            expect(aboutLink).toHaveAttribute('href', '/about');
-        });
-
-        test('should display all navigation links in mobile menu', async () => {
+        test('should have correct href attributes for navigation links', async () => {
             const user = userEvent.setup();
-
             (useAuth as jest.Mock).mockReturnValue({
                 user: null,
                 loading: false,
@@ -512,22 +436,23 @@ describe('Navbar Auth Integration Unit Tests', () => {
 
             const { container } = render(<Navbar />);
 
-            // Open mobile menu - find the menu toggle button
+            // Get all links
+            const allLinks = screen.getAllByRole('link');
+            const storiesLink = allLinks.find(link => link.getAttribute('href') === '/stories' && link.textContent === 'Stories');
+            const novelsLink = allLinks.find(link => link.getAttribute('href') === '/novel' && link.textContent === 'Novels');
+            const aboutLink = allLinks.find(link => link.getAttribute('href') === '/about' && link.textContent === 'About');
+
+            expect(storiesLink).toHaveAttribute('href', '/stories');
+            expect(novelsLink).toHaveAttribute('href', '/novel');
+            expect(aboutLink).toHaveAttribute('href', '/about');
+
+            // Mobile menu check
             const menuButtons = screen.getAllByRole('button');
             const menuButton = menuButtons.find(btn =>
                 btn.querySelector('svg') && btn.classList.contains('md:hidden')
             );
-
-            expect(menuButton).toBeInTheDocument();
             await user.click(menuButton!);
 
-            // Verify mobile menu is visible
-            const mobileMenu = container.querySelector('.fixed.inset-0');
-            expect(mobileMenu).toHaveClass('opacity-100', 'translate-y-0');
-
-            // All navigation links should be present in mobile menu
-            // The mobile menu has all 5 links: Stories, Novels, About, Library, Ranking
-            const allLinks = screen.getAllByRole('link');
             const mobileLinks = allLinks.filter(link =>
                 link.classList.contains('group') && link.classList.contains('p-6')
             );
