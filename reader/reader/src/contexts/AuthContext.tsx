@@ -13,7 +13,7 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { MonetizationProfile } from '@/types';
+import { MonetizationProfile, VelluxWallet, VelluxTier } from '@/types';
 import { getXPProfile } from '@/lib/monetization/xpService';
 import { getInkletWallet } from '@/lib/monetization/coinService';
 import { getSubscriptionTier } from '@/lib/monetization/subscriptionService';
@@ -57,15 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
                         getSubscriptionTier(user.uid)
                     ]);
 
-                    // For now, Vellux wallets are initialized empty if not in Firestore
-                    // We can add a getVelluxWallets service later if needed
-                    const velluxWallets = (walletResult as any).velluxWallets || [];
+                    const userData = (walletResult as any)._raw || {};
+                    const velluxWallets: VelluxWallet[] = [
+                        { tier: 'gold' as VelluxTier, amount: userData.vellux_gold_balance || 0, lastReceivedAt: walletResult.updatedAt },
+                        { tier: 'diamond' as VelluxTier, amount: userData.vellux_diamond_balance || 0, lastReceivedAt: walletResult.updatedAt },
+                        { tier: 'platinum' as VelluxTier, amount: userData.vellux_platinum_balance || 0, lastReceivedAt: walletResult.updatedAt }
+                    ];
 
                     setMonetization({
                         subscriptionTier: subResult.tier,
                         subscriptionExpiresAt: subResult.expiresAt,
                         xpProfile: xpResult,
-                        giltBalance: (walletResult as any).giltBalance ?? 0,
+                        giltBalance: userData.giltBalance ?? 0,
                         inkletWallet: walletResult,
                         velluxWallets: velluxWallets
                     });

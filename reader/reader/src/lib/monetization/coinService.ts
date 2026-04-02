@@ -18,8 +18,9 @@ export async function getInkletWallet(userId: string): Promise<InkletWallet> {
                 balance: data.inkletBalance ?? 0,
                 lifetimeEarned: data.lifetimeEarned ?? 0,
                 lifetimeSpent: data.lifetimeSpent ?? 0,
-                updatedAt: data.updatedAt ?? Timestamp.now()
-            };
+                updatedAt: data.updatedAt ?? Timestamp.now(),
+                _raw: data // Pass raw data for AuthContext to pick up Gilt/Vellux
+            } as any;
         }
 
         return createDefaultInkletWallet();
@@ -104,12 +105,12 @@ export async function subscribeToTier(userId: string, tier: SubscriptionTier, pr
 /**
  * Sends a tip to a creator.
  */
-export async function tipCreator(userId: string, username: string, creatorId: string, amount: number): Promise<boolean> {
+export async function tipCreator(userId: string, username: string, creatorId: string, amount: number, currency: 'gilt' | 'inklets' = 'gilt'): Promise<boolean> {
     try {
         const response = await fetch(`${MONETIZATION_API}/creators/${creatorId}/tip`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, username, amount })
+            body: JSON.stringify({ userId, username, amount, currency })
         });
         const data = await response.json();
         return data.ok;
@@ -139,12 +140,12 @@ export async function getChapterStatus(userId: string, novelId: string, chapterI
 /**
  * Unlocks a chapter for a user.
  */
-export async function unlockChapter(userId: string, novelId: string, chapterId: string): Promise<boolean> {
+export async function unlockChapter(userId: string, novelId: string, chapterId: string, currency: 'gilt' | 'inklets' = 'inklets'): Promise<boolean> {
     try {
         const response = await fetch(`${MONETIZATION_API}/chapters/unlock`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, novelId, chapterId })
+            body: JSON.stringify({ userId, novelId, chapterId, currency })
         });
         const data = await response.json();
         return data.ok && data.success;
@@ -174,12 +175,12 @@ export async function getStoryStatus(userId: string, storyId: string): Promise<{
 /**
  * Unlocks a story for a user.
  */
-export async function unlockStory(userId: string, storyId: string): Promise<boolean> {
+export async function unlockStory(userId: string, storyId: string, currency: 'gilt' | 'inklets' = 'inklets'): Promise<boolean> {
     try {
         const response = await fetch(`${MONETIZATION_API}/stories/unlock`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, storyId })
+            body: JSON.stringify({ userId, storyId, currency })
         });
         const data = await response.json();
         return data.ok && data.success;
@@ -194,7 +195,7 @@ export async function unlockStory(userId: string, storyId: string): Promise<bool
  */
 export async function verifyPaystackPayment(reference: string, userId: string, amount: number, currencyAmount: number, type: string): Promise<boolean> {
     try {
-        const response = await fetch(`/api/payments/paystack/verify`, {
+        const response = await fetch(`${MONETIZATION_API}/payments/paystack/verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ reference, userId, amount, currencyAmount, type })

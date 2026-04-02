@@ -82,10 +82,10 @@ app.get('/api/chapters/status/:userId/:novelId/:chapterId', async (req: Request,
 
 /**
  * POST /api/chapters/unlock
- * Logic to unlock a chapter using Inklets.
+ * Logic to unlock a chapter using Inklets or Gilt.
  */
 app.post('/api/chapters/unlock', async (req: Request, res: Response) => {
-  const { userId, novelId, chapterId } = req.body as any;
+  const { userId, novelId, chapterId, currency = 'inklets' } = req.body as any;
 
   if (!userId || !novelId || !chapterId) {
     return res.status(400).json({ ok: false, error: 'Missing compulsory fields' });
@@ -112,10 +112,11 @@ app.post('/api/chapters/unlock', async (req: Request, res: Response) => {
 
       const chapterData = chapterSnap.data();
       const price = chapterData?.price || 0;
-      const userBalance = userSnap.data()?.inkletBalance || 0;
+      const userData = userSnap.data();
+      const userBalance = currency === 'gilt' ? (userData?.giltBalance || 0) : (userData?.inkletBalance || 0);
 
       if (userBalance < price) {
-        throw new Error('Insufficient Inklets');
+        throw new Error(`Insufficient ${currency === 'gilt' ? 'Gilt' : 'Inklets'}`);
       }
 
       const creatorId = novelSnap.data()?.authorId;
@@ -123,22 +124,33 @@ app.post('/api/chapters/unlock', async (req: Request, res: Response) => {
       const creatorRef = db.collection('users').doc(creatorId);
 
       // 1. Deduct from user
-      transaction.update(userRef, {
-        inkletBalance: admin.firestore.FieldValue.increment(-price),
+      const userUpdate: any = {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if (currency === 'gilt') {
+        userUpdate.giltBalance = admin.firestore.FieldValue.increment(-price);
+      } else {
+        userUpdate.inkletBalance = admin.firestore.FieldValue.increment(-price);
+      }
+      transaction.update(userRef, userUpdate);
 
-      // 2. Grant to creator (65% share)
-      const creatorShare = Math.floor(price * 0.65);
-      transaction.update(creatorRef, {
-        inkletBalance: admin.firestore.FieldValue.increment(creatorShare),
+      // 2. Grant to creator (70% share)
+      const creatorShare = Math.floor(price * 0.70);
+      const creatorUpdate: any = {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if (currency === 'gilt') {
+        creatorUpdate.giltBalance = admin.firestore.FieldValue.increment(creatorShare);
+      } else {
+        creatorUpdate.inkletBalance = admin.firestore.FieldValue.increment(creatorShare);
+      }
+      transaction.update(creatorRef, creatorUpdate);
 
       // 3. Mark as unlocked
       transaction.set(unlockRef, {
         novelId,
         chapterId,
+        currency,
         unlockedAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
@@ -217,7 +229,7 @@ app.get('/api/stories/status/:userId/:storyId', async (req: Request, res: Respon
  * POST /api/stories/unlock
  */
 app.post('/api/stories/unlock', async (req: Request, res: Response) => {
-  const { userId, storyId } = req.body as any;
+  const { userId, storyId, currency = 'inklets' } = req.body as any;
 
   if (!userId || !storyId) {
     return res.status(400).json({ ok: false, error: 'Missing compulsory fields' });
@@ -240,10 +252,11 @@ app.post('/api/stories/unlock', async (req: Request, res: Response) => {
 
       const storyData = storySnap.data();
       const price = storyData?.price || 0;
-      const userBalance = userSnap.data()?.inkletBalance || 0;
+      const userData = userSnap.data();
+      const userBalance = currency === 'gilt' ? (userData?.giltBalance || 0) : (userData?.inkletBalance || 0);
 
       if (userBalance < price) {
-        throw new Error('Insufficient Inklets');
+        throw new Error(`Insufficient ${currency === 'gilt' ? 'Gilt' : 'Inklets'}`);
       }
 
       const creatorId = storyData?.authorId;
@@ -251,21 +264,32 @@ app.post('/api/stories/unlock', async (req: Request, res: Response) => {
       const creatorRef = db.collection('users').doc(creatorId);
 
       // 1. Deduct from user
-      transaction.update(userRef, {
-        inkletBalance: admin.firestore.FieldValue.increment(-price),
+      const userUpdate: any = {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if (currency === 'gilt') {
+        userUpdate.giltBalance = admin.firestore.FieldValue.increment(-price);
+      } else {
+        userUpdate.inkletBalance = admin.firestore.FieldValue.increment(-price);
+      }
+      transaction.update(userRef, userUpdate);
 
-      // 2. Grant to creator (65% share)
-      const creatorShare = Math.floor(price * 0.65);
-      transaction.update(creatorRef, {
-        inkletBalance: admin.firestore.FieldValue.increment(creatorShare),
+      // 2. Grant to creator (70% share)
+      const creatorShare = Math.floor(price * 0.70);
+      const creatorUpdate: any = {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if (currency === 'gilt') {
+        creatorUpdate.giltBalance = admin.firestore.FieldValue.increment(creatorShare);
+      } else {
+        creatorUpdate.inkletBalance = admin.firestore.FieldValue.increment(creatorShare);
+      }
+      transaction.update(creatorRef, creatorUpdate);
 
       // 3. Mark as unlocked
       transaction.set(unlockRef, {
         storyId,
+        currency,
         unlockedAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
@@ -418,6 +442,15 @@ app.post('/api/payments/paystack/verify', async (req: Request, res: Response) =>
         updates.subscriptionTier = tier;
         updates.subscriptionStatus = 'active';
         updates.subscriptionUpdatedAt = admin.firestore.FieldValue.serverTimestamp();
+        
+        // Grant subscription bonuses
+        if (tier === 'prime') {
+          // Vellum Prime: 50 Inklets bonus
+          updates.inkletBalance = admin.firestore.FieldValue.increment(50);
+        } else if (tier === 'nexus') {
+          // Vellum Nexus: 1 Gold Vellux bonus
+          updates.vellux_gold_balance = admin.firestore.FieldValue.increment(1);
+        }
       }
 
       transaction.update(userRef, updates);
@@ -528,7 +561,7 @@ app.post('/api/payments/vellux/purchase', async (req: Request, res: Response) =>
 
 app.post('/api/creators/:id/tip', async (req: Request, res: Response) => {
   const creatorId = req.params.id
-  const { userId, amount, username } = req.body
+  const { userId, amount, username, currency = 'gilt' } = req.body
 
   if (!userId || !amount || !creatorId) {
     return res.status(400).json({ ok: false, error: 'Missing mandatory fields' })
@@ -542,24 +575,39 @@ app.post('/api/creators/:id/tip', async (req: Request, res: Response) => {
       const userSnap = await transaction.get(userRef);
       if (!userSnap.exists) throw new Error('User not found');
       
-      const userBalance = userSnap.data()?.inkletBalance || 0;
+      const userData = userSnap.data();
+      const userBalance = currency === 'gilt' ? (userData?.giltBalance || 0) : (userData?.inkletBalance || 0);
+      
       if (userBalance < amount) {
-        throw new Error('Insufficient Inklets');
+        throw new Error(`Insufficient ${currency === 'gilt' ? 'Gilt' : 'Inklets'}`);
       }
 
       // Deduct from user
-      transaction.update(userRef, {
-        inkletBalance: admin.firestore.FieldValue.increment(-amount),
+      const userUpdate: any = {
         lifetimeSpent: admin.firestore.FieldValue.increment(amount),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if (currency === 'gilt') {
+        userUpdate.giltBalance = admin.firestore.FieldValue.increment(-amount);
+      } else {
+        userUpdate.inkletBalance = admin.firestore.FieldValue.increment(-amount);
+      }
+      transaction.update(userRef, userUpdate);
 
-      // Add to creator
-      transaction.update(creatorRef, {
-        inkletBalance: admin.firestore.FieldValue.increment(amount),
-        lifetimeEarned: admin.firestore.FieldValue.increment(amount),
+      // Add to creator (70% split for Gilt, 100% for Inklets as they are non-monetary/engagement)
+      // Note: Strategy says 70% of Gilt tips go to creator.
+      const creatorShare = currency === 'gilt' ? Math.floor(amount * 0.70) : amount;
+      
+      const creatorUpdate: any = {
+        lifetimeEarned: admin.firestore.FieldValue.increment(creatorShare),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if (currency === 'gilt') {
+        creatorUpdate.giltBalance = admin.firestore.FieldValue.increment(creatorShare);
+      } else {
+        creatorUpdate.inkletBalance = admin.firestore.FieldValue.increment(creatorShare);
+      }
+      transaction.update(creatorRef, creatorUpdate);
 
       // Record transaction
       const transRef = db.collection('transactions').doc();
@@ -569,7 +617,9 @@ app.post('/api/creators/:id/tip', async (req: Request, res: Response) => {
         fromName: username || 'Anonymous',
         toId: creatorId,
         type: 'tip',
+        currency,
         amount,
+        creatorShare,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
     });
@@ -632,6 +682,17 @@ app.post('/api/payments/subscribe', async (req: Request, res: Response) => {
       subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+
+    // Grant subscription bonuses for manual/direct subscription
+    const bonusUpdates: any = {};
+    if (tier === 'prime') {
+      bonusUpdates.inkletBalance = admin.firestore.FieldValue.increment(50);
+    } else if (tier === 'nexus') {
+      bonusUpdates.vellux_gold_balance = admin.firestore.FieldValue.increment(1);
+    }
+    if (Object.keys(bonusUpdates).length > 0) {
+      await userRef.update(bonusUpdates);
+    }
 
     const transRef = db.collection('transactions').doc();
     await transRef.set({

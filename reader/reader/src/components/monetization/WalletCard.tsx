@@ -164,7 +164,7 @@ export default function WalletCard() {
                     </div>
 
                     <div className="space-y-3">
-                        <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 font-black italic">Echoes</p>
+                        <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 font-black italic">Vellux</p>
                         <div className="flex items-center gap-4">
                             <div className="w-8 h-8 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/30 shadow-[0_0_15px_rgba(139,92,246,0.2)]">
                                 <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_10px_#fbbf24] animate-pulse" />
