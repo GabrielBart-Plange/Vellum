@@ -53,7 +53,7 @@ async function getNovelData(slug: string) {
     .orderBy('order', 'asc')
     .get();
     
-  const chapters = JSON.parse(JSON.stringify(chaptersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+  const chapters = JSON.parse(JSON.stringify(chaptersSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))));
 
   return { novelId, novel, chapters };
 }
