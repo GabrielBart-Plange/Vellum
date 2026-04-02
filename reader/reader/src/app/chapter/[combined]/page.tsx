@@ -36,6 +36,10 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
     const [isLocked, setIsLocked] = useState(false);
     const [unlockPrice, setUnlockPrice] = useState(0);
     const [unlocking, setUnlocking] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [showIndex, setShowIndex] = useState(false);
+    const [maxChapterOrderRead, setMaxChapterOrderRead] = useState<number>(0);
 
     // Parsing combined param (e.g. angle-s-arrogance-12)
     const lastHyphenIndex = combined.lastIndexOf("-");
@@ -141,6 +145,22 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                                 chapterOrder,
                                 allChapSnap.size
                             );
+
+                            // Check and set saved status
+                            const savedRef = doc(db, "users", user.uid, "savedNovels", docId);
+                            const savedSnap = await getDoc(savedRef);
+                            setSaved(savedSnap.exists());
+
+                            // Check and set max chapter read (using progress document after save)
+                            const progressRef = doc(db, "users", user.uid, "progress", docId);
+                            const progressSnap = await getDoc(progressRef);
+                            if (progressSnap.exists()) {
+                                setMaxChapterOrderRead(Math.max(progressSnap.data().chapterOrder, chapterOrder));
+                            } else {
+                                setMaxChapterOrderRead(chapterOrder);
+                            }
+                        } else {
+                            setMaxChapterOrderRead(chapterOrder);
                         }
 
                         // View Increment
@@ -193,9 +213,34 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
         load();
     }, [combined, user, router, novelIdentifier, chapterOrder]);
 
+    const handleToggleBookmark = async () => {
+        if (!user) {
+            router.push(`/login?returnUrl=${encodeURIComponent(window.location.pathname)}`);
+            return;
+        }
+        if (!novel || !novelId) return;
+
+        setSaving(true);
+        try {
+            if (saved) {
+                await progressTracking.unsaveNovel(user.uid, novelId);
+                setSaved(false);
+            } else {
+                await progressTracking.saveNovel(
+                    user.uid,novelId,novel.title || "Untitled",novel.coverImage || "",novel.authorName || "Unknown Author",novel.authorId || novel.creatorId,novel.numericalId,novel.slug
+                );
+                setSaved(true);
+            }
+        } catch (error) {
+            console.error("Error toggling novel save:", error);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center text-[var(--reader-text)]/40 uppercase tracking-widest text-xs">
-            Unrolling the chronicle...
+        <div className="min-h-screen flex items-center justify-center text-[var(--reader-text)]/40 uppercase tracking-[0.8em] text-[10px] font-black">
+            Accessing Chapter...
         </div>
     );
 
@@ -230,13 +275,13 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--reader-bg)] via-[var(--reader-bg)]/60 to-transparent" />
 
                 <div className="relative z-10 max-w-3xl mx-auto px-6 pb-12 w-full text-center space-y-4">
-                    <p className="text-[10px] uppercase tracking-[0.6em] font-black" style={{ color: 'var(--reader-accent)' }}>
-                        Unit {chapterOrder}
+                    <p className="text-[10px] uppercase tracking-[0.6em] font-black italic" style={{ color: 'var(--reader-accent)' }}>
+                        Chapter {chapterOrder}
                     </p>
-                    <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight leading-tight" style={{ color: 'var(--reader-text)' }}>
+                    <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight leading-tight italic" style={{ color: 'var(--reader-text)' }}>
                         {chapter.title}
                     </h1>
-                    <div className="flex items-center justify-center gap-4 text-[11px] uppercase tracking-widest opacity-60 font-black">
+                    <div className="flex items-center justify-center gap-4 text-[11px] uppercase tracking-widest opacity-60 font-black italic">
                         <span>{novel.title}</span>
                         <div className="h-1 w-1 bg-zinc-600 rounded-full" />
                         <Link href={`/authors/${novel.authorId}`} className="hover:text-[var(--reader-accent)] transition-colors">
@@ -247,7 +292,7 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
             </div>
 
             <article className="max-w-3xl mx-auto px-6 md:px-12">
-                <div className="flex items-center gap-4 py-8 border-b border-t mb-16 transition-colors" style={{ borderColor: 'var(--reader-border)' }}>
+                    <div className="flex items-center gap-4 py-8 border-b border-t mb-16 transition-colors" style={{ borderColor: 'var(--reader-border)' }}>
                     <LikeButton
                         contentType="chapter"
                         contentId={chapterId}
@@ -256,17 +301,59 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                     />
                     <TipButton creatorId={novel.authorId} creatorName={novel.authorName} />
 
+                    <button 
+                        onClick={handleToggleBookmark} 
+                        disabled={saving}
+                        className={`glass-panel p-2.5 rounded-2xl transition-all ${saved ? 'text-[var(--reader-accent)] border-[var(--reader-accent)]/30 bg-[var(--reader-accent)]/5 shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5 disabled:opacity-50'}`}
+                        title={saved ? "Remove from Library" : "Save to Library"}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill={saved ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                        </svg>
+                    </button>
+                    
+                    <button 
+                        onClick={() => setShowIndex(true)} 
+                        className="glass-panel p-2.5 rounded-2xl transition-all text-zinc-500 hover:text-[var(--reader-accent)] hover:border-[var(--reader-accent)]/30 hover:bg-[var(--reader-accent)]/5"
+                        title="Chapter Index"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                        </svg>
+                    </button>
+
                     <div className="flex-grow" />
 
-                    <div className="hidden md:flex items-center gap-6">
+                    <button
+                        onClick={() => {
+                            navigator.clipboard.writeText(window.location.href);
+                            alert("Link copied to clipboard.");
+                        }}
+                        className="glass-panel p-2.5 rounded-2xl hover:bg-white/5 transition-all text-zinc-500 hover:text-zinc-300 mr-4"
+                        title="Copy link to this chapter"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 scale-x-[-1]">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Zm0 12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                        </svg>
+                    </button>
+
+                    <div className="hidden md:flex items-center gap-6 italic">
                         {prevChapter && (
-                            <Link href={`/chapter/${novelIdentifier}-${prevChapter.order}`} className="text-[10px] uppercase tracking-[0.2em] font-black opacity-40 hover:opacity-100 hover:text-[var(--reader-accent)] transition-all">
-                                Prev Unit
+                            <Link 
+                                href={`/chapter/${novelIdentifier}-${prevChapter.order}`} 
+                                className="text-[10px] uppercase tracking-[0.2em] font-black opacity-40 hover:opacity-100 hover:text-[var(--reader-accent)] transition-all"
+                                title="Go to previous chapter"
+                            >
+                                Last Chapter
                             </Link>
                         )}
                         {nextChapter && (
-                            <Link href={`/chapter/${novelIdentifier}-${nextChapter.order}`} className="text-[10px] uppercase tracking-[0.2em] font-black opacity-40 hover:opacity-100 hover:text-[var(--reader-accent)] transition-all">
-                                Next Unit
+                            <Link 
+                                href={`/chapter/${novelIdentifier}-${nextChapter.order}`} 
+                                className="text-[10px] uppercase tracking-[0.2em] font-black opacity-40 hover:opacity-100 hover:text-[var(--reader-accent)] transition-all"
+                                title="Go to next chapter"
+                            >
+                                Next Chapter
                             </Link>
                         )}
                     </div>
@@ -290,10 +377,10 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <h3 className="text-xl font-black uppercase tracking-widest text-white">This Chapter is Locked</h3>
-                                    <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold max-w-sm mx-auto">
-                                        The chronicler has restricted this content. Support them to continue the unrolling.
-                                    </p>
+                                    <h3 className="text-xl font-black uppercase tracking-widest text-white italic">This Chapter is Locked</h3>
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black max-w-sm mx-auto italic">
+                                    The author has restricted this portion of the story. Support them to continue reading.
+                                </p>
                                 </div>
                                 
                                 {user ? (
@@ -312,7 +399,7 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                                             disabled={unlocking}
                                             className="bg-white text-black px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[var(--reader-accent)] hover:text-white transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50"
                                         >
-                                            {unlocking ? "Processing Unlock..." : `Unlock for ${unlockPrice} Inklets`}
+                                            {unlocking ? "Unlocking..." : `Unlock for ${unlockPrice} Inklets`}
                                         </button>
                                         <p className="text-[9px] uppercase tracking-widest text-white/20 font-black">Refreshes permanently for your archive</p>
                                     </div>
@@ -327,7 +414,28 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                             </div>
                         </div>
                     ) : (
-                        <SystemNotation content={chapter.content} fontSize={fontSize} />
+                        <>
+                            {chapter.authorNoteBefore && (
+                                <div className="mb-12 p-8 rounded-3xl bg-[var(--reader-surface)] border border-[var(--reader-border)] italic text-sm text-[var(--reader-text-muted)] relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-purple-500/20" />
+                                    <p className="text-[9px] uppercase tracking-[0.4em] font-black mb-4 text-purple-400/60 not-italic">Scribe's Prelude</p>
+                                    {chapter.authorNoteBefore}
+                                </div>
+                            )}
+                            <SystemNotation 
+                            content={chapter.content} 
+                            fontSize={fontSize} 
+                            chapterId={chapterId}
+                            novelId={novelId}
+                        />
+                            {chapter.authorNoteAfter && (
+                                <div className="mt-12 p-8 rounded-3xl bg-[var(--reader-surface)] border border-[var(--reader-border)] italic text-sm text-[var(--reader-text-muted)] relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/20" />
+                                    <p className="text-[9px] uppercase tracking-[0.4em] font-black mb-4 text-amber-400/60 not-italic">Scribe's Postscript</p>
+                                    {chapter.authorNoteAfter}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
@@ -337,6 +445,80 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                     novelId={novelId}
                     initialCommentCount={chapter.commentCount || 0}
                 />
+
+                {/* Author Shoutout / Cross-Promotion */}
+                {novel.shoutoutId && (
+                    <div className="mt-16 p-8 rounded-3xl border border-[var(--reader-border)] bg-gradient-to-br from-purple-900/10 to-transparent relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500"><path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" /></svg>
+                        </div>
+                        
+                        <div className="relative z-10 space-y-6">
+                            <div className="space-y-1">
+                                <p className="text-[10px] uppercase tracking-[0.4em] text-purple-400 font-black italic">Similar Stories</p>
+                                <h3 className="text-xl font-black text-white uppercase tracking-tight italic">Shining a Spotlight</h3>
+                            </div>
+
+                            <Link href={`/novel/${novel.shoutoutId}`} className="flex gap-6 items-center bg-white/5 p-4 rounded-2xl hover:bg-white/10 transition-all border border-white/5 hover:border-purple-500/30">
+                                <div className="w-16 h-24 bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
+                                    <img 
+                                        src={novel.shoutoutCover || "https://placehold.co/200x300/1a1a1a/666666?text=Novel"} 
+                                        alt="Recommended Novel"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <h4 className="text-white font-bold uppercase tracking-wide group-hover:text-purple-400 transition-colors">{novel.shoutoutTitle || "Next Great Read"}</h4>
+                                    <p className="text-xs text-zinc-500 line-clamp-2">{novel.shoutoutDescription || "The author recommends this saga for fans of this chronicle."}</p>
+                                </div>
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
+                {/* Community & Support CTAs */}
+                <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="glass-panel p-8 rounded-3xl border border-white/5 flex flex-col items-center text-center space-y-4 hover:border-purple-500/20 transition-all">
+                        <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" /></svg>
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-black uppercase tracking-widest text-white italic">The Circle</h4>
+                            <p className="text-[9px] text-zinc-500 uppercase font-black italic">Resonate with other seekers on Discord</p>
+                        </div>
+                        <a href="https://discord.gg/vellum" target="_blank" rel="noopener noreferrer" className="px-6 py-2 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all">
+                            Join Discord
+                        </a>
+                    </div>
+
+                    <div className="glass-panel p-8 rounded-3xl border border-white/5 flex flex-col items-center text-center space-y-4 hover:border-pink-500/20 transition-all">
+                        <div className="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center text-pink-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21l-8.228-9.96a5 5 0 1 1 7.228-6.96 5 5 0 1 1 7.228 6.96l-8.228 9.96z" /></svg>
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-black uppercase tracking-widest text-white italic">Support the Scribe</h4>
+                            <p className="text-[9px] text-zinc-500 uppercase font-black italic">Offer Gilt to show your appreciation</p>
+                        </div>
+                        <TipButton creatorId={novel.authorId} creatorName={novel.authorName} />
+                    </div>
+
+                    <div className="glass-panel p-8 rounded-3xl border border-white/5 flex flex-col items-center text-center space-y-4 hover:border-amber-500/20 transition-all">
+                        <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" /></svg>
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-black uppercase tracking-widest text-white italic">Rate the Chapter</h4>
+                            <p className="text-[9px] text-zinc-500 uppercase font-black italic">Help others discover this chapter</p>
+                        </div>
+                        <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                                <button key={s} className="text-zinc-600 hover:text-amber-400 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" /></svg>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
 
                 <ManagedAd zone="READER_AFTER_CHAPTER" />
 
@@ -350,8 +532,8 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                                 className="flex-1 group p-8 glass-panel border border-[var(--reader-border)] rounded-3xl transition-all space-y-3 hover:border-[var(--reader-accent)]/30"
                                 style={{ backgroundColor: 'var(--reader-footer-bg)' }}
                             >
-                                <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-black">Previous Unit</p>
-                                <p className="text-lg font-black group-hover:text-[var(--reader-accent)] transition-colors uppercase">{prevChapter.title}</p>
+                                <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-black italic">Last Chapter</p>
+                                <p className="text-lg font-black group-hover:text-[var(--reader-accent)] transition-colors uppercase italic">{prevChapter.title}</p>
                             </Link>
                         ) : <div className="flex-1" />}
 
@@ -361,20 +543,33 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                                 className="flex-1 group p-8 glass-panel border border-[var(--reader-border)] rounded-3xl transition-all space-y-3 text-right hover:border-[var(--reader-accent)]/30"
                                 style={{ backgroundColor: 'var(--reader-footer-bg)' }}
                             >
-                                <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-black">Next Unit</p>
-                                <p className="text-lg font-black group-hover:text-[var(--reader-accent)] transition-colors uppercase">{nextChapter.title}</p>
+                                <p className="text-[9px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-black italic">Next Chapter</p>
+                                <p className="text-lg font-black group-hover:text-[var(--reader-accent)] transition-colors uppercase italic">{nextChapter.title}</p>
                             </Link>
                         ) : (
-                            <div className="flex-1 p-8 border border-dashed rounded-3xl flex flex-col items-center justify-center space-y-2 opacity-30" style={{ borderColor: 'var(--reader-border)' }}>
-                                <p className="text-[9px] uppercase tracking-[0.4em] font-black">End of Volume</p>
-                                <p className="text-lg font-black uppercase">Archive Complete</p>
+                            <div className="flex-1 p-8 glass-panel border border-dashed border-purple-500/30 rounded-3xl flex flex-col items-center justify-center text-center space-y-4 bg-purple-500/5 animate-pulse-slow" style={{ backgroundColor: 'var(--reader-footer-bg)' }}>
+                                <div className="space-y-1">
+                                    <p className="text-[9px] uppercase tracking-[0.4em] text-purple-400 font-black">End of Chapter</p>
+                                    <p className="text-lg font-black uppercase text-white">Caught Up</p>
+                                </div>
+                                <p className="text-[10px] text-zinc-500 max-w-[200px] font-medium leading-tight">
+                                    You've reached the end of the available chapters. Stay tuned for the next release!
+                                </p>
+                                <div className="flex gap-2">
+                                    <Link href="/novel" className="px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase tracking-widest hover:bg-white/5 transition-all text-white">
+                                        Browse Novels
+                                    </Link>
+                                    <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-4 py-2 rounded-full bg-purple-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all">
+                                        Back to Top
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
 
                     <div className="text-center pt-16">
-                        <Link href={`/novel/${novelIdentifier}`} className="text-[10px] uppercase tracking-[0.6em] font-black opacity-40 hover:opacity-100 hover:text-[var(--reader-accent)] transition-all">
-                            Back to Shelf
+                        <Link href={`/novel/${novelIdentifier}`} className="text-[10px] uppercase tracking-[0.6em] font-black opacity-40 hover:opacity-100 hover:text-[var(--reader-accent)] transition-all italic" title="Back to the novel overview">
+                            Return to Novel
                         </Link>
                     </div>
                 </footer>
@@ -389,6 +584,72 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                     }}
                 />
             </div>
+
+            {/* Chapter Index Modal */}
+            {showIndex && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12 animate-in fade-in duration-500">
+                    <div className="absolute inset-0 bg-[var(--reader-bg)]/90 backdrop-blur-3xl" onClick={() => setShowIndex(false)} />
+                    <div className="relative w-full max-w-5xl max-h-[80vh] overflow-hidden glass rounded-3xl border border-[var(--reader-border)] flex flex-col scale-in-center">
+                        <header className="p-8 border-b border-[var(--reader-border)] flex items-center justify-between shadow-sm">
+                            <div>
+                                <h1 className="text-[10px] uppercase tracking-[0.5em] text-[var(--reader-text-subtle)] font-black italic">Project Vellum</h1>
+                                <p className="text-xl font-black uppercase text-[var(--reader-text)] tracking-widest italic">{novel?.title}</p>
+                            </div>
+                            <button
+                                onClick={() => setShowIndex(false)}
+                                className="w-12 h-12 rounded-full glass flex items-center justify-center text-[var(--reader-text-subtle)] hover:text-[var(--reader-text)] transition-all"
+                            >
+                                ✕
+                            </button>
+                        </header>
+                        <div className="flex-grow overflow-y-auto p-8 custom-scrollbar">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {allChapters.map((chap, index) => {
+                                    const isCurrent = chap.id === chapterId;
+                                    const isRead = chap.order <= maxChapterOrderRead && !isCurrent;
+                                    
+                                    return (
+                                        <Link
+                                            key={chap.id}
+                                            href={`/chapter/${novelIdentifier}-${chap.order}`}
+                                            className={`group p-6 glass-panel border rounded-2xl transition-all duration-500 flex items-center justify-between ${
+                                                isCurrent 
+                                                ? 'border-[var(--reader-accent)]/50 bg-[var(--reader-accent)]/10 shadow-[0_0_20px_rgba(139,92,246,0.15)]' 
+                                                : isRead
+                                                    ? 'border-white/5 bg-white/[0.02] opacity-60 hover:opacity-100 hover:border-white/20'
+                                                    : 'border-white/5 hover:border-[var(--reader-accent)]/40 hover:bg-white/[0.05]'
+                                            }`}
+                                        >
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <p className={`text-[9px] uppercase tracking-widest font-black italic ${isCurrent ? 'text-[var(--reader-accent)]' : 'text-[var(--reader-text-subtle)] group-hover:text-[var(--reader-accent)] transition-colors'}`}>
+                                                        Chapter {index + 1}
+                                                    </p>
+                                                    {isRead && (
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-zinc-500">
+                                                            <title>Read</title>
+                                                            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                                <h3 className={`text-sm font-black tracking-tight line-clamp-1 truncate uppercase italic ${isCurrent ? 'text-white' : 'text-[var(--reader-text-muted)] group-hover:text-[var(--reader-text)] transition-colors'}`}>
+                                                    {chap.title}
+                                                </h3>
+                                            </div>
+                                            {chap.isPremium && !isCurrent && (
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-[var(--reader-accent)]/50">
+                                                    <title>Premium Chapter</title>
+                                                    <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clipRule="evenodd" />
+                                                </svg>
+                                            )}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

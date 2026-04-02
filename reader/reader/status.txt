@@ -1,0 +1,119 @@
+﻿On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   ../../backend/monetization-srv/src/index.ts
+	deleted:    ../../creator/creator/.gitignore
+	deleted:    ../../creator/creator/README.md
+	deleted:    ../../creator/creator/eslint.config.mjs
+	deleted:    ../../creator/creator/next.config.ts
+	deleted:    ../../creator/creator/package-lock.json
+	deleted:    ../../creator/creator/package.json
+	deleted:    ../../creator/creator/postcss.config.mjs
+	deleted:    ../../creator/creator/public/file.svg
+	deleted:    ../../creator/creator/public/globe.svg
+	deleted:    ../../creator/creator/public/next.svg
+	deleted:    ../../creator/creator/public/vercel.svg
+	deleted:    ../../creator/creator/public/window.svg
+	deleted:    ../../creator/creator/src/app/dashboard/art/page.tsx
+	deleted:    ../../creator/creator/src/app/dashboard/drafts/[id]/page.tsx
+	deleted:    ../../creator/creator/src/app/dashboard/drafts/new/page.tsx
+	deleted:    ../../creator/creator/src/app/dashboard/drafts/page.tsx
+	deleted:    ../../creator/creator/src/app/dashboard/layout.tsx
+	deleted:    ../../creator/creator/src/app/dashboard/page.tsx
+	deleted:    ../../creator/creator/src/app/dashboard/profile/page.tsx
+	deleted:    ../../creator/creator/src/app/dashboard/published/page.tsx
+	deleted:    ../../creator/creator/src/app/dashboard/settings/page.tsx
+	deleted:    ../../creator/creator/src/app/favicon.ico
+	deleted:    ../../creator/creator/src/app/globals.css
+	deleted:    ../../creator/creator/src/app/layout.tsx
+	deleted:    ../../creator/creator/src/app/login/page.tsx
+	deleted:    ../../creator/creator/src/app/page.tsx
+	deleted:    ../../creator/creator/src/app/portal/page.tsx
+	deleted:    ../../creator/creator/src/app/signout/page.tsx
+	deleted:    ../../creator/creator/src/app/signup/page.tsx
+	deleted:    ../../creator/creator/src/app/verify-email/page.tsx
+	deleted:    ../../creator/creator/src/components/AuthProvider.tsx
+	deleted:    ../../creator/creator/src/components/DraftCard.tsx
+	deleted:    ../../creator/creator/src/components/ImageUpload.tsx
+	deleted:    ../../creator/creator/src/components/MobileNav.tsx
+	deleted:    ../../creator/creator/src/components/Sidebar.tsx
+	deleted:    ../../creator/creator/src/components/StatCard.tsx
+	deleted:    ../../creator/creator/src/components/theme-provider.tsx
+	deleted:    ../../creator/creator/src/lib/firebase.ts
+	deleted:    ../../creator/creator/src/lib/syncUser.ts
+	deleted:    ../../creator/creator/src/lib/useRequireAuth.ts
+	deleted:    ../../creator/creator/src/styles/creator.css
+	deleted:    ../../creator/creator/tsconfig.json
+	modified:   ../../discord-bot/data/vellum_bot.json
+	modified:   ../../discord-bot/package-lock.json
+	modified:   ../../discord-bot/package.json
+	modified:   ../../discord-bot/src/db/database.ts
+	modified:   ../../discord-bot/src/modules/externalControl.ts
+	modified:   ../../discord-bot/src/modules/listener.ts
+	modified:   ../../discord-bot/src/modules/summarizer.ts
+	modified:   src/app/about/page.tsx
+	modified:   src/app/art/page.tsx
+	modified:   src/app/authors/[id]/page.tsx
+	modified:   src/app/chapter/[combined]/page.tsx
+	modified:   src/app/contact/page.tsx
+	deleted:    src/app/favicon.ico
+	modified:   src/app/genre/[slug]/page.tsx
+	modified:   src/app/globals.css
+	modified:   src/app/layout.tsx
+	modified:   src/app/library/page.tsx
+	modified:   src/app/login/page.tsx
+	modified:   src/app/nexus/page.tsx
+	modified:   src/app/not-found.tsx
+	modified:   src/app/novel/[slug]/page.tsx
+	modified:   src/app/novel/page.tsx
+	modified:   src/app/page.tsx
+	modified:   src/app/portal/page.tsx
+	modified:   src/app/privacy/page.tsx
+	modified:   src/app/ranking/page.tsx
+	modified:   src/app/settings/page.tsx
+	modified:   src/app/signup/page.tsx
+	modified:   src/app/stories/[id]/page.tsx
+	modified:   src/app/stories/page.tsx
+	modified:   src/app/tag/[slug]/page.tsx
+	modified:   src/components/cards/StoryCard.tsx
+	modified:   src/components/home/GenreGrid.tsx
+	modified:   src/components/home/Hero.tsx
+	modified:   src/components/home/NovelsSection.tsx
+	modified:   src/components/home/StoriesSection.tsx
+	modified:   src/components/interactions/CommentSection.tsx
+	modified:   src/components/interactions/LikeButton.tsx
+	modified:   src/components/interactions/TipButton.tsx
+	modified:   src/components/layout/DiscoveryFilter.tsx
+	modified:   src/components/layout/Footer.tsx
+	modified:   src/components/layout/Navbar.tsx
+	modified:   src/components/layout/SearchModal.tsx
+	modified:   src/components/monetization/NexusPool.tsx
+	modified:   src/components/monetization/WalletCard.tsx
+	modified:   src/components/reader/ReadingSettings.tsx
+	modified:   src/components/reader/SystemNotation.tsx
+	modified:   src/lib/monetization/coinService.ts
+	modified:   src/types/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	../../discord-bot/dashboard/
+	creator/
+	diff.txt
+	public/logo.png
+	src/app/error.tsx
+	src/app/icon.png
+	src/app/loading.tsx
+	src/app/robots.txt
+	src/app/sitemap.ts
+	src/components/authors/
+	src/components/home/PulseFeed.tsx
+	src/components/novel/
+	src/components/stories/
+	src/lib/firebase-admin.ts
+	status.txt
+	../../revert-resonance.js
+
+no changes added to commit (use "git add" and/or "git commit -a")

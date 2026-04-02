@@ -11,8 +11,8 @@ export default function GenreGrid() {
     return (
         <section className="py-24 px-4 max-w-6xl mx-auto">
             <header className="mb-12 text-center space-y-2">
-                <h2 className="text-[11px] uppercase tracking-[0.6em] text-[var(--reader-text-subtle)] font-bold">Categories</h2>
-                <p className="text-3xl font-bold tracking-tighter text-[var(--reader-text)] uppercase italic">Choose your Archive</p>
+                <h2 className="text-[11px] uppercase tracking-[0.6em] text-[var(--reader-text-subtle)] font-bold">Pathways</h2>
+                <p className="text-3xl font-bold tracking-tighter text-[var(--reader-text)] uppercase italic">Find Your Story</p>
             </header>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

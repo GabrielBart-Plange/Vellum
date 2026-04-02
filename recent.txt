@@ -1,0 +1,15 @@
+﻿C:\Users\gabba\Documents\15-chronicles\recent.txt
+C:\Users\gabba\Documents\15-chronicles\Paystack_Merchant_Service_Agreement_1772216 (1).pdf
+C:\Users\gabba\Documents\15-chronicles\reader\reader\src\app\portal\page.tsx
+C:\Users\gabba\Documents\15-chronicles\reader\reader\src\app\(creator)\creator\dashboard\layout.tsx
+C:\Users\gabba\Documents\15-chronicles\reader\reader\src\app\(creator)\creator\dashboard\profile\page.tsx
+C:\Users\gabba\Documents\15-chronicles\reader\reader\status.txt
+C:\Users\gabba\Documents\15-chronicles\reader\reader\diff.txt
+C:\Users\gabba\Documents\15-chronicles\reader\reader\.env.local
+C:\Users\gabba\Documents\15-chronicles\backend\monetization-srv\.env
+C:\Users\gabba\Documents\15-chronicles\reader\reader\src\lib\monetization\coinService.ts
+C:\Users\gabba\Documents\15-chronicles\backend\monetization-srv\src\index.ts
+C:\Users\gabba\Documents\15-chronicles\reader\reader\src\app\authors\[id]\page.tsx
+C:\Users\gabba\Documents\15-chronicles\reader\reader\src\app\novel\[slug]\page.tsx
+C:\Users\gabba\Documents\15-chronicles\reader\reader\src\app\stories\[id]\page.tsx
+C:\Users\gabba\Documents\15-chronicles\reader\reader\next-env.d.ts

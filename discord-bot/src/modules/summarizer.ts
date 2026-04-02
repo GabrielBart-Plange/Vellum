@@ -26,23 +26,9 @@ export async function sendDailyDigest(client: Client) {
 
   const summary = await generateLLMSummary(recentMessages);
 
-  // Send to a specific dev/admin channel
-  const logChannelId = process.env.LOG_CHANNEL_ID;
-  if (!logChannelId || logChannelId === 'REPLACE_WITH_YOUR_PRIVATE_LOG_CHANNEL_ID') {
-    console.error('LOG_CHANNEL_ID not set or default in .env');
-    // For now, let's log to console so the user sees it even if channel ID isn't set.
-    console.log('--- MISTRAL SUMMARY ---\n', summary);
-    return;
-  }
-
-  const channel = client.channels.cache.get(logChannelId) as TextChannel;
-  if (channel) {
-    await channel.send({
-      content: `📊 **Daily Server Operations Digest (Powered by Mistral)**\n\n${summary}`
-    });
-  } else {
-    console.log('Could not find log channel by ID. Logging summary here:\n', summary);
-  }
+  // Log to Database for Dashboard Display
+  db.logSummary(summary);
+  console.log('✅ Daily Digest saved to database and ready for dashboard.');
 }
 
 async function generateLLMSummary(messages: any[]): Promise<string> {

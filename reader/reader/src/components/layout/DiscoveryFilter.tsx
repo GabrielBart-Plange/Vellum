@@ -13,7 +13,7 @@ export default function DiscoveryFilter({
     categories,
     onSearch,
     onCategoryChange,
-    placeholder = "Search the archives..."
+    placeholder = "Search for stories..."
 }: DiscoveryFilterProps) {
     const [searchTerm, setSearchTerm] = useState("");
     const [activeCategory, setActiveCategory] = useState("All");
@@ -38,7 +38,7 @@ export default function DiscoveryFilter({
                     value={searchTerm}
                     onChange={handleSearchChange}
                     placeholder={placeholder}
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/40 transition-all"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-8 py-4 text-white placeholder:text-zinc-700 focus:outline-none focus:ring-4 focus:ring-[var(--reader-accent)]/10 focus:border-[var(--reader-accent)]/40 transition-all italic font-medium"
                 />
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-zinc-600">
@@ -47,24 +47,23 @@ export default function DiscoveryFilter({
                 </div>
             </div>
 
-            {/* Categories */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-4">
                 <button
                     onClick={() => handleCategoryClick("All")}
-                    className={`px-6 py-2 rounded-full text-[11px] uppercase tracking-[0.2em] font-black transition-all border ${activeCategory === "All"
-                            ? "bg-white text-black border-white"
-                            : "bg-transparent text-zinc-500 border-white/10 hover:border-white/20 hover:text-white"
+                    className={`px-8 py-2.5 rounded-full text-[10px] uppercase tracking-[0.3em] font-black transition-all border italic ${activeCategory === "All"
+                            ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+                            : "bg-transparent text-zinc-600 border-white/5 hover:border-white/20 hover:text-white"
                         }`}
                 >
-                    All Types
+                    All Genres
                 </button>
                 {categories.map((cat) => (
                     <button
                         key={cat}
                         onClick={() => handleCategoryClick(cat)}
-                        className={`px-6 py-2 rounded-full text-[11px] uppercase tracking-[0.2em] font-black transition-all border ${activeCategory === cat
-                                ? "bg-purple-600 text-white border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]"
-                                : "bg-transparent text-zinc-500 border-white/10 hover:border-white/20 hover:text-white"
+                        className={`px-8 py-2.5 rounded-full text-[10px] uppercase tracking-[0.3em] font-black transition-all border italic ${activeCategory === cat
+                                ? "bg-[var(--reader-accent)] text-white border-[var(--reader-accent)] shadow-[0_0_25px_rgba(168,85,247,0.2)]"
+                                : "bg-transparent text-zinc-600 border-white/5 hover:border-white/20 hover:text-white"
                             }`}
                     >
                         {cat}

@@ -125,11 +125,11 @@ export default function LikeButton({
   };
 
   return (
-    <div className="flex items-center gap-1.5 glass-panel px-4 py-2 rounded-2xl">
+    <div className="flex items-center gap-1.5 glass-panel px-4 py-2 rounded-2xl group/like">
       <button
         onClick={handleLike}
         disabled={loading}
-        className={`transition-all ${liked ? 'text-pink-500 scale-110' : 'text-zinc-500 hover:text-pink-400'} disabled:opacity-50`}
+        className={`transition-all duration-500 ${liked ? 'text-pink-500 scale-110 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]' : 'text-zinc-500 hover:text-pink-400 hover:scale-110'} disabled:opacity-50`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -146,7 +146,7 @@ export default function LikeButton({
           />
         </svg>
       </button>
-      <span className="text-xs font-bold text-zinc-400">{likeCount}</span>
+      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter italic group-hover/like:text-zinc-300 transition-colors">{likeCount} Likes</span>
     </div>
   );
 }

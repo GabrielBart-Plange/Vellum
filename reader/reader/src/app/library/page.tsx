@@ -55,9 +55,9 @@ export default function LibraryPage() {
         return (
             <main className="min-h-screen bg-[var(--reader-bg)] pt-40 pb-24 px-8 text-[var(--reader-text)]">
                 <div className="max-w-6xl mx-auto space-y-16">
-                    <header className="space-y-4 border-l-2 border-[var(--reader-border)] pl-8">
-                        <p className="text-[11px] uppercase tracking-[0.8em] text-[var(--reader-text-muted)] font-bold">Personal</p>
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic">THE GRAND LIBRARY</h1>
+                    <header className="space-y-6 border-l-2 border-[var(--reader-accent)]/30 pl-10">
+                        <p className="text-[10px] uppercase tracking-[0.8em] text-zinc-500 font-black italic">Personal Vault</p>
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic leading-[0.8]">MY <br />LIBRARY</h1>
                     </header>
 
                     <div className="glass-panel p-20 rounded-[40px] border border-[var(--reader-border)] text-center space-y-8">
@@ -66,7 +66,7 @@ export default function LibraryPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
                             </svg>
                         </div>
-                        <p className="text-[var(--reader-text-muted)] italic uppercase tracking-[0.4em] text-sm">Access your personal archive</p>
+                        <p className="text-[var(--reader-text-muted)] italic uppercase tracking-[0.4em] text-sm">Access your personal library</p>
                         <Link href="/login" className="inline-block px-10 py-4 rounded-full border border-[var(--reader-border)] text-[var(--reader-text)] text-[10px] font-black uppercase tracking-widest hover:bg-[var(--reader-surface)] transition-all">
                             Sign In to Access
                         </Link>
@@ -80,9 +80,9 @@ export default function LibraryPage() {
         return (
             <main className="min-h-screen bg-[var(--reader-bg)] pt-40 pb-24 px-8 text-[var(--reader-text)]">
                 <div className="max-w-6xl mx-auto space-y-16">
-                    <header className="space-y-4 border-l-2 border-[var(--reader-border)] pl-8">
-                        <p className="text-[11px] uppercase tracking-[0.8em] text-[var(--reader-text-muted)] font-bold">Personal</p>
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic">THE GRAND LIBRARY</h1>
+                    <header className="space-y-6 border-l-2 border-[var(--reader-accent)]/30 pl-10">
+                        <p className="text-[10px] uppercase tracking-[0.8em] text-zinc-500 font-black italic">Personal Vault</p>
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic leading-[0.8]">MY <br />LIBRARY</h1>
                     </header>
 
                     <div className="glass-panel p-20 rounded-[40px] border border-[var(--reader-border)] text-center space-y-8">
@@ -91,7 +91,7 @@ export default function LibraryPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
                             </svg>
                         </div>
-                        <p className="text-[var(--reader-text-muted)] italic uppercase tracking-[0.4em] text-sm">Retrieving your scrolls from the archive...</p>
+                        <p className="text-[var(--reader-text-muted)] italic uppercase tracking-[0.4em] text-sm">Retrieving your collection...</p>
                     </div>
                 </div>
             </main>
@@ -108,9 +108,9 @@ export default function LibraryPage() {
         return (
             <main className="min-h-screen bg-black pt-40 pb-24 px-8">
                 <div className="max-w-6xl mx-auto space-y-16">
-                    <header className="space-y-4 border-l-2 border-zinc-700 pl-8">
-                        <p className="text-[11px] uppercase tracking-[0.8em] text-zinc-500 font-bold">Personal</p>
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic">THE GRAND LIBRARY</h1>
+                    <header className="space-y-6 border-l-2 border-[var(--reader-accent)]/30 pl-10">
+                        <p className="text-[10px] uppercase tracking-[0.8em] text-zinc-500 font-black italic">Personal Vault</p>
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic leading-[0.8]">MY <br />LIBRARY</h1>
                     </header>
 
                     <div className="glass-panel p-20 rounded-[40px] border border-white/5 text-center space-y-8">
@@ -119,13 +119,13 @@ export default function LibraryPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
                             </svg>
                         </div>
-                        <p className="text-zinc-500 italic uppercase tracking-[0.4em] text-sm">Your library is empty</p>
-                        <p className="text-zinc-600 text-sm max-w-md mx-auto">Start exploring stories and novels to build your personal collection. Liked content and reading progress will appear here.</p>
+                        <p className="text-zinc-500 italic uppercase tracking-[0.4em] text-sm font-black">Your shelves are collecting dust</p>
+                        <p className="text-zinc-600 text-sm max-w-md mx-auto font-medium">It looks like you haven't started your collection yet. Let's find your next story in the Library.</p>
                         <div className="flex gap-4 justify-center pt-4">
-                            <Link href="/stories" className="px-6 py-3 rounded-xl border border-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-all">
-                                Browse Stories
+                            <Link href="/stories" className="px-10 py-4 rounded-2xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-all">
+                                Explore Tales
                             </Link>
-                            <Link href="/novel" className="px-6 py-3 rounded-xl border border-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-all">
+                            <Link href="/novel" className="px-10 py-4 rounded-2xl border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">
                                 Browse Novels
                             </Link>
                         </div>
@@ -138,15 +138,41 @@ export default function LibraryPage() {
     return (
         <main className="min-h-screen text-[var(--reader-text)] pt-40 pb-24 px-8">
             <div className="max-w-6xl mx-auto space-y-16">
-                <header className="space-y-4 border-l-2 border-[var(--reader-border)] pl-8">
-                    <p className="text-[11px] uppercase tracking-[0.8em] text-[var(--reader-text-muted)] font-bold">Personal</p>
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic">THE GRAND LIBRARY</h1>
-                    <p className="text-[var(--reader-text-muted)] max-w-2xl">Your personal collection of liked stories and reading progress</p>
-                </header>
-                <div className="flex justify-end">
+                <div className="flex flex-col md:flex-row justify-between items-end gap-12">
+                    <div className="space-y-6 border-l-2 border-[var(--reader-accent)]/30 pl-10">
+                        <p className="text-[10px] uppercase tracking-[0.8em] text-zinc-500 font-black italic">Account Profile</p>
+                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic leading-[0.8]">MY <br />LIBRARY</h1>
+                        <p className="text-[var(--reader-text-muted)] max-w-2xl text-[11px] uppercase tracking-[0.2em] font-black italic">Your collection of stories and novels saved for reading</p>
+                    </div>
+                    
+                    {/* Daily Ritual / Streak (Human Element) */}
+                    <div className="hidden lg:flex items-center gap-6 glass-panel p-6 rounded-[2rem] border border-white/5 bg-white/[0.02] animate-in fade-in slide-in-from-right-4">
+                        <div className="text-right">
+                            <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-black">Daily Ritual</p>
+                            <p className="text-xl font-black text-white italic tracking-tighter uppercase">5 Day Streak</p>
+                        </div>
+                        <div className="flex gap-1.5">
+                            {[1, 2, 3, 4, 5].map((day) => (
+                                <div key={day} className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-xs shadow-[0_0_15px_-5px_rgba(168,85,247,0.4)]">
+                                    🔥
+                                </div>
+                            ))}
+                            {[6, 7].map((day) => (
+                                <div key={day} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs opacity-30">
+                                    ⭕
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-4 items-center">
+                    <Link href={`/authors/${user.uid}`} className="text-[10px] uppercase tracking-widest font-black text-zinc-500 hover:text-white transition-all mr-4">
+                        View Public Scroll
+                    </Link>
                     <button
                         onClick={handleSignOut}
-                        className="rounded-full bg-[var(--accent-lime)] px-5 py-2 text-[12px] font-bold text-white hover:bg-white/90 transition-all shadow-[0_0_20px_-5px_var(--glow-lime)]"
+                        className="rounded-full bg-white text-black px-10 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all shadow-[0_20px_40px_-10px_rgba(255,255,255,0.2)] italic active:scale-95"
                     >
                         Sign Out
                     </button>
@@ -155,9 +181,12 @@ export default function LibraryPage() {
                 <div className="space-y-16">
                     {/* Liked Stories Section */}
                     {libraryData?.likedStories.length > 0 && (
-                        <section>
-                            <h2 className="text-2xl font-black text-[var(--reader-text)] mb-8 uppercase tracking-tight border-l-2 border-purple-500 pl-4">Liked Stories</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <section className="space-y-10">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-2xl font-black text-[var(--reader-text)] uppercase tracking-tight italic">Stories</h2>
+                                <div className="h-px flex-1 bg-white/5" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                                 {libraryData.likedStories.map((story) => (
                                     <Link
                                         key={story.id}
@@ -183,9 +212,12 @@ export default function LibraryPage() {
 
                     {/* Saved Novels Section */}
                     {libraryData?.savedNovels.length > 0 && (
-                        <section>
-                            <h2 className="text-2xl font-black text-[var(--reader-text)] mb-8 uppercase tracking-tight border-l-2 border-purple-500 pl-4">Saved Novels</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <section className="space-y-10">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-2xl font-black text-[var(--reader-text)] uppercase tracking-tight italic">Novels</h2>
+                                <div className="h-px flex-1 bg-white/5" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                                 {libraryData.savedNovels.map((novel) => (
                                     <Link
                                         key={novel.id}
@@ -211,47 +243,50 @@ export default function LibraryPage() {
 
                     {/* Novels in Progress Section */}
                     {libraryData?.novelsInProgress.length > 0 && (
-                        <section>
-                            <h2 className="text-2xl font-black text-[var(--reader-text)] mb-8 uppercase tracking-tight border-l-2 border-blue-500 pl-4">Reading Progress</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <section className="space-y-10">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-2xl font-black text-[var(--reader-text)] uppercase tracking-tight italic">Active Immersions</h2>
+                                <div className="h-px flex-1 bg-white/5" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 {libraryData.novelsInProgress.map((novel) => (
                                     <Link
                                         key={novel.id}
                                         href={`/chapter/${novel.numericalId || novel.slug || novel.id}-${novel.chapterOrder || 1}`}
-                                        className="group glass-panel rounded-2xl border border-white/5 overflow-hidden hover:border-blue-500/30 transition-all"
+                                        className="group glass-panel rounded-[2.5rem] border border-white/5 overflow-hidden hover:border-[var(--reader-accent)]/30 transition-all relative"
                                     >
-                                        <div className="relative py-8">
-                                            <div className="absolute inset-0 flex items-center">
-                                                <div className="w-full border-t border-[var(--reader-border)]"></div>
-                                            </div>
-                                            <div className="relative flex justify-center text-[10px] uppercase tracking-widest text-[var(--reader-text)]/40">
-                                                <span className="px-8" style={{ backgroundColor: 'var(--reader-bg)' }}>The Collection</span>
-                                            </div>
-                                        </div>                                        <div className="flex gap-6 p-6">
-                                            <div className="flex-shrink-0">
-                                                <div className="w-24 h-32 bg-zinc-900 rounded-xl overflow-hidden">
+                                        <div className="flex gap-8 p-10">
+                                            <div className="flex-shrink-0 relative">
+                                                <div className="w-32 h-44 bg-zinc-900 rounded-[1.5rem] overflow-hidden shadow-2xl border border-white/5">
                                                     <img
                                                         src={novel.coverImage || "https://placehold.co/200x300/1a1a1a/666666?text=Vellum"}
                                                         alt={novel.title}
-                                                        className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-all"
+                                                        className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110"
                                                     />
                                                 </div>
+                                                <div className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-[var(--reader-accent)] flex items-center justify-center text-white text-xs font-black shadow-lg border-4 border-[#0b0a0f] rotate-12 group-hover:rotate-0 transition-transform">
+                                                    {novel.progressPercentage}%
+                                                </div>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="text-white font-bold text-lg group-hover:text-blue-400 transition-colors line-clamp-2 mb-2">{novel.title}</h3>
-                                                <p className="text-zinc-400 text-sm mb-3">by {novel.authorName}</p>
-                                                <p className="text-zinc-500 text-xs mb-4 line-clamp-2">Currently reading: {novel.currentChapterTitle}</p>
-                                                <div className="space-y-2">
-                                                    <div className="flex justify-between text-xs">
-                                                        <span className="text-zinc-400">Progress</span>
-                                                        <span className="text-white font-bold">{novel.progressPercentage}%</span>
-                                                    </div>
-                                                    <div className="w-full bg-zinc-800 rounded-full h-2">
+                                            <div className="flex-1 min-w-0 flex flex-col justify-center space-y-4">
+                                                <div className="space-y-1">
+                                                    <h3 className="text-white font-black text-2xl group-hover:text-[var(--reader-accent)] transition-colors italic tracking-tighter leading-none truncate">{novel.title}</h3>
+                                                    <p className="text-zinc-500 text-[10px] uppercase tracking-[0.4em] font-black italic">scribed by {novel.authorName}</p>
+                                                </div>
+                                                
+                                                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 group-hover:bg-white/[0.04] transition-all">
+                                                    <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-black mb-1">Current Chapter</p>
+                                                    <p className="text-white text-sm font-black italic truncate">{novel.currentChapterTitle || "The Beginning"}</p>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                                                         <div
-                                                            className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                                                            className="bg-[var(--reader-accent)] h-full transition-all duration-1000 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
                                                             style={{ width: `${novel.progressPercentage}%` }}
                                                         />
                                                     </div>
+                                                    <p className="text-zinc-600 text-[9px] uppercase tracking-[0.3em] font-black italic text-right">{novel.progressPercentage}% of the way through</p>
                                                 </div>
                                             </div>
                                         </div>

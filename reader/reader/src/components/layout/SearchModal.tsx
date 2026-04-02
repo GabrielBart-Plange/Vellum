@@ -113,8 +113,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
                         <input
-                            className="flex-1 bg-transparent border-none text-lg text-white placeholder-zinc-600 focus:outline-none"
-                            placeholder="Search archives..."
+                            className="flex-1 bg-transparent border-none text-lg text-white placeholder-zinc-700 focus:outline-none italic"
+                            placeholder="Search for titles, authors, or themes..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             autoFocus
@@ -133,7 +133,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                                 <button
                                     key={genre}
                                     onClick={() => setSelectedGenre(genre)}
-                                    className={`px-3 py-1 text-[9px] uppercase tracking-widest font-black rounded-md transition-all ${selectedGenre === genre ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    className={`px-3 py-1 text-[9px] uppercase tracking-widest font-black rounded-md transition-all italic ${selectedGenre === genre ? 'bg-[var(--reader-accent)]/20 text-[var(--reader-accent)] border border-[var(--reader-accent)]/30' : 'text-zinc-500 hover:text-zinc-300'}`}
                                 >
                                     {genre}
                                 </button>
@@ -156,12 +156,19 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
                 <div className="overflow-y-auto p-2 custom-scrollbar">
                     {loading ? (
-                        <div className="p-8 text-center text-zinc-500 text-xs uppercase tracking-widest animate-pulse">
-                            Searching Archives...
+                        <div className="p-12 text-center text-zinc-500 text-[10px] uppercase tracking-[0.4em] font-black animate-pulse flex flex-col items-center gap-4 italic">
+                            <div className="w-8 h-8 rounded-full border-2 border-t-[var(--reader-accent)] border-white/5 animate-spin" />
+                            Searching Library...
                         </div>
                     ) : searchTerm && results.length === 0 ? (
-                        <div className="p-8 text-center text-zinc-600 text-sm">
-                            No works found matching "{searchTerm}"
+                        <div className="p-16 text-center space-y-4">
+                            <div className="text-4xl opacity-20">🕯️</div>
+                            <p className="text-zinc-500 italic font-black uppercase tracking-widest text-[10px]">
+                                No results found
+                            </p>
+                            <p className="text-zinc-600 text-[9px] uppercase tracking-[0.2em] font-bold">
+                                The Library is silent on '{searchTerm}'
+                            </p>
                         </div>
                     ) : (
                         <div className="space-y-1">
@@ -183,8 +190,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                                         <h4 className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">
                                             {item.title}
                                         </h4>
-                                        <p className="text-[10px] uppercase tracking-wider text-zinc-500">
-                                            {item.authorName || "Unknown Author"} • <span className="text-purple-400/80">{item.type}</span> • {item.genre || item.category || "General"}
+                                        <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-black italic">
+                                            by {item.authorName || "Unknown Author"} • <span className="text-[var(--reader-accent)]/80">{item.type}</span> • {item.genre || item.category || "General"}
                                         </p>
                                     </div>
                                     {item.type === 'art' && (
@@ -198,10 +205,16 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     )}
 
                     {!searchTerm && (
-                        <div className="p-8 text-center">
-                            <p className="text-zinc-700 text-xs uppercase tracking-[0.2em] font-bold">
-                                Type to search the archives
+                        <div className="p-16 text-center space-y-6">
+                            <div className="h-px w-12 bg-white/10 mx-auto" />
+                            <p className="text-zinc-600 text-[10px] uppercase tracking-[0.3em] font-black italic">
+                                Search for a title, author, or genre...
                             </p>
+                            <div className="flex flex-wrap justify-center gap-3 opacity-40">
+                                <span className="text-[8px] uppercase tracking-widest text-zinc-500 border border-white/10 px-3 py-1 rounded-full">Epic Novels</span>
+                                <span className="text-[8px] uppercase tracking-widest text-zinc-500 border border-white/10 px-3 py-1 rounded-full">Short Stories</span>
+                                <span className="text-[8px] uppercase tracking-widest text-zinc-500 border border-white/10 px-3 py-1 rounded-full">Visual Art</span>
+                            </div>
                         </div>
                     )}
                 </div>

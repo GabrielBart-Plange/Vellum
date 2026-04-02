@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -17,9 +17,68 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#0b0a0f",
+  colorScheme: "dark",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
-  title: "Vellum",
-  description: "Read original stories and novels.",
+  title: {
+    default: "Vellum | Read Original Stories & Novels",
+    template: "%s | Vellum"
+  },
+  description: "Read, write, and explore original stories and chronicles. The premier platform for digital storytelling and interactive novels.",
+  applicationName: "Vellum",
+  authors: [{ name: "Gabriel Bart-Plange" }],
+  generator: "Next.js",
+  keywords: ["reading", "writing", "novels", "stories", "interactive fiction", "paystack", "Ghana"],
+  referrer: "origin-when-cross-origin",
+  creator: "Vellum Operations",
+  publisher: "Vellum",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_GH",
+    url: "https://v1-vellum.vercel.app",
+    siteName: "Vellum",
+    title: "Vellum | Original Stories & Novels",
+    description: "The archive for digital chronicles. Explore thousands of original sagas.",
+    images: [
+      {
+        url: "https://v1-vellum.vercel.app/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Vellum - The Scribe's Archive",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Vellum | Original Stories & Novels",
+    description: "Explore the newest chronicles in the digital archive.",
+    images: ["https://v1-vellum.vercel.app/twitter-image.jpg"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
+  verification: {
+    google: "google-site-verification-placeholder",
+  }
 };
 
 import { Analytics } from "@vercel/analytics/next";

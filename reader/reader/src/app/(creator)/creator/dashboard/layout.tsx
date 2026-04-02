@@ -19,7 +19,7 @@ export default function DashboardLayout({
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.replace("/login");
+        router.replace("/login?returnUrl=/creator/dashboard");
       } else {
         syncCreatorProfile(user).catch(console.error);
       }

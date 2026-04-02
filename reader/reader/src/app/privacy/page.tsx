@@ -21,7 +21,7 @@ export default function PrivacyPage() {
 
                     <section className="space-y-4">
                         <h2 className="text-white uppercase tracking-widest text-sm font-black">2. How We Use Your Data</h2>
-                        <p>To provide and maintain the Vellum service, personalize recommendations, process payments, and calculate the "Archivist's Cut" for creators.</p>
+                        <p>To provide and maintain the Vellum service, personalize recommendations, process payments, and calculate the "Creator's Cut" for authors.</p>
                     </section>
 
                     <section className="space-y-4">

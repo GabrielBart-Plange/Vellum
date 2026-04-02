@@ -1,1 +1,13 @@
-{"messages":[],"server_stats":{}}
+{
+  "messages": [],
+  "server_stats": {},
+  "admin_configs": {
+    "1474302805866057749": {
+      "text": "No spam!",
+      "lastUpdated": 1775010747507
+    }
+  },
+  "admin_tracking": {
+    "1474302805866057749": "1488727715531063306"
+  }
+}

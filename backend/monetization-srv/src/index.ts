@@ -650,7 +650,7 @@ app.post('/api/payments/subscribe', async (req: Request, res: Response) => {
   }
 })
 
-const port = process.env.PORT || 3001
+const port = process.env.PORT || 3005
 app.listen(port, () => {
   console.log(`Vellum Monetization Engine listening on port ${port}`)
 })

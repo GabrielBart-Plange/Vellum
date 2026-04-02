@@ -10,30 +10,29 @@ export default function Hero() {
       {/* Sakura Accent Glow */}
       <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[var(--reader-accent)]/5 blur-[100px] rounded-full -z-10 animate-pulse" />
 
-      <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-[var(--reader-text)] leading-tight">
-        Read the next <br />
+      <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] leading-[0.9] uppercase italic">
+        Chronicles <br />
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-[var(--reader-accent)]">
-          great chronicle.
+          for the soul.
         </span>
       </h1>
 
-      <p className="mt-8 text-[var(--reader-text-muted)] text-xl font-light leading-relaxed max-w-2xl mx-auto">
-        Discover original stories and novels crafted with care.
-        Immerse yourself in <span className="text-[var(--reader-accent)] italic font-medium opacity-80 underline decoration-[var(--reader-accent)]/30 underline-offset-4">new worlds</span>, one chapter at a time.
+      <p className="mt-10 text-[var(--reader-text-muted)] text-xl font-light leading-relaxed max-w-2xl mx-auto italic">
+        Step into a realm where every word is a heartbeat. Discover original sagas and short stories woven by a community of creators who live for the craft.
       </p>
 
-      <div className="mt-12 flex items-center justify-center gap-6">
+      <div className="mt-14 flex flex-col md:flex-row items-center justify-center gap-6">
         <Link
           href="/stories"
-          className="px-10 py-4 rounded-full bg-[var(--accent-lime)] text-white font-bold uppercase tracking-[0.2em] hover:bg-white/90 transition-all shadow-[0_0_30px_-5px_var(--glow-lime)] hover:-translate-y-1 active:scale-95"
+          className="w-full md:w-auto px-12 py-5 rounded-2xl bg-white text-black font-black uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:-translate-y-1 active:scale-95 text-xs"
         >
-          Explore Stories
+          Read Stories
         </Link>
         <Link
-          href="/about"
-          className="px-10 py-4 rounded-full border border-[var(--reader-border)] glass-panel text-[var(--reader-text)] font-bold uppercase tracking-[0.2em] hover:bg-white/5 transition-all text-center"
+          href="/novel"
+          className="w-full md:w-auto px-12 py-5 rounded-2xl border border-white/10 glass-panel text-white font-black uppercase tracking-[0.2em] hover:bg-white/5 transition-all text-center text-xs"
         >
-          Learn More
+          Browse Novels
         </Link>
       </div>
     </section>

@@ -1,0 +1,13 @@
+User-Agent: *
+Allow: /
+Allow: /novel/
+Allow: /authors/
+Allow: /genre/
+Allow: /tag/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /library/
+Disallow: /portal/
+Disallow: /creator/
+
+Sitemap: https://v1-vellum.vercel.app/sitemap.xml

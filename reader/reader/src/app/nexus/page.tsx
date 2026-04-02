@@ -5,32 +5,38 @@ import WalletCard from "@/components/monetization/WalletCard";
 
 export default function NexusPage() {
     return (
-        <main className="min-h-screen text-[var(--reader-text)] pt-40 pb-24 px-8 bg-zinc-950">
+        <main className="min-h-screen text-[var(--reader-text)] pt-40 pb-24 px-8 bg-[var(--reader-bg)]">
             <div className="w-full max-w-6xl mx-auto space-y-24">
                 <header className="space-y-6 text-center">
-                    <p className="text-[10px] uppercase tracking-[0.8em] text-purple-500 font-bold">Vellum Chronicles</p>
-                    <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter italic">The Nexus Hub</h1>
-                    <p className="text-zinc-500 max-w-2xl mx-auto text-sm leading-relaxed uppercase tracking-widest font-medium">
-                        Your central command for wealth, wisdom, and exclusive chronicles. 
-                        Manage your Gilt and explore the high-fidelity archives.
+                    <p className="text-[10px] uppercase tracking-[0.8em] text-[var(--reader-accent)] font-black italic">Member Benefits</p>
+                    <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter italic leading-[0.8]">THE <br />NEXUS</h1>
+                    <p className="text-zinc-500 max-w-2xl mx-auto text-[11px] leading-relaxed uppercase tracking-[0.2em] font-black italic">
+                        Your sovereign chamber for membership, balance, and exclusive rewards. 
+                        Customize your experience, manage your Gilt, and access high-fidelity stories.
                     </p>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-                    <section className="lg:col-span-1 sticky top-40">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
+                    <section className="lg:col-span-1 sticky top-40 space-y-8">
                         <WalletCard />
-                        <div className="mt-8 p-8 glass-panel rounded-3xl border border-white/5 bg-zinc-900/10 space-y-4">
-                            <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Subscription Perks</p>
-                            <ul className="space-y-3">
+                        <div className="p-10 glass-panel rounded-[2.5rem] border border-white/5 bg-white/[0.01] space-y-8 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-accent)] font-black italic">Nexus Membership</p>
+                                <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Active Perks</h3>
+                            </div>
+                            <ul className="space-y-6">
                                 {[
-                                    { text: "Ad-free exploration", icon: "✨" },
-                                    { text: "Weekly Gilt stipend (Nexus only)", icon: "💎" },
-                                    { text: "Early Access to Vellum Prime", icon: "🗝️" },
-                                    { text: "Sovereign Pool Voting", icon: "🏛️" }
+                                    { text: "Undistracted exploration", icon: "✨", color: "text-blue-400" },
+                                    { text: "Weekly Gilt stipend", icon: "💎", color: "text-amber-400" },
+                                    { text: "Vellum Prime Access", icon: "🗝️", color: "text-purple-400" },
+                                    { text: "Governance Voting", icon: "🏛️", color: "text-emerald-400" }
                                 ].map((perk, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-[11px] text-zinc-400 font-medium">
-                                        <span>{perk.icon}</span>
-                                        {perk.text}
+                                    <li key={i} className="flex items-center gap-4 text-[11px] text-zinc-500 font-black uppercase tracking-widest italic group/item">
+                                        <span className={`text-lg grayscale group-hover/item:grayscale-0 transition-all ${perk.color}`}>{perk.icon}</span>
+                                        <span className="group-hover/item:text-zinc-300 transition-colors">{perk.text}</span>
                                     </li>
                                 ))}
                             </ul>

@@ -1,4 +1,4 @@
-import { Client, Events, Message } from 'discord.js';
+import { Client, Events, Message, TextChannel } from 'discord.js';
 import { db } from '../db/database';
 import { randomUUID } from 'crypto';
 
@@ -12,6 +12,22 @@ const CHANNEL_CONFIG: Record<string, string> = {
 const TARGET_CHANNELS = Object.keys(CHANNEL_CONFIG);
 
 export function setupListener(client: Client) {
+  // 1. Welcome Listener
+  client.on(Events.GuildMemberAdd, async (member) => {
+    const welcomeChannelId = process.env.WELCOME_CHANNEL_ID;
+    if (!welcomeChannelId) return;
+
+    try {
+      const channel = client.channels.cache.get(welcomeChannelId) as TextChannel;
+      if (channel) {
+        await channel.send(`👋 **Welcome to Vellum, ${member.user.username}!** We're glad you're here. Check out <#${process.env.RULES_CHANNEL_ID}> to get started!`);
+      }
+    } catch (error) {
+      console.error('Failed to send welcome message:', error);
+    }
+  });
+
+  // 2. Message Listener (Existing)
   client.on(Events.MessageCreate, async (message: Message) => {
     // Ignore bots
     if (message.author.bot) return;

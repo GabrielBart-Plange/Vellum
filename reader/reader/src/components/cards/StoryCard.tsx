@@ -61,8 +61,8 @@ export default function StoryCard({
                     {title}
                 </h3>
                 {!hideAuthor && (
-                    <p className="text-[11px] font-medium text-[var(--reader-text)]/50 group-hover:text-[var(--reader-text)]/70 transition-colors">
-                        {author}
+                    <p className="text-[11px] font-black uppercase tracking-widest text-[var(--reader-text)]/40 group-hover:text-[var(--reader-text)]/60 transition-colors italic">
+                        scribed by {author}
                     </p>
                 )}
             </div>

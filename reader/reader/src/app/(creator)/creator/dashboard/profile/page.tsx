@@ -34,7 +34,7 @@ export default function ProfilePage() {
                     setBannerUrl(data.bannerUrl || "");
                 }
             } else {
-                router.replace("/login");
+                router.replace("/login?returnUrl=/creator/dashboard/profile");
             }
         });
         return () => unsub();

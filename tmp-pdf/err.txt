@@ -1,0 +1,58 @@
+﻿node : C:\Users\gabba\Do
+cuments\15-chronicles\tm
+p-pdf\parse.js:7
+At line:1 char:1
++ node C:\Users\gabba\Do
+cuments\15-chronicles\tm
+p-pdf\parse.js 2>&1 | O 
+...
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo      
+        : NotSpecified  
+  : (C:\Users\gabba\.   
+ ..-pdf\parse.js:7:S    
+tring) [], RemoteEx    
+ception
+    + FullyQualifiedErr 
+   orId : NativeComman  
+  dError
+ 
+pdf(dataBuffer).then(fun
+ction(data) {
+^
+
+TypeError: pdf is not a 
+function
+    at 
+Object.<anonymous> (C:\U
+sers\gabba\Documents\15-
+chronicles\tmp-pdf\parse
+.js:7:1)
+    at Module._compile (
+node:internal/modules/cj
+s/loader:1761:14)
+    at Object..js (node:
+internal/modules/cjs/loa
+der:1893:10)
+    at Module.load (node
+:internal/modules/cjs/lo
+ader:1481:32)
+    at Module._load (nod
+e:internal/modules/cjs/l
+oader:1300:12)
+    at TracingChannel.tr
+aceSync (node:diagnostic
+s_channel:328:14)
+    at wrapModuleLoad (n
+ode:internal/modules/cjs
+/loader:245:24)
+    at Module.executeUse
+rEntryPoint [as 
+runMain] (node:internal/
+modules/run_main:154:5)
+    at node:internal/mai
+n/run_main_module:33:47
+
+Node.js v24.12.0

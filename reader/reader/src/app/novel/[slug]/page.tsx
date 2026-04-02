@@ -1,338 +1,229 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { notFound, useParams, useRouter } from "next/navigation";
-import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, getDocs, orderBy, query, where, setDoc, Timestamp, onSnapshot, DocumentData } from "firebase/firestore";
-import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
-import { increment, updateDoc } from "firebase/firestore";
+import { Metadata } from 'next';
+import { adminDb } from '@/lib/firebase-admin';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import LikeButton from "@/components/interactions/LikeButton";
-import { progressTracking } from "@/lib/progressTracking";
+import NovelActions from "@/components/novel/NovelActions";
+import NovelViewTracker from "@/components/novel/NovelViewTracker";
 
-export default function NovelLandingPage() {
-    const { slug } = useParams<{ slug: string }>();
-    const router = useRouter();
-    const { user } = useAuth();
-    const [novel, setNovel] = useState<DocumentData | null>(null);
-    const [novelId, setNovelId] = useState<string | null>(null);
-    const [chapters, setChapters] = useState<DocumentData[]>([]);
-    const [readingProgress, setReadingProgress] = useState<DocumentData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [showChapters, setShowChapters] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [saved, setSaved] = useState(false);
-
-    useEffect(() => {
-        let unsubscribeNovel: () => void;
-
-        const load = async () => {
-            if (!slug) return;
-            try {
-                // 1. Try to find by ID first (backward compatibility)
-                let docId = slug;
-                let docRef = doc(db, "novels", docId);
-                let snap = await getDoc(docRef);
-
-                // 2. If not found by ID, try to find by slug field or numericalId
-                if (!snap.exists()) {
-                    // 2a. Try slug
-                    const qSlug = query(collection(db, "novels"), where("slug", "==", slug), where("published", "==", true));
-                    const querySlugSnap = await getDocs(qSlug);
-                    if (!querySlugSnap.empty) {
-                        snap = querySlugSnap.docs[0];
-                        docId = snap.id;
-                        docRef = doc(db, "novels", docId);
-                    } else {
-                            // 2b. Try numericalId if slug is a number
-                            const maybeNum = parseInt(slug);
-                            if (!isNaN(maybeNum)) {
-                                const qNum = query(collection(db, "novels"), where("numericalId", "==", maybeNum), where("published", "==", true));
-                                const queryNumSnap = await getDocs(qNum);
-                            if (!queryNumSnap.empty) {
-                                snap = queryNumSnap.docs[0];
-                                docId = snap.id;
-                                docRef = doc(db, "novels", docId);
-                            }
-                        }
-                    }
-                }
-
-                if (snap.exists()) {
-                    setNovelId(docId);
-                    const initialData = snap.data();
-                    setNovel(initialData);
-
-                    // Real-time listener for engagement metrics
-                    unsubscribeNovel = onSnapshot(docRef, (docSnap) => {
-                        if (docSnap.exists()) {
-                            setNovel(docSnap.data());
-                        }
-                    });
-
-                    // Load chapters
-                    const chaptersRef = collection(db, "novels", docId, "chapters");
-                    const chaptersQuery = query(
-                        chaptersRef,
-                        where("published", "==", true),
-                        orderBy("order", "asc")
-                    );
-                    const chaptersSnap = await getDocs(chaptersQuery);
-                    setChapters(chaptersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-                    if (user) {
-                        const savedRef = doc(db, "users", user.uid, "savedNovels", docId);
-                        const savedSnap = await getDoc(savedRef);
-                        setSaved(savedSnap.exists());
-
-                        // Load Reading Progress
-                        const progressRef = doc(db, "users", user.uid, "progress", docId);
-                        const progressSnap = await getDoc(progressRef);
-                        if (progressSnap.exists()) {
-                            setReadingProgress(progressSnap.data());
-                        }
-                    }
-                } else {
-                    notFound();
-                }
-            } catch (error) {
-                console.error("Error loading novel:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        load();
-
-        return () => {
-            if (unsubscribeNovel) unsubscribeNovel();
-        };
-    }, [slug, user]);
-
-    useEffect(() => {
-        // Increment View Count with basic deduplication
-        const incrementView = async () => {
-            if (!novelId) return;
-
-            const storageKey = `viewed_novel_${novelId}`;
-            const hasViewed = localStorage.getItem(storageKey);
-
-            if (hasViewed) return;
-
-            try {
-                const novelRef = doc(db, "novels", novelId);
-                await updateDoc(novelRef, {
-                    views: increment(1)
-                });
-                localStorage.setItem(storageKey, "true");
-            } catch (error) {
-                console.error("Error incrementing view:", error);
-            }
-        };
-
-        incrementView();
-    }, [novelId]);
-
-    const handleSaveToLibrary = async () => {
-        if (!user) {
-            router.push(`/login?returnUrl=${encodeURIComponent(window.location.pathname)}`);
-            return;
-        }
-
-        if (!novel || !novelId) return;
-
-        setSaving(true);
-        try {
-            if (saved) {
-                await progressTracking.unsaveNovel(user.uid, novelId);
-                setSaved(false);
-            } else {
-                await progressTracking.saveNovel(
-                    user.uid,
-                    novelId,
-                    novel.title || "Untitled",
-                    novel.coverImage || "",
-                    novel.authorName || "Unknown Author",
-                    novel.authorId || novel.creatorId,
-                    novel.numericalId,
-                    novel.slug
-                );
-                setSaved(true);
-            }
-        } catch (error) {
-            console.error("Error toggling novel save:", error);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    if (loading) return (
-        <div className="min-h-screen flex items-center justify-center text-[var(--reader-text-subtle)] uppercase tracking-widest text-xs">
-            Unrolling the scroll...
-        </div>
-    );
-
-    if (!novel) return null;
-
-    return (
-        <main className="min-h-screen text-[var(--reader-text)] font-sans pb-40">
-            {/* Header / Hero - Screenshot 2026-02-06 054856.png */}
-            <div className="relative h-[90vh] overflow-hidden flex items-center justify-center">
-                <img
-                    src={novel.coverImage || "https://placehold.co/1200x800/1a1a1a/666666?text=CHAMPION"}
-                    className="absolute inset-0 w-full h-full object-cover opacity-20 scale-105"
-                    alt=""
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--reader-bg)] via-[var(--reader-bg)]/60 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-b from-[var(--reader-bg)]/60 via-transparent to-transparent" />
-
-                {/* Content Overlay */}
-                <div className="relative z-10 max-w-4xl mx-auto px-8 text-center space-y-12">
-                    {/* Top Badge Card (The little floating one in the screenshot) */}
-                    <div className="inline-block glass-panel p-1 rounded-2xl mb-8 transform translate-y-[-20px]">
-                        <div className="relative rounded-xl overflow-hidden group cursor-pointer">
-                            <img
-                                src={novel.coverImage}
-                                className="w-64 h-24 object-cover opacity-50 group-hover:scale-110 transition-transform duration-700"
-                                alt=""
-                            />
-                            <div className="absolute inset-0 bg-[var(--reader-bg)]/40 flex items-center justify-center">
-                                <span className="text-[12px] uppercase tracking-[0.3em] font-black text-[var(--reader-text-muted)]">{novel.authorName}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-center gap-3">
-                            <span className="px-4 py-1.5 rounded-full glass text-[10px] uppercase tracking-[0.3em] text-[var(--reader-text-muted)] font-black">
-                                {novel.genre}
-                            </span>
-                            <span className={`px-4 py-1.5 rounded-full border text-[10px] uppercase tracking-[0.3em] font-black italic ${novel.status === "Completed"
-                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                                : "border-purple-500/30 bg-purple-500/10 text-purple-400"
-                                }`}>
-                                {novel.status || "Ongoing"}
-                            </span>
-                        </div>
-                        {/* Tags */}
-                        {novel.tags && novel.tags.length > 0 && (
-                            <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
-                                {novel.tags.map((tag: string) => (
-                                    <span key={tag} className="text-[9px] uppercase tracking-widest text-[var(--reader-text-subtle)] font-bold px-2 py-0.5 rounded border border-[var(--reader-border)] bg-[var(--reader-surface)]">
-                                        {tag.startsWith('#') ? tag : `#${tag}`}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-
-                        <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-[var(--reader-text)] uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                            {novel.title}
-                        </h1>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-center gap-12 pt-8">
-                        <Link href={`/authors/${novel.authorId}`} className="group space-y-2">
-                            <p className="text-[var(--reader-text-subtle)] text-[9px] uppercase tracking-[0.3em] font-black">Chronicle By</p>
-                            <p className="text-[var(--reader-text)] group-hover:text-[var(--reader-accent)] transition-colors uppercase font-black text-sm">{novel.authorName}</p>
-                        </Link>
-
-                        <div className="w-px h-12 bg-white/5" />
-
-                        <div className="space-y-2">
-                            <p className="text-[var(--reader-text-subtle)] text-[9px] uppercase tracking-[0.3em] font-black">Archive</p>
-                            <p className="text-[var(--reader-text)] uppercase font-black text-sm">{chapters.length} Units</p>
-                        </div>
-
-                        <div className="w-px h-12 bg-white/5" />
-
-                        <div className="space-y-2">
-                            <p className="text-[var(--reader-text-subtle)] text-[9px] uppercase tracking-[0.3em] font-black">Engagement</p>
-                            <div className="flex items-center gap-6">
-                                <LikeButton
-                                    contentType="novel"
-                                    contentId={novelId || ""}
-                                    initialLikeCount={novel.likes || 0}
-                                />
-                                <div className="h-1 w-1 bg-[var(--reader-border)] rounded-full" />
-                                <span className="text-[var(--reader-text)] uppercase font-black text-sm">{(novel.views || 0).toLocaleString()} Views</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-6 pt-12">
-                        <button
-                            onClick={() => setShowChapters(true)}
-                            className="px-12 py-5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[13px] font-black uppercase tracking-[0.3em] premium-shadow hover:scale-105 active:scale-95 transition-all duration-500"
-                        >
-                            Open Vellum
-                        </button>
-                        {readingProgress && (
-                            <Link
-                                href={`/chapter/${novel.numericalId || novel.slug || slug}-${readingProgress.chapterOrder || 1}`}
-                                className="px-12 py-5 rounded-2xl bg-white text-black text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95"
-                            >
-                                Resume Archive
-                            </Link>
-                        )}
-                        <button
-                            onClick={handleSaveToLibrary}
-                            disabled={saving}
-                            className="px-12 py-5 rounded-2xl border border-white/10 glass-panel text-white text-[13px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all disabled:opacity-50"
-                        >
-                            {saved ? "In Library" : saving ? "Saving..." : "Add to Library"}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Synopsis Section */}
-            <div className="max-w-4xl mx-auto px-8 pt-32 space-y-12">
-                <div className="space-y-4">
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--reader-text-subtle)] font-black">Synopsis</p>
-                    <div className="h-px w-24 bg-[var(--reader-accent)]/30" />
-                </div>
-                <p className="text-[var(--reader-text-muted)] leading-relaxed text-lg font-light">
-                    {novel.description || "The archives are currently being unrolled for this chronicle. Check back soon for the full synopsis."}
-                </p>
-            </div>
-
-            {/* Expandable Chapters Overlay */}
-            {showChapters && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12 animate-in fade-in duration-500">
-                    <div className="absolute inset-0 bg-[var(--reader-bg)]/90 backdrop-blur-3xl" onClick={() => setShowChapters(false)} />
-                    <div className="relative w-full max-w-5xl max-h-[80vh] overflow-hidden glass rounded-3xl border border-[var(--reader-border)] flex flex-col scale-in-center">
-                        <header className="p-8 border-b border-[var(--reader-border)] flex items-center justify-between">
-                            <div>
-                                <h1 className="text-[10px] uppercase tracking-[0.5em] text-[var(--reader-text-subtle)] font-black">Project Vellum</h1>
-                                <p className="text-xl font-black uppercase text-[var(--reader-text)] tracking-widest">{novel.title}</p>
-                            </div>
-                            <button
-                                onClick={() => setShowChapters(false)}
-                                className="w-12 h-12 rounded-full glass flex items-center justify-center text-[var(--reader-text-subtle)] hover:text-[var(--reader-text)] transition-all"
-                            >
-                                ✕
-                            </button>
-                        </header>
-                        <div className="flex-grow overflow-y-auto p-8 custom-scrollbar">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {chapters.map((chapter, index) => (
-                                    <Link
-                                        key={chapter.id}
-                                        href={`/chapter/${novel.numericalId || novel.slug || slug}-${chapter.order}`}
-                                        className="group p-6 glass-panel border border-white/5 rounded-2xl hover:border-purple-500/40 hover:bg-white/[0.05] transition-all duration-500"
-                                    >
-                                        <div className="space-y-2">
-                                            <p className="text-[9px] uppercase tracking-widest text-[var(--reader-text-subtle)] font-black group-hover:text-[var(--reader-accent)] transition-colors">Unit {index + 1}</p>
-                                            <h3 className="text-[var(--reader-text-muted)] text-sm font-black group-hover:text-[var(--reader-text)] transition-colors tracking-tight line-clamp-1 truncate uppercase">{chapter.title}</h3>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </main>
-    );
+interface PageProps {
+  params: Promise<{ slug: string }>;
 }
 
+async function getNovelData(slug: string) {
+  // 1. Try to find by ID first (backward compatibility)
+  let novelDoc = await adminDb.collection('novels').doc(slug).get();
+
+  // 2. If not found by ID, try to find by slug field or numericalId
+  if (!novelDoc.exists) {
+    // 2a. Try slug
+    const slugQuery = await adminDb.collection('novels')
+      .where('slug', '==', slug)
+      .where('published', '==', true)
+      .limit(1)
+      .get();
+      
+    if (!slugQuery.empty) {
+      novelDoc = slugQuery.docs[0];
+    } else {
+      // 2b. Try numericalId
+      const maybeNum = parseInt(slug);
+      if (!isNaN(maybeNum)) {
+        const numQuery = await adminDb.collection('novels')
+          .where('numericalId', '==', maybeNum)
+          .where('published', '==', true)
+          .limit(1)
+          .get();
+        if (!numQuery.empty) {
+          novelDoc = numQuery.docs[0];
+        }
+      }
+    }
+  }
+
+  if (!novelDoc.exists) return null;
+
+  const novelId = novelDoc.id;
+  const novel = JSON.parse(JSON.stringify(novelDoc.data()));
+  if (!novel) return null;
+
+  // Fetch Chapters
+  const chaptersSnap = await adminDb.collection('novels').doc(novelId).collection('chapters')
+    .where('published', '==', true)
+    .orderBy('order', 'asc')
+    .get();
+    
+  const chapters = JSON.parse(JSON.stringify(chaptersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+
+  return { novelId, novel, chapters };
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getNovelData(slug);
+
+  if (!data) return { title: 'Novel Not Found' };
+
+  const { novel } = data;
+  const title = `${novel.title} | Vellum`;
+  const description = novel.description?.substring(0, 160) || "Read this original chronicle on Vellum.";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [novel.coverImage || ''],
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [novel.coverImage || ''],
+    },
+  };
+}
+
+export default async function NovelLandingPage({ params }: PageProps) {
+  const { slug } = await params;
+  const data = await getNovelData(slug);
+
+  if (!data) notFound();
+
+  const { novelId, novel, chapters } = data;
+
+  return (
+    <main className="min-h-screen text-[var(--reader-text)] font-sans pb-40">
+      <NovelViewTracker novelId={novelId} />
+      
+      {/* Header / Hero */}
+      <div className="relative h-[90vh] overflow-hidden flex items-center justify-center">
+        <img
+          src={novel.coverImage || "https://placehold.co/1200x800/1a1a1a/666666?text=CHAMPION"}
+          className="absolute inset-0 w-full h-full object-cover opacity-20 scale-105"
+          alt=""
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--reader-bg)] via-[var(--reader-bg)]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--reader-bg)]/60 via-transparent to-transparent" />
+
+        {/* Content Overlay */}
+        <div className="relative z-10 max-w-4xl mx-auto px-8 text-center space-y-12">
+          {/* Top Badge Card */}
+          <div className="inline-block glass-panel p-1 rounded-2xl mb-8 transform translate-y-[-20px]">
+            <div className="relative rounded-xl overflow-hidden group cursor-pointer" title="View Author Profile">
+              <img
+                src={novel.coverImage}
+                className="w-64 h-24 object-cover opacity-50 group-hover:scale-110 transition-transform duration-700"
+                alt=""
+              />
+              <div className="absolute inset-0 bg-[var(--reader-bg)]/40 flex items-center justify-center">
+                <span className="text-[12px] uppercase tracking-[0.3em] font-black text-[var(--reader-text-muted)]">{novel.authorName}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-3">
+              <span className="px-4 py-1.5 rounded-full glass text-[10px] uppercase tracking-[0.3em] text-[var(--reader-text-muted)] font-black">
+                {novel.genre}
+              </span>
+              <span className={`px-4 py-1.5 rounded-full border text-[10px] uppercase tracking-[0.3em] font-black italic ${novel.status === "Completed"
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                : "border-purple-500/30 bg-purple-500/10 text-purple-400"
+                }`}>
+                {novel.status || "Ongoing"}
+              </span>
+            </div>
+            {/* Tags */}
+            {novel.tags && novel.tags.length > 0 && (
+              <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
+                {novel.tags.map((tag: string) => (
+                  <span key={tag} className="text-[9px] uppercase tracking-widest text-[var(--reader-text-subtle)] font-bold px-2 py-0.5 rounded border border-[var(--reader-border)] bg-[var(--reader-surface)]">
+                    {tag.startsWith('#') ? tag : `#${tag}`}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-[var(--reader-text)] uppercase drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+              {novel.title}
+            </h1>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-12 pt-8">
+            <Link href={`/authors/${novel.authorId}`} className="group space-y-2">
+              <p className="text-[var(--reader-text-subtle)] text-[9px] uppercase tracking-[0.3em] font-black italic">Scribed By</p>
+              <p className="text-[var(--reader-text)] group-hover:text-[var(--reader-accent)] transition-colors uppercase font-black text-sm">{novel.authorName}</p>
+            </Link>
+
+            <div className="w-px h-12 bg-white/5" />
+
+            <div className="space-y-2">
+              <p className="text-[var(--reader-text-subtle)] text-[9px] uppercase tracking-[0.3em] font-black italic">Content</p>
+              <p className="text-[var(--reader-text)] uppercase font-black text-sm">{chapters.length} Chapters</p>
+            </div>
+
+            <div className="w-px h-12 bg-white/5" />
+
+            <div className="space-y-2">
+              <p className="text-[var(--reader-text-subtle)] text-[9px] uppercase tracking-[0.3em] font-black italic">Likes</p>
+              <div className="flex items-center gap-6">
+                <LikeButton
+                  contentType="novel"
+                  contentId={novelId || ""}
+                  initialLikeCount={novel.likes || 0}
+                />
+                <div className="h-1 w-1 bg-[var(--reader-border)] rounded-full" />
+                <span className="text-[var(--reader-text)] uppercase font-black text-sm">{(novel.views || 0).toLocaleString()} Views</span>
+              </div>
+            </div>
+          </div>
+
+          <NovelActions novel={novel} novelId={novelId} slug={slug} chapters={chapters} />
+        </div>
+      </div>
+
+      {/* Synopsis & Author Section */}
+      <div className="max-w-4xl mx-auto px-8 pt-32 grid grid-cols-1 md:grid-cols-3 gap-16">
+        <div className="md:col-span-2 space-y-12">
+          <div className="space-y-4">
+            <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--reader-text-subtle)] font-black italic">The Unrolling</p>
+            <div className="h-px w-24 bg-[var(--reader-accent)]/30" />
+          </div>
+          <p className="text-[var(--reader-text-muted)] leading-relaxed text-lg font-light italic">
+            {novel.description || "The archives are currently being unrolled for this chronicle. Check back soon for the full synopsis."}
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <p className="text-[10px] uppercase tracking-[0.6em] text-[var(--reader-text-subtle)] font-black italic">The Author</p>
+            <div className="h-px w-12 bg-[var(--reader-accent)]/30" />
+          </div>
+
+          <Link href={`/authors/${novel.authorId}`} className="block group">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl overflow-hidden glass-panel border border-white/5 group-hover:border-[var(--reader-accent)]/30 transition-all">
+                <img
+                  src={novel.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${novel.authorName}`}
+                  alt={novel.authorName}
+                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                />
+              </div>
+              <div>
+                <p className="text-white font-black uppercase tracking-widest group-hover:text-[var(--reader-accent)] transition-colors">{novel.authorName}</p>
+                <p className="text-[10px] text-[var(--reader-text-subtle)] uppercase tracking-tighter font-bold">View Profile</p>
+              </div>
+            </div>
+          </Link>
+
+          <p className="text-sm text-[var(--reader-text-muted)] leading-relaxed italic">
+            {novel.authorBio || "This chronicler prefers to let their work speak for itself."}
+          </p>
+        </div>
+      </div>
+    </main>
+  );
+}

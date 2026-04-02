@@ -36,9 +36,10 @@ export default function TagPage({ params }: { params: Promise<{ slug: string }> 
     return (
         <main className="min-h-screen bg-[#0b0a0f] pt-40 pb-24 px-8">
             <div className="max-w-7xl mx-auto space-y-20">
-                <header className="space-y-4 border-l-2 border-cyan-500 pl-8">
-                    <p className="text-[11px] uppercase tracking-[0.8em] text-zinc-500 font-bold">Tag Archive</p>
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white italic uppercase leading-none">#{tagName}</h1>
+                <header className="space-y-6 border-l-2 border-cyan-500/30 pl-10">
+                    <p className="text-[10px] uppercase tracking-[0.8em] text-zinc-500 font-black italic">Tag Discovery</p>
+                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white italic uppercase leading-none leading-[0.8]">#{tagName}</h1>
+                    <p className="text-[var(--reader-text-muted)] max-w-2xl text-sm leading-relaxed italic">Stories resonating with the #{tagName} theme.</p>
                 </header>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-12">
@@ -63,10 +64,16 @@ export default function TagPage({ params }: { params: Promise<{ slug: string }> 
                             />
                         ))
                     ) : (
-                        <div className="col-span-full py-20 text-center glass-panel rounded-3xl border-dashed border-white/5">
-                            <p className="text-zinc-500 italic uppercase tracking-widest text-xs">
-                                No works found with the #{tagName} tag yet.
-                            </p>
+                        <div className="col-span-full py-32 text-center glass-panel rounded-[2.5rem] border-dashed border-white/10 bg-white/[0.01]">
+                            <div className="max-w-md mx-auto space-y-4">
+                                <div className="text-4xl opacity-20 grayscale">🔖</div>
+                                <p className="text-zinc-500 italic font-black uppercase tracking-[0.4em] text-[10px]">
+                                    This tag is currently empty
+                                </p>
+                                <p className="text-zinc-600 text-[9px] uppercase tracking-widest font-bold">
+                                    No works have been tagged with #{tagName} in the Library yet.
+                                </p>
+                            </div>
                         </div>
                     )}
                 </div>

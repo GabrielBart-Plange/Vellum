@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { collection, getDocs, query, where, limit, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import StoryCard from "../cards/StoryCard";
 import ManagedAd from "../monetization/ManagedAd";
@@ -16,6 +16,7 @@ export default function StoriesSection() {
                 const q = query(
                     collection(db, "stories"),
                     where("published", "==", true),
+                    orderBy("createdAt", "desc"),
                     limit(6)
                 );
 
@@ -35,14 +36,15 @@ export default function StoriesSection() {
         <section className="py-16 px-4 max-w-7xl mx-auto">
             <header className="mb-8 flex items-baseline justify-between border-b border-white/5 pb-4">
                 <h2 className="text-sm tracking-[0.4em] text-[var(--reader-text-subtle)] uppercase font-bold">
-                    Short Stories
+                    Fresh Releases
                 </h2>
 
                 <a
                     href="/stories"
                     className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--reader-text-muted)] hover:text-[var(--reader-text)] transition-colors"
+                    title="View all short stories"
                 >
-                    View all
+                    Explore all
                 </a>
             </header>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { collection, getDocs, query, where, limit, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import StoryCard from "../cards/StoryCard";
 import ManagedAd from "../monetization/ManagedAd";
@@ -16,6 +16,7 @@ export default function NovelsSection() {
                 const q = query(
                     collection(db, "novels"),
                     where("published", "==", true),
+                    orderBy("createdAt", "desc"),
                     limit(6)
                 );
 
@@ -41,8 +42,9 @@ export default function NovelsSection() {
                 <a
                     href="/novel"
                     className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--reader-text-muted)] hover:text-[var(--reader-text)] transition-colors"
+                    title="View all long sagas"
                 >
-                    View all
+                    Explore all
                 </a>
             </header>
 

@@ -48,35 +48,48 @@ export default function ArtGalleryPage() {
     return (
         <main className="min-h-screen text-[var(--reader-text)] pt-40 pb-24 px-8">
             <div className="max-w-6xl mx-auto space-y-16">
-                <header className="space-y-4 border-l-2 border-zinc-700 pl-8">
-                    <p className="text-[11px] uppercase tracking-[0.8em] text-zinc-500 font-bold">The Archives</p>
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic">ART GALLERY</h1>
-                    <p className="text-[var(--reader-text-muted)] max-w-2xl text-sm leading-relaxed">A collection of visual works from across the realms.</p>
+                <header className="space-y-6 border-l-2 border-[var(--reader-accent)]/30 pl-10">
+                    <p className="text-[10px] uppercase tracking-[0.8em] text-zinc-500 font-black italic">Art Gallery</p>
+                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white uppercase italic leading-[0.8]">VISUAL <br />ARCHIVES</h1>
+                    <p className="text-[var(--reader-text-muted)] max-w-2xl text-sm leading-relaxed italic">A collection of visual works captured from across the shifting realms.</p>
                 </header>
 
                 <DiscoveryFilter
                     categories={["Character", "Landscape", "Concept", "Illustration"]}
                     onSearch={setSearchTerm}
                     onCategoryChange={setSelectedCategory}
-                    placeholder="Search characters, realms, or artists..."
                 />
 
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                         {[1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="aspect-[4/5] glass-panel rounded-3xl animate-pulse" />
+                            <div key={i} className="aspect-[4/5] glass-panel rounded-[2rem] border border-white/5 animate-pulse-slow" />
                         ))}
                     </div>
                 ) : filteredArt.length === 0 ? (
-                    <div className="py-24 text-center glass-panel border-dashed border-white/5 rounded-3xl">
-                        <p className="text-zinc-500 italic tracking-wide">
-                            {searchTerm || selectedCategory !== "All"
-                                ? "No visions match your current search criteria."
-                                : '"The gallery sits in silence."'}
-                        </p>
+                    <div className="col-span-full py-32 text-center glass-panel rounded-[2.5rem] border-dashed border-white/10 bg-white/[0.01]">
+                        <div className="max-w-md mx-auto space-y-6">
+                            <div className="text-4xl opacity-20 grayscale">🎨</div>
+                            <div className="space-y-2">
+                                <p className="text-zinc-500 italic font-black uppercase tracking-[0.4em] text-[10px]">
+                                    No visions match your search
+                                </p>
+                                <p className="text-zinc-600 text-[9px] uppercase tracking-widest font-bold">
+                                    {searchTerm || selectedCategory !== "All"
+                                        ? "Perhaps try a different whisper in the Library?"
+                                        : "The gallery sits in silence. The next masterpiece is currently being etched in the stars..."}
+                                </p>
+                            </div>
+                            <button 
+                                onClick={() => {setSearchTerm(""); setSelectedCategory("All");}}
+                                className="px-8 py-3 rounded-full bg-white/5 border border-white/10 text-white text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all italic"
+                            >
+                                Reset Filters
+                            </button>
+                        </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                         {filteredArt.map((item) => (
                             <ArtCard
                                 key={item.id}

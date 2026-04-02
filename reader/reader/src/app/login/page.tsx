@@ -54,17 +54,23 @@ function LoginForm() {
 
     if (resetSent) {
         return (
-            <div className="w-full max-w-md space-y-8 text-center glass-panel p-10 rounded-3xl border border-white/5">
-                <header className="space-y-4">
-                    <Link href="/" className="text-2xl font-black tracking-tighter text-white uppercase italic">Vellum</Link>
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-green-500 font-bold">Reset Protocol Sent</p>
+            <div className="w-full max-w-md space-y-12 text-center glass-panel p-12 rounded-[2.5rem] border border-white/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                </div>
+                <header className="space-y-6">
+                    <Link href="/" className="text-3xl font-black tracking-tighter text-white uppercase italic">Vellum</Link>
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase tracking-[0.6em] text-green-500 font-black italic">Recovery Protocol Initialized</p>
+                        <div className="h-px w-12 bg-green-500/30 mx-auto" />
+                    </div>
                 </header>
-                <p className="text-sm text-zinc-400">Check your mail for the archival access reset link.</p>
+                <p className="text-sm text-zinc-400 leading-relaxed italic">The archives have whispered a restoration link to your mail. Check your inbox to regain your essence.</p>
                 <button
                     onClick={() => { setIsResetMode(false); setResetSent(false); }}
-                    className="w-full py-4 rounded-xl border border-white/10 text-white font-black uppercase tracking-widest text-xs hover:bg-white/5 transition-all"
+                    className="w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white/10 transition-all active:scale-95 italic"
                 >
-                    Back to Login
+                    Return to Threshold
                 </button>
             </div>
         );
@@ -77,49 +83,54 @@ function LoginForm() {
             </div>
 
             <div className="w-full max-w-md space-y-12 relative z-10 text-center">
-                <header className="space-y-4">
-                    <Link href="/" className="text-2xl font-black tracking-tighter text-white uppercase italic">Vellum</Link>
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-zinc-500 font-bold">
-                        {isResetMode ? "Recovery Protocol" : "Authentication Node"}
-                    </p>
+                <header className="space-y-6">
+                    <Link href="/" className="text-3xl font-black tracking-tighter text-white uppercase italic">Vellum</Link>
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase tracking-[0.6em] text-zinc-500 font-black italic">Member Access</p>
+                        <div className="h-px w-12 bg-[var(--reader-accent)]/30 mx-auto" />
+                    </div>
                 </header>
 
-                <div className="glass-panel p-10 rounded-3xl border border-white/5 space-y-8">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="glass-panel p-12 rounded-[2.5rem] border border-white/5 space-y-10 relative overflow-hidden">
+                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--reader-accent)]/5 blur-3xl rounded-full" />
+
+                    <form onSubmit={handleSubmit} className="space-y-8">
                         {error && (
-                            <div role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider">
+                            <div role="alert" className="p-5 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest italic animate-in fade-in slide-in-from-top-2">
                                 {error}
                             </div>
                         )}
 
-                        <input
-                            type="email"
-                            placeholder="ARCHIVIST MAIL"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            disabled={isLoading}
-                            className="w-full bg-zinc-900/50 border border-white/5 rounded-xl px-6 py-4 text-xs font-black tracking-widest focus:outline-none focus:border-purple-500/50 transition-all text-white placeholder:text-zinc-700 disabled:opacity-50"
-                        />
-
-                        {!isResetMode && (
+                        <div className="space-y-4">
                             <input
-                                type="password"
-                                placeholder="ACCESS CODE"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                type="email"
+                                placeholder="EMAIL ADDRESS"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                                 disabled={isLoading}
-                                className="w-full bg-zinc-900/50 border border-white/5 rounded-xl px-6 py-4 text-xs font-black tracking-widest focus:outline-none focus:border-purple-500/50 transition-all text-white placeholder:text-zinc-700 disabled:opacity-50"
+                                className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-8 py-5 text-[10px] font-black tracking-[0.2em] focus:outline-none focus:border-[var(--reader-accent)]/40 focus:ring-4 focus:ring-[var(--reader-accent)]/5 transition-all text-white placeholder:text-zinc-800 disabled:opacity-50 italic"
                             />
-                        )}
+
+                            {!isResetMode && (
+                                <input
+                                    type="password"
+                                    placeholder="PASSWORD"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    disabled={isLoading}
+                                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-8 py-5 text-[10px] font-black tracking-[0.2em] focus:outline-none focus:border-[var(--reader-accent)]/40 focus:ring-4 focus:ring-[var(--reader-accent)]/5 transition-all text-white placeholder:text-zinc-800 disabled:opacity-50 italic"
+                                />
+                            )}
+                        </div>
 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-4 rounded-xl border border-white/10 text-white font-black uppercase tracking-widest text-xs hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full py-5 rounded-2xl bg-white text-black font-black uppercase tracking-[0.3em] text-[11px] hover:bg-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_20px_40px_-15px_rgba(255,255,255,0.2)] active:scale-95 italic"
                         >
-                            {isLoading ? 'Authenticating...' : (isResetMode ? 'Send Reset Link' : 'Enter Archives')}
+                            {isLoading ? 'Resonating...' : (isResetMode ? 'Reset Password' : 'Sign In')}
                         </button>
 
                         <div className="flex justify-between items-center px-1">
@@ -134,12 +145,12 @@ function LoginForm() {
 
                         {!isResetMode && (
                             <>
-                                <div className="relative py-4">
+                                <div className="relative py-6">
                                     <div className="absolute inset-0 flex items-center">
-                                        <div className="w-full border-t border-white/10"></div>
+                                        <div className="w-full border-t border-white/5"></div>
                                     </div>
-                                    <div className="relative flex justify-center text-[10px] uppercase tracking-widest">
-                                        <span className="px-4 text-[var(--reader-text)]/40" style={{ backgroundColor: 'var(--reader-bg)' }}>or continue with</span>
+                                    <div className="relative flex justify-center text-[9px] uppercase tracking-[0.4em] font-black italic">
+                                        <span className="px-6 text-[var(--reader-text)]/30" style={{ backgroundColor: 'var(--reader-bg)' }}>or resonate via</span>
                                     </div>
                                 </div>
 
@@ -147,20 +158,20 @@ function LoginForm() {
                                     type="button"
                                     onClick={handleGoogleLogin}
                                     disabled={isLoading}
-                                    className="w-full py-4 rounded-xl border border-white/10 text-white font-black uppercase tracking-widest text-xs hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                    className="w-full py-5 rounded-2xl border border-white/10 text-white font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4 italic"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-                                        <path fill="#FFFFFF" d="M12.24 10.285V14.4H19.046C18.771 16.165 16.99 19.574 12.24 19.574C8.145 19.574 4.801 16.185 4.801 12C4.801 7.815 8.145 4.426 12.24 4.426C14.57 4.426 16.131 5.415 17.025 6.275L20.279 3.137C18.189 1.186 15.479 0 12.24 0C5.605 0 0.245 5.365 0.245 12C0.245 18.635 5.605 24 12.24 24C19.166 24 23.76 19.131 23.76 12.274C23.76 11.486 23.675 10.884 23.571 10.285H12.24Z" />
+                                        <path fill="currentColor" d="M12.24 10.285V14.4H19.046C18.771 16.165 16.99 19.574 12.24 19.574C8.145 19.574 4.801 16.185 4.801 12C4.801 7.815 8.145 4.426 12.24 4.426C14.57 4.426 16.131 5.415 17.025 6.275L20.279 3.137C18.189 1.186 15.479 0 12.24 0C5.605 0 0.245 5.365 0.245 12C0.245 18.635 5.605 24 12.24 24C19.166 24 23.76 19.131 23.76 12.274C23.76 11.486 23.675 10.884 23.571 10.285H12.24Z" />
                                     </svg>
-                                    Google
+                                    Sign In with Google
                                 </button>
                             </>
                         )}
                     </form>
                 </div>
 
-                <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">
-                    New Archivist? <Link href="/signup" className="text-white hover:text-[var(--accent-sakura)] transition-colors">Join the Archives</Link>
+                <p className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.3em] italic">
+                    New Reader? <Link href="/signup" className="text-white hover:text-[var(--reader-accent)] transition-all ml-2 border-b border-white/10 pb-0.5">Create an Account</Link>
                 </p>
             </div>
         </div>

@@ -2,7 +2,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, Timestamp } from "firebase/firestore";
 import { InkletWallet, VelluxWallet, VelluxTier, SubscriptionTier } from "@/types";
 
-const MONETIZATION_API = process.env.NEXT_PUBLIC_MONETIZATION_API || "http://localhost:3001/api";
+const MONETIZATION_API = process.env.NEXT_PUBLIC_MONETIZATION_API || "http://localhost:3005/api";
 
 /**
  * Fetches the user's Inklet wallet from Firestore.
