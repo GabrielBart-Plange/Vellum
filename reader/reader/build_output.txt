@@ -1,0 +1,60 @@
+﻿
+> reader@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.5 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 5.5s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/29) ...
+  Generating static pages using 7 workers (7/29) 
+  Generating static pages using 7 workers (14/29) 
+  Generating static pages using 7 workers (21/29) 
+Ô£ô Generating static pages using 7 workers (29/29) in 1790.5ms
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî Ôùï /
+Ôö£ Ôùï /_not-found
+Ôö£ Ôùï /about
+Ôö£ Ôùï /art
+Ôö£ ãÆ /authors/[id]
+Ôö£ ãÆ /chapter/[combined]
+Ôö£ Ôùï /contact
+Ôö£ Ôùï /creator
+Ôö£ Ôùï /creator/dashboard
+Ôö£ Ôùï /creator/dashboard/art
+Ôö£ Ôùï /creator/dashboard/drafts
+Ôö£ ãÆ /creator/dashboard/drafts/[id]
+Ôö£ Ôùï /creator/dashboard/drafts/new
+Ôö£ Ôùï /creator/dashboard/profile
+Ôö£ Ôùï /creator/dashboard/published
+Ôö£ Ôùï /creator/dashboard/settings
+Ôö£ ãÆ /genre/[slug]
+Ôö£ Ôùï /icon.png
+Ôö£ Ôùï /library
+Ôö£ Ôùï /login
+Ôö£ Ôùï /nexus
+Ôö£ Ôùï /novel
+Ôö£ ãÆ /novel/[slug]
+Ôö£ ãÆ /novel/[slug]/chapter/[chapterId]
+Ôö£ Ôùï /portal
+Ôö£ Ôùï /privacy
+Ôö£ Ôùï /profile
+Ôö£ Ôùï /ranking
+Ôö£ Ôùï /robots.txt
+Ôö£ Ôùï /settings
+Ôö£ Ôùï /signup
+Ôö£ Ôùï /sitemap.xml
+Ôö£ Ôùï /stories
+Ôö£ ãÆ /stories/[id]
+Ôö£ ãÆ /tag/[slug]
+Ôöö Ôùï /terms
+
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

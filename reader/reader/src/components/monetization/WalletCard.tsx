@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePaystackPayment } from "react-paystack";
+
 import { purchaseInklets, purchaseVellux, purchaseGilt, subscribeToTier, verifyPaystackPayment } from "@/lib/monetization/coinService";
 import { VelluxTier, SubscriptionTier } from "@/types";
 
