@@ -194,7 +194,7 @@ export async function unlockStory(userId: string, storyId: string): Promise<bool
  */
 export async function verifyPaystackPayment(reference: string, userId: string, amount: number, currencyAmount: number, type: string): Promise<boolean> {
     try {
-        const response = await fetch(`${MONETIZATION_API}/payments/paystack/verify`, {
+        const response = await fetch(`/api/payments/paystack/verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ reference, userId, amount, currencyAmount, type })
