@@ -41,7 +41,7 @@ async function getAuthorData(id: string) {
     .where('published', '==', true)
     .orderBy('publishedAt', 'desc')
     .get();
-  const stories = JSON.parse(JSON.stringify(storiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+  const stories = JSON.parse(JSON.stringify(storiesSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))));
 
   // Novels
   const novelsSnap = await adminDb.collection('novels')
@@ -49,14 +49,14 @@ async function getAuthorData(id: string) {
     .where('published', '==', true)
     .orderBy('publishedAt', 'desc')
     .get();
-  const novels = JSON.parse(JSON.stringify(novelsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+  const novels = JSON.parse(JSON.stringify(novelsSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))));
 
   // Art
   const artSnap = await adminDb.collection('art')
     .where('authorId', '==', id)
     .orderBy('createdAt', 'desc')
     .get();
-  const art = JSON.parse(JSON.stringify(artSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+  const art = JSON.parse(JSON.stringify(artSnap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))));
 
   return { authorMetadata, xpProfile, followerCount, stories, novels, art };
 }
