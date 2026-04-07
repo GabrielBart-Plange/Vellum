@@ -144,26 +144,6 @@ export default function LibraryPage() {
                         <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-[var(--reader-text)] uppercase italic leading-[0.8]">MY <br />LIBRARY</h1>
                         <p className="text-[var(--reader-text-muted)] max-w-2xl text-[11px] uppercase tracking-[0.2em] font-black italic">Your collection of stories and novels saved for reading</p>
                     </div>
-                    
-                    {/* Daily Ritual / Streak (Human Element) */}
-                    <div className="hidden lg:flex items-center gap-6 glass-panel p-6 rounded-[2rem] border border-white/5 bg-white/[0.02] animate-in fade-in slide-in-from-right-4">
-                        <div className="text-right">
-                            <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-black">Daily Ritual</p>
-                            <p className="text-xl font-black text-white italic tracking-tighter uppercase">5 Day Streak</p>
-                        </div>
-                        <div className="flex gap-1.5">
-                            {[1, 2, 3, 4, 5].map((day) => (
-                                <div key={day} className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-xs shadow-[0_0_15px_-5px_rgba(168,85,247,0.4)]">
-                                    🔥
-                                </div>
-                            ))}
-                            {[6, 7].map((day) => (
-                                <div key={day} className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs opacity-30">
-                                    ⭕
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
 
                 <div className="flex justify-end gap-4 items-center">

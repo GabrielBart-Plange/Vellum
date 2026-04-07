@@ -17,7 +17,7 @@ export default function NovelsSection() {
                     collection(db, "novels"),
                     where("published", "==", true),
                     orderBy("createdAt", "desc"),
-                    limit(6)
+                    limit(5)
                 );
 
                 const snap = await getDocs(q);
@@ -51,10 +51,10 @@ export default function NovelsSection() {
             <ManagedAd zone="HOME_DISCOVERY" />
 
             {/* Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-x-4 gap-y-8">
                 {loading ? (
                     /* Loading Skeletons */
-                    Array.from({ length: 4 }).map((_, i) => (
+                    Array.from({ length: 5 }).map((_, i) => (
                         <div key={i} className="animate-pulse flex flex-col gap-3">
                             <div className="aspect-[2/3] w-full rounded-md bg-[var(--reader-surface)]" />
                             <div className="h-4 w-3/4 rounded bg-[var(--reader-surface)]" />

@@ -5,6 +5,8 @@ import Footer from "@/components/layout/Footer";
 import Script from "next/script";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import ReferralTracker from "@/components/monetization/ReferralTracker";
+import { Suspense } from "react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -96,6 +98,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider>
+            <Suspense fallback={null}>
+              <ReferralTracker />
+            </Suspense>
             <Navbar />
             <main className="flex-grow">
               {children}

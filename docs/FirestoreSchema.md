@@ -8,7 +8,7 @@ Collections and key fields:
 - chapters: chapterId, storyId, title, contentPreview, publishedAt, priceInInklets (optional)
 - reads: readId, userId, chapterId, timestamp, duration, completed
 - comments: commentId, userId, chapterId, content, createdAt
-- subscriptions: subscriptionId, userId, tier (Free|Prime|Nexus), start, end, status
+- subscriptions: subscriptionId, userId, tier (Free|Plus|Pro), start, end, status
 - inklets: inkletPackId, userId, amount, price, purchasedAt
 - vellux: velluxId, userId, tier (Gold|Diamond|Platinum), amount, receivedAt
 - xp: userId, level, currentXp, xpHistory

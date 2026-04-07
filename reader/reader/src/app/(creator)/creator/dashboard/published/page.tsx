@@ -7,6 +7,7 @@ import Link from "next/link";
 
 interface PublishedWork {
     id: string;
+    displayId?: string;
     title?: string;
     authorName?: string;
     views?: number;
@@ -32,17 +33,33 @@ export default function PublishedPage() {
                 where("authorId", "==", user.uid),
                 where("published", "==", true)
             );
-            const storiesSnap = await getDocs(qStories);
-            const sDocs = storiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), collectionName: "stories" } as PublishedWork));
+        const storiesSnap = await getDocs(qStories);
+        const sDocs = storiesSnap.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                ...data, 
+                collectionName: "stories",
+                displayId: data.slug || doc.id 
+            } as PublishedWork;
+        });
 
-            // 2. Fetch novels
-            const qNovels = query(
-                collection(db, "novels"),
-                where("authorId", "==", user.uid),
-                where("published", "==", true)
-            );
-            const novelsSnap = await getDocs(qNovels);
-            const nDocs = novelsSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), collectionName: "novels" } as PublishedWork));
+        // 2. Fetch novels
+        const qNovels = query(
+            collection(db, "novels"),
+            where("authorId", "==", user.uid),
+            where("published", "==", true)
+        );
+        const novelsSnap = await getDocs(qNovels);
+        const nDocs = novelsSnap.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                ...data, 
+                collectionName: "novels",
+                displayId: data.slug || doc.id
+            } as PublishedWork;
+        });
 
             setStories([...sDocs, ...nDocs].sort((a, b) => {
                 const dateA = a.publishedAt?.seconds || 0;
@@ -106,28 +123,26 @@ export default function PublishedPage() {
                                     <h3 className="text-xl font-light text-[var(--foreground)] group-hover:text-[var(--reader-accent)] transition-colors leading-tight">
                                         {story.title || "Untitled"}
                                     </h3>
-                                    <div className="flex gap-4">
-                                        <Link
-                                            href={`/creator/dashboard/drafts/${story.id}`}
-                                            className="text-[10px] uppercase tracking-widest text-[var(--reader-text-muted)] hover:text-[var(--foreground)] transition-colors"
-                                        >
-                                            Edit
-                                        </Link>
-                                        <a
-                                            href={`/${story.collectionName === "novels" ? "novels" : "stories"}/${story.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-[10px] uppercase tracking-widest text-[var(--reader-text-muted)] hover:text-blue-400 transition-colors"
-                                        >
-                                            View
-                                        </a>
-                                        <button
-                                            onClick={() => handleUnpublish(story.id, story.collectionName)}
-                                            className="text-[10px] uppercase tracking-widest text-red-500/40 hover:text-red-500 transition-colors"
-                                        >
-                                            Unpublish
-                                        </button>
-                                    </div>
+                                        <div className="flex items-center gap-4">
+                                            <Link
+                                                href={`/creator/dashboard/drafts/${story.id}`}
+                                                className="text-[10px] uppercase tracking-widest text-[var(--reader-text-muted)] hover:text-[var(--foreground)] transition-colors"
+                                            >
+                                                Edit
+                                            </Link>
+                                            <a
+                                                href={story.collectionName === "novels" ? `/novel/${story.displayId || story.id}` : `/stories/${story.displayId || story.id}`}
+                                                className="text-[10px] uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors font-bold"
+                                            >
+                                                View
+                                            </a>
+                                            <button
+                                                onClick={() => handleUnpublish(story.id, story.collectionName)}
+                                                className="text-[10px] uppercase tracking-widest text-red-500/40 hover:text-red-500 transition-colors"
+                                            >
+                                                Unpublish
+                                            </button>
+                                        </div>
                                 </div>
 
                                 <div className="flex items-center gap-6">

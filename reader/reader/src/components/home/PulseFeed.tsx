@@ -18,33 +18,36 @@ export default function PulseFeed() {
     const [activities, setActivities] = useState<ActivityItem[]>([]);
 
     useEffect(() => {
-        // In a real app, we'd have a global 'activity' collection.
-        // For now, let's pull from recent comments to simulate activity.
         const q = query(
-            collection(db, "global_activity"), // Assuming this exists or we'll mock it
+            collection(db, "global_activity"),
             orderBy("timestamp", "desc"),
             limit(5)
         );
 
-        // Mocking some data if the collection is empty
-        const mockActivities: ActivityItem[] = [
-            { id: '1', type: 'comment', user: 'Nexus_Reader', target: 'Cyber Dreams', timestamp: new Date() },
-            { id: '2', type: 'tip', user: 'Sarah', value: '500 Inklets', target: 'A Mysterious Scribe', timestamp: new Date() },
-            { id: '3', type: 'level_up', user: 'Alex', value: 5, timestamp: new Date() },
-            { id: '4', type: 'like', user: 'gabba', target: 'The Lost Scroll', timestamp: new Date() },
-        ];
-
-        setActivities(mockActivities);
-        
-        // Real listener would go here
-        /*
         const unsubscribe = onSnapshot(q, (snap) => {
-            const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ActivityItem));
+            const items = snap.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data(),
+                timestamp: doc.data().timestamp?.toDate() || new Date()
+            } as ActivityItem));
             setActivities(items);
+        }, (error) => {
+            console.error("Error listening to Pulse:", error);
         });
+
         return () => unsubscribe();
-        */
     }, []);
+
+    const formatTime = (date: Date) => {
+        const now = new Date();
+        const diff = now.getTime() - date.getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return "Just now";
+        if (mins < 60) return `${mins}m ago`;
+        const hours = Math.floor(mins / 60);
+        if (hours < 24) return `${hours}h ago`;
+        return date.toLocaleDateString();
+    };
 
     return (
         <div className="glass-panel rounded-3xl border border-white/5 p-6 space-y-6">
@@ -76,7 +79,7 @@ export default function PulseFeed() {
                                     <span className="text-zinc-200 italic font-medium">{activity.target}</span>
                                 )}<br />
                             </p>
-                            <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter">Just now</p>
+                            <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter">{formatTime(activity.timestamp)}</p>
                         </div>
                     </div>
                 ))}

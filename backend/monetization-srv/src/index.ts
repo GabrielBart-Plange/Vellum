@@ -112,10 +112,12 @@ app.post('/api/chapters/unlock', async (req: Request, res: Response) => {
 
       const chapterData = chapterSnap.data();
       const price = chapterData?.price || 0;
+      const deductionAmount = currency === 'gilt' ? Math.ceil(price / 10) : price;
+      
       const userData = userSnap.data();
       const userBalance = currency === 'gilt' ? (userData?.giltBalance || 0) : (userData?.inkletBalance || 0);
 
-      if (userBalance < price) {
+      if (userBalance < deductionAmount) {
         throw new Error(`Insufficient ${currency === 'gilt' ? 'Gilt' : 'Inklets'}`);
       }
 
@@ -128,14 +130,14 @@ app.post('/api/chapters/unlock', async (req: Request, res: Response) => {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
       if (currency === 'gilt') {
-        userUpdate.giltBalance = admin.firestore.FieldValue.increment(-price);
+        userUpdate.giltBalance = admin.firestore.FieldValue.increment(-deductionAmount);
       } else {
-        userUpdate.inkletBalance = admin.firestore.FieldValue.increment(-price);
+        userUpdate.inkletBalance = admin.firestore.FieldValue.increment(-deductionAmount);
       }
       transaction.update(userRef, userUpdate);
 
       // 2. Grant to creator (70% share)
-      const creatorShare = Math.floor(price * 0.70);
+      const creatorShare = Math.floor(deductionAmount * 0.70);
       const creatorUpdate: any = {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
@@ -168,7 +170,8 @@ app.post('/api/chapters/unlock', async (req: Request, res: Response) => {
         type: 'chapter_unlock',
         novelId,
         chapterId,
-        amount: price,
+        amount: deductionAmount,
+        originalPrice: price,
         status: 'completed',
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
@@ -252,10 +255,12 @@ app.post('/api/stories/unlock', async (req: Request, res: Response) => {
 
       const storyData = storySnap.data();
       const price = storyData?.price || 0;
+      const deductionAmount = currency === 'gilt' ? Math.ceil(price / 10) : price;
+      
       const userData = userSnap.data();
       const userBalance = currency === 'gilt' ? (userData?.giltBalance || 0) : (userData?.inkletBalance || 0);
 
-      if (userBalance < price) {
+      if (userBalance < deductionAmount) {
         throw new Error(`Insufficient ${currency === 'gilt' ? 'Gilt' : 'Inklets'}`);
       }
 
@@ -268,14 +273,14 @@ app.post('/api/stories/unlock', async (req: Request, res: Response) => {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
       if (currency === 'gilt') {
-        userUpdate.giltBalance = admin.firestore.FieldValue.increment(-price);
+        userUpdate.giltBalance = admin.firestore.FieldValue.increment(-deductionAmount);
       } else {
-        userUpdate.inkletBalance = admin.firestore.FieldValue.increment(-price);
+        userUpdate.inkletBalance = admin.firestore.FieldValue.increment(-deductionAmount);
       }
       transaction.update(userRef, userUpdate);
 
       // 2. Grant to creator (70% share)
-      const creatorShare = Math.floor(price * 0.70);
+      const creatorShare = Math.floor(deductionAmount * 0.70);
       const creatorUpdate: any = {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
@@ -300,7 +305,8 @@ app.post('/api/stories/unlock', async (req: Request, res: Response) => {
         userId,
         type: 'story_unlock',
         storyId,
-        amount: price,
+        amount: deductionAmount,
+        originalPrice: price,
         status: 'completed',
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
@@ -444,11 +450,11 @@ app.post('/api/payments/paystack/verify', async (req: Request, res: Response) =>
         updates.subscriptionUpdatedAt = admin.firestore.FieldValue.serverTimestamp();
         
         // Grant subscription bonuses
-        if (tier === 'prime') {
-          // Vellum Prime: 50 Inklets bonus
+        if (tier === 'plus') {
+          // Vellum Plus: 50 Inklets bonus
           updates.inkletBalance = admin.firestore.FieldValue.increment(50);
-        } else if (tier === 'nexus') {
-          // Vellum Nexus: 1 Gold Vellux bonus
+        } else if (tier === 'pro') {
+          // Vellum Pro: 1 Gold Vellux bonus
           updates.vellux_gold_balance = admin.firestore.FieldValue.increment(1);
         }
       }
@@ -674,8 +680,8 @@ app.post('/api/payments/subscribe', async (req: Request, res: Response) => {
   try {
     const userRef = db.collection('users').doc(userId);
     const expiresAt = new Date();
-    if (tier === 'prime') expiresAt.setDate(expiresAt.getDate() + 7);
-    else if (tier === 'nexus') expiresAt.setMonth(expiresAt.getMonth() + 1);
+    if (tier === 'plus') expiresAt.setDate(expiresAt.getDate() + 7);
+    else if (tier === 'pro') expiresAt.setMonth(expiresAt.getMonth() + 1);
 
     await userRef.set({
       subscriptionTier: tier,
@@ -685,9 +691,9 @@ app.post('/api/payments/subscribe', async (req: Request, res: Response) => {
 
     // Grant subscription bonuses for manual/direct subscription
     const bonusUpdates: any = {};
-    if (tier === 'prime') {
+    if (tier === 'plus') {
       bonusUpdates.inkletBalance = admin.firestore.FieldValue.increment(50);
-    } else if (tier === 'nexus') {
+    } else if (tier === 'pro') {
       bonusUpdates.vellux_gold_balance = admin.firestore.FieldValue.increment(1);
     }
     if (Object.keys(bonusUpdates).length > 0) {
@@ -710,6 +716,90 @@ app.post('/api/payments/subscribe', async (req: Request, res: Response) => {
     res.status(500).json({ ok: false, error: error.message })
   }
 })
+
+
+// --- Viral Loops (Referrals) ---
+
+/**
+ * POST /api/referrals/redeem
+ * Awards Inklets to a referrer when a new user signs up.
+ */
+app.post("/api/referrals/redeem", async (req: Request, res: Response) => {
+  const { referredUserId, referralCode } = req.body;
+
+  if (!referredUserId || !referralCode) {
+    return res.status(400).json({ ok: false, error: "Missing referredUserId or referralCode" });
+  }
+
+  try {
+    const referrerQuery = await db.collection("users").where("referralId", "==", referralCode).limit(1).get();
+    
+    if (referrerQuery.empty) {
+      return res.status(404).json({ ok: false, error: "Referral code not found" });
+    }
+
+    const referrerDoc = referrerQuery.docs[0];
+    const referrerData = referrerDoc.data();
+    const referrerId = referrerDoc.id;
+    const referrerTier = referrerData.subscriptionTier || 'free';
+
+    // Prevent self-referral
+    if (referrerId === referredUserId) {
+      return res.status(400).json({ ok: false, error: "Self-referral is not allowed" });
+    }
+
+    // Enforce Tier-Based Limits (Plus: 25, Prime: 50, Free: 10)
+    const rewardCountQuery = await db.collection("transactions")
+      .where("userId", "==", referrerId)
+      .where("type", "==", "referral_reward")
+      .get();
+
+    const currentCount = rewardCountQuery.size;
+    let limit = 10;
+    if (referrertier === 'plus') limit = 25;
+    else if (referrertier === 'plus') limit = 50;
+
+    if (currentCount >= limit) {
+      return res.status(403).json({ ok: false, error: `Referral reward limit reached for ${referrerTier} tier (Max ${limit})` });
+    }
+
+    // Check if this reward was already granted for this specific pair
+    const existingReward = await db.collection("transactions")
+      .where("userId", "==", referrerId)
+      .where("type", "==", "referral_reward")
+      .where("refereeId", "==", referredUserId)
+      .get();
+
+    if (!existingReward.empty) {
+      return res.json({ ok: true, message: "Reward already granted" });
+    }
+
+    // Award 50 Inklets
+    const rewardAmount = 50;
+    await db.runTransaction(async (transaction) => {
+      transaction.set(referrerDoc.ref, {
+        inkletBalance: admin.firestore.FieldValue.increment(rewardAmount),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      const transRef = db.collection("transactions").doc();
+      transaction.set(transRef, {
+        id: transRef.id,
+        userId: referrerId,
+        refereeId: referredUserId,
+        type: "referral_reward",
+        amount: rewardAmount,
+        status: "completed",
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+
+    res.json({ ok: true, message: "Referral reward granted successfully" });
+  } catch (error: any) {
+    console.error("Referral error:", error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
 
 const port = process.env.PORT || 3005
 app.listen(port, () => {

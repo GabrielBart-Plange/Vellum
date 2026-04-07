@@ -194,33 +194,55 @@ async function syncReaderProfile(user: User): Promise<void> {
     try {
         const ref = doc(db, 'users', user.uid);
         const snap = await getDoc(ref);
-        const hasExistsMethod = typeof (snap as { exists?: unknown } | undefined)?.exists === 'function';
-        if (!hasExistsMethod || !(snap as { exists: () => boolean }).exists()) {
-            await setDoc(ref, {
-                username: user.displayName || user.email?.split('@')[0] || 'Reader',
-                email: user.email || '',
-                roles: ['reader'],
-                createdAt: serverTimestamp(),
-            }, { merge: true });
-        } else {
-            const data = (snap as { data: () => Record<string, unknown> }).data();
-            const roles = Array.isArray(data.roles) ? data.roles : [];
-            const nextRoles = roles.includes('reader') ? roles : [...roles, 'reader'];
+        
+        let referralId: string;
+        let updatePayload: any = {
+            email: user.email || '',
+            updatedAt: serverTimestamp(),
+        };
 
-            // Only update email and roles, preserve custom username if it exists
-            const updatePayload: { email: string; roles: string[]; updatedAt: ReturnType<typeof serverTimestamp>; username?: string } = {
-                email: user.email || '',
-                roles: nextRoles,
-                updatedAt: serverTimestamp(),
+        if (!snap.exists()) {
+            referralId = `ARC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+            
+            // Check for attribution from ReferralTracker
+            let referredBy = null;
+            if (typeof window !== "undefined") {
+                referredBy = sessionStorage.getItem("vellum_referral_id");
+            }
+
+            updatePayload = {
+                ...updatePayload,
+                username: user.displayName || user.email?.split('@')[0] || 'Reader',
+                roles: ['reader'],
+                referralId,
+                referredBy,
+                createdAt: serverTimestamp(),
             };
 
-            // Only set a default username if the field is currently missing/empty in Firestore
+            // Trigger referral reward in the background (Archivist's Echo)
+            if (referredBy) {
+                const { referralService } = await import('@/lib/monetization/referralService');
+                referralService.awardReferralBonus(referredBy, user.uid)
+                    .catch(err => console.error("[Referral Reward] Failed to trigger redemption:", err));
+            }
+        } else {
+            const data = snap.data();
+            const roles = Array.isArray(data.roles) ? data.roles : [];
+            const nextRoles = roles.includes('reader') ? roles : [...roles, 'reader'];
+            referralId = data.referralId || `ARC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+            updatePayload = {
+                ...updatePayload,
+                roles: nextRoles,
+                referralId,
+            };
+
             if (!data.username) {
                 updatePayload.username = user.displayName || user.email?.split('@')[0] || 'Reader';
             }
-
-            await setDoc(ref, updatePayload, { merge: true });
         }
+
+        await setDoc(ref, updatePayload, { merge: true });
     } catch (error) {
         console.error("Reader profile sync failed:", error);
     }

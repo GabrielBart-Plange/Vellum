@@ -18,11 +18,19 @@ export default function NovelListingPage() {
             try {
                 const q = query(
                     collection(db, "novels"),
-                    where("published", "==", true),
-                    orderBy("createdAt", "desc")
+                    where("published", "==", true)
                 );
                 const snap = await getDocs(q);
-                setNovels(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Novel)));
+                const fetchedNovels = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Novel));
+                
+                // Sort client-side to handle missing createdAt gracefully
+                fetchedNovels.sort((a, b) => {
+                    const dateA = a.createdAt?.toMillis?.() || a.publishedAt?.toMillis?.() || 0;
+                    const bDateB = b.createdAt?.toMillis?.() || b.publishedAt?.toMillis?.() || 0;
+                    return bDateB - dateA;
+                });
+
+                setNovels(fetchedNovels);
             } catch (err) {
                 console.error("Error fetching novels:", err);
             } finally {

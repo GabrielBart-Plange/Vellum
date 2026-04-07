@@ -1,17 +1,31 @@
 import { Client, Events, Message, TextChannel } from 'discord.js';
 import { db } from '../db/database';
 import { randomUUID } from 'crypto';
+import { Mistral } from '@mistralai/mistralai';
 
-const CHANNEL_CONFIG: Record<string, string> = {
+let dynamicChannelConfig: Record<string, string> = {
   '1474317463264170088': 'bug',
   '1474317372985839711': 'feature',
   '1474306854288101499': 'support',
-  '1474317289833631826': 'dev_update'
+  '1474317289833631826': 'dev_update',
+  '1474304640165347398': 'fan_creation',
+  '1474313522652647516': 'feedback',
+  '1474310525813788764': 'support',
+  '1474301996709314690': 'events'
 };
 
-const TARGET_CHANNELS = Object.keys(CHANNEL_CONFIG);
+export async function setupListener(client: Client) {
+  // Sync with Firestore on startup
+  const remoteConfig = await db.getChannelConfig();
+  if (Object.keys(remoteConfig).length > 0) {
+    dynamicChannelConfig = remoteConfig;
+    console.log('📡 Synced dynamic channel configuration from Firestore');
+  } else {
+    // Save initial hardcoded config to Firestore if it's empty
+    await db.saveChannelConfig(dynamicChannelConfig);
+    console.log('📡 Initialized Firestore channel configuration');
+  }
 
-export function setupListener(client: Client) {
   // 1. Welcome Listener
   client.on(Events.GuildMemberAdd, async (member) => {
     const welcomeChannelId = process.env.WELCOME_CHANNEL_ID;
@@ -27,56 +41,118 @@ export function setupListener(client: Client) {
     }
   });
 
-  // 2. Message Listener (Existing)
+  // 2. Message Listener
   client.on(Events.MessageCreate, async (message: Message) => {
-    // Ignore bots
     if (message.author.bot) return;
+    
+    // Refresh local config cache periodically or on demand (for simplicity, we'll use the variable)
+    // In a high-scale app, we might use an event emitter to signal config changes
+    if (!Object.keys(dynamicChannelConfig).includes(message.channelId)) return;
 
-    // Only listen to target channels
-    if (!TARGET_CHANNELS.includes(message.channelId)) return;
-
-    // Basic Noise Filter (Can be replaced with LLM call)
-    if (isNoise(message.content)) {
-      console.log(`🔇 Filtered noise from ${message.author.username}: ${message.content.substring(0, 20)}...`);
+    // Use AI to filter clutter and categorize
+    const assessment = await assessMessage(message.content, message.author.username);
+    
+    if (assessment.isClutter) {
+      console.log(`🔇 AI Filtered clutter from ${message.author.username}: ${message.content.substring(0, 30)}...`);
       return;
     }
 
-    // Determine item type
-    const type = CHANNEL_CONFIG[message.channelId] || determineType(message.content, message.channelId);
-
-    // Save to Log
+    // Save high-value messages to Firestore
     try {
-      db.logMessage({
+      await db.logMessage({
         id: randomUUID(),
         channelId: message.channelId,
         userId: message.author.id,
         authorName: message.author.username,
         content: message.content,
-        type: type,
+        type: assessment.category || dynamicChannelConfig[message.channelId] || 'general',
+        sentiment: assessment.sentiment,
+        urgency: assessment.urgency,
+        probabilities: assessment.probabilities,
         timestamp: Date.now(),
         processed: 0
       });
-      console.log(`✅ Logged ${type} from ${message.author.username}`);
+      console.log(`🚀 AI Logged ${assessment.category} from ${message.author.username} (Urgency: ${assessment.urgency})`);
     } catch (error) {
       console.error('Failed to log message:', error);
     }
   });
 }
 
-function isNoise(text: string): boolean {
-  const t = text.toLowerCase().trim();
-  // Very basic noise rejection. An LLM API call goes here in the future.
-  if (t.length < 15 && !t.includes('bug') && !t.includes('issue')) return true;
-  if (t === 'thanks' || t === 'me too' || t === 'same') return true;
-  return false;
+// Export for externalControl to update
+export function updateLocalChannelConfig(newConfig: Record<string, string>) {
+  dynamicChannelConfig = newConfig;
 }
 
-function determineType(text: string, channelId: string): string {
-  // If we rely on channel structure:
-  // if (channelId === 'BUG_CHANNEL_ID') return 'bug';
-  
-  const t = text.toLowerCase();
-  if (t.includes('bug') || t.includes('issue') || t.includes('broken')) return 'bug';
-  if (t.includes('add') || t.includes('please') || t.includes('idea')) return 'feature';
-  return 'general_feedback';
+async function assessMessage(text: string, author: string): Promise<{ 
+  isClutter: boolean; 
+  category?: string; 
+  sentiment?: string; 
+  urgency?: string;
+  probabilities?: {
+    spam: number;
+    toxic: number;
+    nsfw: number;
+    constructive: number;
+  }
+}> {
+  const apiKey = process.env.LLM_API_KEY;
+  if (!apiKey) return { isClutter: text.length < 15 };
+
+  try {
+    const mistral = new Mistral({ apiKey });
+    const prompt = `
+      You are a Discord Community Manager for "Vellum".
+      Analyze this message and determine its "substantive" value and behavioral probabilities.
+      
+      Behavioral Probabilities (0.0 to 1.0):
+      - spam: Likelihood of being repetitive, bot-like, or useless noise.
+      - toxic: Likelihood of being rude, insulting, or inflammatory.
+      - nsfw: Likelihood of containing inappropriate content for a general audience.
+      - constructive: Likelihood of being a high-value contribution.
+
+      Message: "${text}"
+      Author: ${author}
+
+      Return ONLY a JSON object:
+      {
+        "isClutter": boolean,
+        "category": "bug" | "feature" | "question" | "feedback" | "chat",
+        "sentiment": "positive" | "negative" | "neutral",
+        "urgency": "low" | "medium" | "high",
+        "probabilities": {
+          "spam": number,
+          "toxic": number,
+          "nsfw": number,
+          "constructive": number
+        },
+        "reason": "short explanation"
+      }
+    `;
+
+    const result = await mistral.chat.complete({
+      model: process.env.LLM_MODEL || 'open-mistral-7b',
+      messages: [{ role: 'user', content: prompt }],
+      responseFormat: { type: 'json_object' }
+    });
+
+    const content = result.choices?.[0]?.message?.content;
+    if (typeof content === 'string') {
+      const parsed = JSON.parse(content);
+      // Log almost everything to build accurate behavioral profiles, 
+      // but still filter out "isClutter" if the AI explicitly says it's trash (like just "lol" or "ok")
+      return {
+        isClutter: parsed.isClutter && parsed.probabilities.constructive < 0.1 && parsed.probabilities.spam > 0.8,
+        category: parsed.category,
+        sentiment: parsed.sentiment,
+        urgency: parsed.urgency,
+        probabilities: parsed.probabilities
+      };
+    }
+  } catch (error) {
+    console.error("AI Assessment failed, falling back to basic filter:", error);
+  }
+
+  // Fallback to basic length filter
+  return { isClutter: text.length < 20 };
 }

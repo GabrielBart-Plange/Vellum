@@ -33,14 +33,14 @@ export async function getSubscriptionTier(userId: string): Promise<{
  * Helper to check if a tier has ad-free benefits.
  */
 export function isAdFree(tier: SubscriptionTier): boolean {
-    return tier === 'prime' || tier === 'nexus';
+    return tier === 'plus' || tier === 'pro';
 }
 
 /**
  * Helper to check if a tier has early access benefits.
  */
 export function hasEarlyAccess(tier: SubscriptionTier): boolean {
-    return tier === 'prime' || tier === 'nexus';
+    return tier === 'plus' || tier === 'pro';
 }
 
 /**
@@ -48,19 +48,9 @@ export function hasEarlyAccess(tier: SubscriptionTier): boolean {
  */
 export function getXPMultiplier(tier: SubscriptionTier): number {
     switch (tier) {
-        case 'nexus': return 2.0;
-        case 'prime': return 1.5;
+        case 'pro': return 2.0;
+        case 'plus': return 1.5;
         default: return 1.0;
     }
 }
 
-/**
- * Gets the monthly Essence Coin bonus for a tier.
- */
-export function getMonthlyCoinBonus(tier: SubscriptionTier): number {
-    switch (tier) {
-        case 'nexus': return 60;
-        case 'prime': return 20;
-        default: return 0;
-    }
-}

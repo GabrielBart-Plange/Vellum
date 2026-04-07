@@ -35,8 +35,8 @@ export default function TermsPage() {
                     <section className="space-y-4">
                         <h2 className="text-white uppercase tracking-widest text-sm font-black">4. Digital Currencies & Economy</h2>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Gilt (Hard Currency)</strong>: Purchased via real-world currency (MoMo/Card). Valued at 10 Gilt = GHS 2.00. Non-refundable.</li>
-                            <li><strong>Inklets (Soft Currency)</strong>: Daily reward currency earned through engagement. Used for temporary chapter unlocks. No cash value.</li>
+                            <li><strong>Gilt (Hard Currency)</strong>: Purchased via real-world currency (MoMo/Card). Valued at 10 Gilt = GHS 2.00. <strong>1 Gilt matches the purchasing power of 10 Inklets</strong>. Non-refundable.</li>
+                            <li><strong>Inklets (Soft Currency)</strong>: Daily reward currency earned through engagement. Valued at 100 Inklets = GHS 2.00 (Aligned with Gilt). Used for temporary chapter unlocks. No cash value.</li>
                             <li><strong>Vellux (Support Tokens)</strong>: Granted based on activity or subscription tiers. Used to boost story rankings.</li>
                         </ul>
                     </section>
@@ -45,12 +45,12 @@ export default function TermsPage() {
                         <h2 className="text-white uppercase tracking-widest text-sm font-black">5. Subscription Levels</h2>
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-white font-bold text-xs uppercase mb-2">Vellum Prime (GHS 5/week)</h3>
-                                <p className="text-sm">Includes Ad-Free reading, 24h Early Access, and 50 Inklets credited weekly.</p>
+                                <h3 className="text-white font-bold text-xs uppercase mb-2">Vellum Plus (GHS 10/week)</h3>
+                                <p className="text-sm">Includes Ad-Free reading, 24h Early Access, and 50 Inklets monthly bonus.</p>
                             </div>
                             <div>
-                                <h3 className="text-white font-bold text-xs uppercase mb-2">Vellum Nexus (GHS 20/month)</h3>
-                                <p className="text-sm">Includes all Prime perks plus 3 monthly Premium Picks, 1 Gold Vellux token, and an exclusive Profile Aura.</p>
+                                <h3 className="text-white font-bold text-xs uppercase mb-2">Vellum Pro (GHS 30/month)</h3>
+                                <p className="text-sm">Includes all Plus perks plus 3 monthly Premium Picks, 1 Gold Vellux token, and an exclusive Profile Aura.</p>
                             </div>
                         </div>
                     </section>

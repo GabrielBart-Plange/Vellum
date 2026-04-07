@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
-import * as admin from 'firebase-admin';
+import { paystackService } from '@/lib/monetization/paystackService';
 
 export async function POST(req: NextRequest) {
   const { reference, userId, amount, currencyAmount, priceGHS, type } = await req.json();
@@ -33,47 +32,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Amount mismatch' }, { status: 400 });
     }
 
-    // 3. Update Firestore via Admin SDK
-    const userRef = adminDb.collection('users').doc(userId);
-
-    await adminDb.runTransaction(async (tx: any) => {
-      const userSnap = await tx.get(userRef);
-      if (!userSnap.exists) throw new Error('User not found');
-
-      const updates: any = {
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      };
-
-      if (type === 'gilt') {
-        updates.giltBalance = admin.firestore.FieldValue.increment(amount);
-      } else if (type === 'inklets') {
-        updates.inkletBalance = admin.firestore.FieldValue.increment(amount);
-      } else if (type?.startsWith('sub_')) {
-        const tier = type.replace('sub_', '');
-        const expiresAt = new Date();
-        if (tier === 'prime') expiresAt.setDate(expiresAt.getDate() + 7);
-        else if (tier === 'nexus') expiresAt.setMonth(expiresAt.getMonth() + 1);
-        updates.subscriptionTier = tier;
-        updates.subscriptionStatus = 'active';
-        updates.subscriptionExpiresAt = admin.firestore.Timestamp.fromDate(expiresAt);
-        updates.subscriptionUpdatedAt = admin.firestore.FieldValue.serverTimestamp();
-      }
-
-      tx.update(userRef, updates);
-
-      // Record transaction (idempotent — keyed by reference)
-      const txRef = adminDb.collection('transactions').doc(reference);
-      tx.set(txRef, {
-        userId,
-        amount,
-        currencyAmount: finalCurrencyAmount,
-        reference,
-        type: type || 'inklets',
-        provider: 'paystack',
-        status: 'success',
-        paystackData,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+    // 3. Process and update Firestore via Service (Transaction + Idempotent)
+    await paystackService.processVerifiedPayment({
+      reference,
+      userId,
+      amount,
+      currencyAmount: finalCurrencyAmount,
+      type,
+      metadata: paystackData.metadata
     });
 
     return NextResponse.json({ ok: true, success: true });

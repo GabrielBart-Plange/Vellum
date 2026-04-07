@@ -5,6 +5,8 @@ import { isAdFree } from "@/lib/monetization/subscriptionService";
 import { getAdForZone, MockAd } from "@/lib/monetization/adConfig";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { collection, query, where, limit, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface ManagedAdProps {
     zone: string;
@@ -14,17 +16,74 @@ interface ManagedAdProps {
 export default function ManagedAd({ zone, className = "" }: ManagedAdProps) {
     const { monetization } = useAuth();
     const [ad, setAd] = useState<MockAd | null>(null);
+    const [loading, setLoading] = useState(true);
 
     // If user is on a paid tier, don't show any ads
     const adFree = monetization ? isAdFree(monetization.subscriptionTier) : false;
 
     useEffect(() => {
-        if (!adFree) {
-            setAd(getAdForZone(zone));
-        }
+        const prepareAd = async () => {
+            if (adFree) {
+                setLoading(false);
+                return;
+            }
+
+            const baseAd = getAdForZone(zone);
+            
+            // If it's a featured book ad, fetch real data
+            if (baseAd.type === 'featured') {
+                try {
+                    // Try to find a book to promote
+                    let bookData = null;
+                    let bookId = null;
+                    let targetCollection = '';
+
+                    // Randomly start with one collection, try the other if empty
+                    const collections = Math.random() > 0.5 ? ['novels', 'stories'] : ['stories', 'novels'];
+                    
+                    for (const coll of collections) {
+                        const q = query(
+                            collection(db, coll),
+                            where("published", "==", true),
+                            limit(15)
+                        );
+                        const snap = await getDocs(q);
+                        if (!snap.empty) {
+                            const randomDoc = snap.docs[Math.floor(Math.random() * snap.docs.length)];
+                            bookData = randomDoc.data();
+                            bookId = randomDoc.id;
+                            targetCollection = coll;
+                            break;
+                        }
+                    }
+                    
+                    if (bookData) {
+                        setAd({
+                            ...baseAd,
+                            title: bookData.title,
+                            description: bookData.description?.substring(0, 140) + "..." || "A captivating new chronicle discovered in the archives.",
+                            link: `/${targetCollection === 'novels' ? 'novel' : 'stories'}/${bookData.slug || bookId}`,
+                            image: bookData.coverImage,
+                            cta: 'Read Now'
+                        });
+                    } else {
+                        // Fallback to a subscription ad if absolutely no books are found
+                        setAd(getAdForZone(zone, 'subscription'));
+                    }
+                } catch (error) {
+                    console.error("Ad data fetch failed:", error);
+                    setAd(getAdForZone(zone, 'subscription'));
+                }
+            } else {
+                setAd(baseAd);
+            }
+            setLoading(false);
+        };
+
+        prepareAd();
     }, [adFree, zone]);
 
-    if (adFree || !ad) {
+    if (adFree || loading || !ad) {
         return null;
     }
 
@@ -35,9 +94,13 @@ export default function ManagedAd({ zone, className = "" }: ManagedAdProps) {
                 <div className="absolute top-0 right-0 -mr-4 -mt-4 h-24 w-24 rounded-full bg-purple-600/5 blur-3xl group-hover:bg-purple-600/10 transition-colors" />
 
                 <div className="relative flex flex-col md:flex-row items-center gap-6 p-6">
-                    {/* Placeholder for Ad Image/Graphic */}
-                    <div className="h-16 w-16 md:h-20 md:w-20 rounded-xl bg-zinc-800 flex-shrink-0 flex items-center justify-center border border-white/5 group-hover:bg-zinc-700 transition-colors">
-                        <span className="text-2xl opacity-40">✦</span>
+                    {/* Visual Graphic */}
+                    <div className="h-16 w-16 md:h-20 md:w-20 rounded-xl bg-zinc-800 flex-shrink-0 flex items-center justify-center border border-white/5 group-hover:bg-zinc-700 transition-colors overflow-hidden">
+                        {ad.image ? (
+                            <img src={ad.image} alt="" className="w-full h-full object-cover opacity-80" />
+                        ) : (
+                            <span className="text-2xl opacity-40">✦</span>
+                        )}
                     </div>
 
                     <div className="flex-1 space-y-1 text-center md:text-left">
@@ -71,7 +134,7 @@ export default function ManagedAd({ zone, className = "" }: ManagedAdProps) {
                     href="/premium"
                     className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest hover:text-white transition-colors"
                 >
-                    Hide all ads with Vellum Prime →
+                    Hide all ads with Vellum Plus →
                 </Link>
             </div>
         </div>

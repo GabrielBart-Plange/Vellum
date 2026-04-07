@@ -21,11 +21,11 @@ export default function ArtCard({ art, isSavedInitially = false, isRepostedIniti
     const [showComments, setShowComments] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const isPremium = monetization?.subscriptionTier === 'prime' || monetization?.subscriptionTier === 'nexus';
+    const isPremium = monetization?.subscriptionTier === 'plus' || monetization?.subscriptionTier === 'pro';
 
     const handleSave = async () => {
         if (!user) return alert("Sign in to save artifacts.");
-        if (!isPremium) return alert("Vellum Prime required to save artifacts.");
+        if (!isPremium) return alert("Vellum Plus required to save artifacts.");
 
         setLoading(true);
         try {
@@ -45,7 +45,7 @@ export default function ArtCard({ art, isSavedInitially = false, isRepostedIniti
 
     const handleRepost = async () => {
         if (!user) return alert("Sign in to repost.");
-        if (!isPremium) return alert("Vellum Prime required to repost.");
+        if (!isPremium) return alert("Vellum Plus required to repost.");
 
         setLoading(true);
         try {

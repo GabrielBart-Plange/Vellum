@@ -16,7 +16,7 @@ export interface ReaderProfile {
 }
 
 // Monetization Types
-export type SubscriptionTier = 'free' | 'prime' | 'nexus';
+export type SubscriptionTier = 'free' | 'plus' | 'pro';
 
 export interface XPProfile {
   xp: number;
@@ -147,6 +147,9 @@ export interface ArtPiece {
   tags?: string[];
 }
 
+// Content Safety
+export type ContentRating = 'Everyone' | 'Teen' | 'Mature' | 'Explicit';
+
 export interface Story {
   id: string;
   alphanumericId?: string;
@@ -160,8 +163,11 @@ export interface Story {
   genre?: string;
   category?: string;
   tags?: string[];
+  contentWarnings?: string[];
+  rating?: ContentRating;
   published: boolean;
   createdAt: Timestamp;
+  publishedAt?: Timestamp;
   viewCount?: number;
   likeCount?: number;
 }
@@ -178,8 +184,11 @@ export interface Novel {
   genre?: string;
   category?: string;
   tags?: string[];
+  contentWarnings?: string[];
+  rating?: ContentRating;
   published: boolean;
   createdAt: Timestamp;
+  publishedAt?: Timestamp;
   viewCount?: number;
   likeCount?: number;
   chapterCount?: number;

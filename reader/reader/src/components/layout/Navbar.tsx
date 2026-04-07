@@ -48,7 +48,7 @@ export default function Navbar() {
                 setNotifications(results);
             },
             (error) => {
-                console.error("Archive Listener Error:", error.code, error.message);
+                console.error("Navbar Notifications Listener Error:", error);
             }
         );
 
@@ -67,7 +67,7 @@ export default function Navbar() {
     const navLinks = [
         { name: "Stories", href: "/stories", tooltip: "Browse Sagas" },
         { name: "Novels", href: "/novel", tooltip: "Explore Tomes" },
-        { name: "Nexus", href: "/nexus", tooltip: "Premium Picks" },
+        { name: "Pro", href: "/pro", tooltip: "Premium Picks" },
         { name: "Gallery", href: "/art", tooltip: "Visual Archives" },
         { name: "Settings", href: "/settings", tooltip: "Calibrate Persona" },
         { name: "Profile", href: user ? `/authors/${user.uid}` : "/profile", tooltip: "Your Scroll" },

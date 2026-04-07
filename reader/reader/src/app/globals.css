@@ -27,7 +27,7 @@
   --accent-sakura: #fbcfe8;
   --glow-lime: rgba(77, 124, 15, 0.3);
 
-  /* Notation Tokens (from Creator) */
+  /* Notation Tokens (from Creator) - Default Dark */
   --notion-sys-bg: rgba(99, 102, 241, 0.1);
   --notion-sys-border: #6366f1;
   --notion-sys-text: #e0e7ff;
@@ -51,6 +51,17 @@
   --reader-footer-bg: #ebe7d9;
   --glass-bg: rgba(124, 45, 18, 0.03);
   --glass-border: rgba(124, 45, 18, 0.1);
+
+  /* Notation Tokens - Archive */
+  --notion-sys-bg: rgba(124, 45, 18, 0.05);
+  --notion-sys-border: #7c2d12;
+  --notion-sys-text: #27272a;
+  --notion-qst-bg: rgba(180, 83, 9, 0.05);
+  --notion-qst-border: rgba(180, 83, 9, 0.4);
+  --notion-qst-text: #451a03;
+  --notion-sta-bg: rgba(39, 39, 42, 0.03);
+  --notion-sta-border: rgba(39, 39, 42, 0.1);
+  --notion-sta-text: #27272a;
 }
 
 [data-theme='nebula'] {
@@ -79,6 +90,17 @@
   --reader-footer-bg: #f4f4f5;
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(0, 0, 0, 0.05);
+
+  /* Notation Tokens - Light */
+  --notion-sys-bg: rgba(37, 99, 235, 0.05);
+  --notion-sys-border: #2563eb;
+  --notion-sys-text: #09090b;
+  --notion-qst-bg: rgba(217, 119, 6, 0.05);
+  --notion-qst-border: rgba(217, 119, 6, 0.4);
+  --notion-qst-text: #451a03;
+  --notion-sta-bg: rgba(9, 9, 11, 0.03);
+  --notion-sta-border: rgba(9, 9, 11, 0.1);
+  --notion-sta-text: #09090b;
 }
 
 [data-theme='midnight'] {

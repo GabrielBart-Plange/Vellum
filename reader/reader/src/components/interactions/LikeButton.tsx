@@ -98,7 +98,7 @@ export default function LikeButton({
       const title = data?.title || "Untitled";
 
       if (liked) {
-        await progressTracking.unlikeContent(user.uid, contentId, contentType, authorId);
+        await progressTracking.unlikeContent(user.uid, contentId, contentType, authorId, novelId);
         setLiked(false);
         setLikeCount(prev => prev - 1);
       } else {
@@ -108,8 +108,17 @@ export default function LikeButton({
           contentId,
           contentType,
           title,
-          authorId
+          authorId,
+          novelId
         );
+
+        // Record global activity for The Pulse
+        await progressTracking.recordGlobalActivity({
+          type: 'like',
+          user: user.displayName || "Someone",
+          target: title
+        });
+
         setLiked(true);
         setLikeCount(prev => prev + 1);
 

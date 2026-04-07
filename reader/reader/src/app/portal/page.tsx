@@ -61,7 +61,7 @@ export default function PortalPage() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         </div>
                         <p className="text-[10px] uppercase tracking-[0.4em] text-[#5865F2] font-black italic">The Circle</p>
-                        <h2 className="text-2xl font-black uppercase tracking-tight mt-6 italic leading-none">Join the Nexus</h2>
+                        <h2 className="text-2xl font-black uppercase tracking-tight mt-6 italic leading-none">Join the Sanctuary</h2>
                         <p className="text-zinc-500 mt-4 text-sm leading-relaxed italic">
                             Connect with fellow chroniclers and discuss the archives in real-time.
                         </p>

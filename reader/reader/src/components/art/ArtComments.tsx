@@ -62,13 +62,13 @@ export default function ArtComments({ artId }: ArtCommentsProps) {
             <h4 className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 font-black">Echoes of the Chronicle</h4>
 
             <form onSubmit={handleSubmit} className="relative">
-                <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Leave an echo..."
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/20 transition-all"
-                />
+                    <input
+                        type="text"
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Leave an echo..."
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/20 transition-all"
+                    />
                 <button
                     type="submit"
                     disabled={submitting}

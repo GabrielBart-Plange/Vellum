@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const premiumPicks = [
     {
-        id: "nexus-1",
+        id: "pro-1",
         title: "The Gilded Sovereign",
         author: "Archivist Elara",
         image: "https://images.unsplash.com/photo-1514539079130-25950c84af65?q=80&w=1000",
@@ -14,15 +14,15 @@ const premiumPicks = [
         description: "A tale of power, betrayals, and the cost of eternal Gilt."
     },
     {
-        id: "nexus-2",
+        id: "pro-2",
         title: "Neon Grimoire",
         author: "Scribe 73",
         image: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1000",
         type: "Graphic Novel",
-        description: "In the heart of the Vellum Nexus, digital magic is real."
+        description: "In the heart of the Vellum Pro, digital magic is real."
     },
     {
-        id: "nexus-3",
+        id: "pro-3",
         title: "Ruins of Aethelgard",
         author: "The Chronicler",
         image: "https://images.unsplash.com/photo-1444464666168-49d633b867ad?q=80&w=1000",
@@ -31,11 +31,11 @@ const premiumPicks = [
     }
 ];
 
-export default function NexusPool() {
+export default function ProPool() {
     const { monetization } = useAuth();
-    const isNexus = monetization?.subscriptionTier === 'nexus';
+    const isPro = monetization?.subscriptionTier === 'pro';
 
-    if (!isNexus) {
+    if (!isPro) {
         return (
             <div className="glass-panel p-16 rounded-[2.5rem] border border-white/5 bg-white/[0.01] text-center space-y-8 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-10 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity pointer-events-none">
@@ -45,16 +45,16 @@ export default function NexusPool() {
                     <span className="text-3xl grayscale group-hover:grayscale-0 transition-all">🔒</span>
                 </div>
                 <div className="space-y-3 relative z-10">
-                    <h3 className="text-3xl font-black uppercase tracking-tight text-white italic">The Nexus Pool</h3>
+                    <h3 className="text-3xl font-black uppercase tracking-tight text-white italic">The Pro Pool</h3>
                     <p className="text-zinc-500 max-w-sm mx-auto text-[11px] uppercase tracking-[0.2em] font-black italic leading-relaxed">
-                        This exclusive area is reserved for **Vellum Nexus** members. Upgrade to access premium picks and exclusive rewards.
+                        This exclusive area is reserved for **Vellum Pro** members. Upgrade to access premium picks and exclusive rewards.
                     </p>
                 </div>
                 <Link 
                     href="/settings" 
                     className="inline-block px-12 py-4 bg-white text-black text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_20px_40px_-10px_rgba(255,255,255,0.3)] italic"
                 >
-                    Upgrade to Nexus
+                    Upgrade to Pro
                 </Link>
             </div>
         );
@@ -64,7 +64,7 @@ export default function NexusPool() {
         <div className="space-y-12">
             <header className="flex justify-between items-end border-b border-white/5 pb-8">
                 <div className="space-y-2 border-l-2 border-[var(--reader-accent)]/30 pl-8">
-                    <p className="text-[10px] uppercase tracking-[0.6em] text-zinc-500 font-black italic">Nexus Sanctuary</p>
+                    <p className="text-[10px] uppercase tracking-[0.6em] text-zinc-500 font-black italic">Pro Sanctuary</p>
                     <h2 className="text-5xl font-black uppercase tracking-tighter text-white italic leading-none">Premium Picks</h2>
                 </div>
                 <div className="hidden md:block text-[9px] uppercase tracking-[0.3em] text-zinc-600 font-black italic border-l border-white/10 pl-8 mb-1">
@@ -101,7 +101,7 @@ export default function NexusPool() {
                         View Full Archive
                     </button>
                     <button className="px-10 py-3 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-white hover:bg-white/5 transition-all italic">
-                        Nexus Discord
+                        Pro Discord
                     </button>
                 </div>
                 <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-[var(--reader-accent)] font-black italic">

@@ -1,0 +1,187 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    function isCreator() {
+      return isAuthenticated() && 
+             request.auth.token.roles != null && 
+             request.auth.token.roles.hasAny(['creator', 'author']);
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+    }
+
+    // Stories collection
+    match /stories/{storyId} {
+      allow read: if true; // Public read access
+      allow create: if isAuthenticated() && isCreator();
+      allow update, delete: if isOwner(resource.data.authorId) || isAdmin();
+      
+      // Subcollections
+      match /likes/{likeId} {
+        allow read: if true;
+        allow create, delete: if isAuthenticated();
+      }
+      
+      match /views/{viewId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+      }
+      
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      }
+      
+      match /inline_comments/{commentId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      }
+    }
+
+    // Novels collection
+    match /novels/{novelId} {
+      allow read: if true; // Public read access
+      allow create: if isAuthenticated() && isCreator();
+      allow update, delete: if isOwner(resource.data.authorId) || isAdmin();
+      
+      // Chapters subcollection
+      match /chapters/{chapterId} {
+        allow read: if true; // Public read access
+        allow create: if isOwner(resource.data.authorId) || isAdmin();
+        allow update, delete: if isOwner(resource.data.authorId) || isAdmin();
+        
+        // Chapter subcollections
+        match /likes/{likeId} {
+          allow read: if true;
+          allow create, delete: if isAuthenticated();
+        }
+        
+        match /views/{viewId} {
+          allow read: if true;
+          allow create: if isAuthenticated();
+        }
+        
+        match /comments/{commentId} {
+          allow read: if true;
+          allow create: if isAuthenticated();
+          allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+        }
+        
+        match /inline_comments/{commentId} {
+          allow read: if true;
+          allow create: if isAuthenticated();
+          allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+        }
+      }
+      
+      // Novel-level subcollections
+      match /likes/{likeId} {
+        allow read: if true;
+        allow create, delete: if isAuthenticated();
+      }
+      
+      match /views/{viewId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+      }
+    }
+
+    // Art collection
+    match /art/{artId} {
+      allow read: if true; // Public read access
+      allow create: if isAuthenticated() && isCreator();
+      allow update, delete: if isOwner(resource.data.authorId) || isAdmin();
+      
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      }
+    }
+
+    // Authors collection (public profiles)
+    match /authors/{authorId} {
+      allow read: if true; // Public read access
+      allow write: if isOwner(authorId) || isAdmin();
+    }
+
+    // Tags collection (public)
+    match /tags/{tagId} {
+      allow read: if true; // Public read access
+      allow write: if isAdmin();
+    }
+
+    // Genres collection (public)
+    match /genres/{genreId} {
+      allow read: if true; // Public read access
+      allow write: if isAdmin();
+    }
+
+    // Analytics collection (admin only)
+    match /analytics/{analyticsId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Referral tracking collection
+    match /referrals/{referralId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+    }
+
+    // Monetization collections
+    match /transactions/{transactionId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+    }
+
+    match /subscriptions/{subscriptionId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+    }
+
+    match /balances/{balanceId} {
+      allow read: if isOwner(balanceId) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // User drafts (private)
+    match /users/{userId}/drafts/{draftId} {
+      allow read, write: if isOwner(userId);
+      allow create: if isOwner(userId);
+    }
+
+    // User notifications
+    match /users/{userId}/notifications/{notificationId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Collection group queries for chapters
+    match /{path=**}/chapters/{chapterId} {
+      allow read: if true;
+      allow list: if true; // For ChapterPulse collection group queries
+    }
+  }
+}

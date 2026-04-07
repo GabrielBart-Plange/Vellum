@@ -17,7 +17,7 @@ export default function ContactPage() {
                     </p>
                     <div className="space-y-8 relative z-10">
                         <div className="space-y-4">
-                            <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 font-black italic">Community Nexus</p>
+                            <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 font-black italic">Community Sanctuary</p>
                             <a
                                 href="https://discord.gg/QSmgvTwBUu"
                                 target="_blank"

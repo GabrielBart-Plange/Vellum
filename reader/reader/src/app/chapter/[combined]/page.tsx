@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, collection, getDocs, orderBy, query, where, onSnapshot, increment, updateDoc, DocumentData } from "firebase/firestore";
 import Link from "next/link";
+import { Menu, X, ChevronLeft, ChevronRight, Book, Share2, Bookmark, Heart, Coins, Flag } from "lucide-react";
 
 import ReadingSettings from "@/components/reader/ReadingSettings";
 import SystemNotation from "@/components/reader/SystemNotation";
@@ -16,6 +17,8 @@ import { progressTracking } from "@/lib/progressTracking";
 import ManagedAd from "@/components/monetization/ManagedAd";
 import TipButton from "@/components/interactions/TipButton";
 import { getChapterStatus, unlockChapter } from "@/lib/monetization/coinService";
+import { analyticsService } from "@/lib/analyticsService";
+import ReportModal from "@/components/modals/ReportModal";
 
 export default function UnifiedChapterPage({ params }: { params: Promise<{ combined: string }> }) {
     const { combined } = use(params);
@@ -40,6 +43,9 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
     const [saving, setSaving] = useState(false);
     const [showIndex, setShowIndex] = useState(false);
     const [maxChapterOrderRead, setMaxChapterOrderRead] = useState<number>(0);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isViralUnlock, setIsViralUnlock] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
     // Parsing combined param (e.g. angle-s-arrogance-12)
     const lastHyphenIndex = combined.lastIndexOf("-");
@@ -168,6 +174,14 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                         if (!localStorage.getItem(storageKey)) {
                             await updateDoc(targetChap.ref, { views: increment(1) });
                             localStorage.setItem(storageKey, "true");
+                            
+                            // Analytics tracking
+                            analyticsService.trackChapterView({
+                                novelId: docId,
+                                chapterId: targetChap.id,
+                                authorId: novelSnap.data()?.authorId,
+                                userId: user?.uid
+                            });
                         }
 
                         // 4. Check Lock Status
@@ -211,7 +225,40 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
         };
 
         load();
-    }, [combined, user, router, novelIdentifier, chapterOrder]);
+
+        // Check for session-based viral unlock
+        const viralKey = `viral_unlock_chapter_${chapterId}`;
+        if (localStorage.getItem(viralKey)) {
+            setIsLocked(false);
+            setIsViralUnlock(true);
+        }
+    }, [combined, user, router, novelIdentifier, chapterOrder, chapterId]);
+
+    const handleShareToUnlock = () => {
+        const referralId = (user as any)?.referralId || "VELLUM";
+        const shareUrl = `${window.location.origin}/novel/${novel?.slug || novelIdentifier}?ref=${referralId}`;
+        const shareText = `I'm reading "${novel?.title}" on Vellum! It's incredible. Use my archival link to get 50 bonus Inklets: ${shareUrl}`;
+        
+        // Use Web Share API for "Easy" sharing if available
+        if (navigator.share) {
+            navigator.share({
+                title: novel?.title,
+                text: shareText,
+                url: shareUrl,
+            }).catch(err => console.log("Share failed:", err));
+        } else {
+            // Fallback to WhatsApp Share Intent
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Grant temporary unlock
+        if (chapterId) {
+            localStorage.setItem(`viral_unlock_chapter_${chapterId}`, "true");
+            setIsLocked(false);
+            setIsViralUnlock(true);
+        }
+    };
 
     const handleToggleBookmark = async () => {
         if (!user) {
@@ -251,7 +298,70 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
     const nextChapter = allChapters[currentIndex + 1];
 
     return (
-        <main className="min-h-screen pb-40 transition-colors duration-500 ease-in-out font-sans relative">
+        <main className={`min-h-screen pb-40 transition-all duration-500 ease-in-out font-sans relative ${isSidebarOpen ? 'pl-0 lg:pl-80' : 'pl-0'}`}>
+            {/* Sidebar ToC */}
+            <aside 
+                className={`fixed top-0 left-0 z-[200] h-full w-80 bg-[var(--reader-bg)] border-r border-[var(--reader-border)] transition-transform duration-500 ease-in-out transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} overflow-y-auto custom-scrollbar`}
+            >
+                <div className="sticky top-0 z-20 bg-[var(--reader-bg)]/80 backdrop-blur-xl border-b border-[var(--reader-border)] p-6">
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-accent)] font-black italic">Table of Contents</p>
+                        <button onClick={() => setIsSidebarOpen(false)} className="text-zinc-500 hover:text-white transition-colors lg:hidden">
+                            <X size={18} />
+                        </button>
+                    </div>
+                    <h2 className="text-lg font-black uppercase text-[var(--reader-text)] tracking-tight italic line-clamp-1">{novel.title}</h2>
+                </div>
+
+                <div className="p-4 space-y-2">
+                    {allChapters.map((chap, index) => {
+                        const isCurrent = chap.id === chapterId;
+                        const isRead = chap.order <= maxChapterOrderRead && !isCurrent;
+                        
+                        return (
+                            <Link
+                                key={chap.id}
+                                href={`/chapter/${novelIdentifier}-${chap.order}`}
+                                onClick={() => {
+                                    if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                                }}
+                                className={`group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
+                                    isCurrent 
+                                    ? 'border-[var(--reader-accent)]/50 bg-[var(--reader-accent)]/10 shadow-[0_0_20px_rgba(139,92,246,0.1)]' 
+                                    : 'border-transparent hover:bg-white/[0.03] text-zinc-500 hover:text-zinc-300'
+                                }`}
+                            >
+                                <div className="flex items-center gap-4 min-w-0">
+                                    <span className={`text-[10px] font-black tabular-nums ${isCurrent ? 'text-[var(--reader-accent)]' : 'opacity-20'}`}>
+                                        {(index + 1).toString().padStart(2, '0')}
+                                    </span>
+                                    <span className={`text-xs font-bold truncate uppercase italic ${isCurrent ? 'text-white' : ''}`}>
+                                        {chap.title}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {isRead && <div className="w-1 h-1 rounded-full bg-zinc-700" />}
+                                    {chap.isPremium && <Coins size={12} className={isCurrent ? 'text-[var(--reader-accent)]' : 'opacity-20'} />}
+                                </div>
+                            </Link>
+                        );
+                    })}
+
+                    {/* Sidebar Ad Placement */}
+                    <div className="pt-8 mt-8 border-t border-[var(--reader-border)]">
+                        <ManagedAd zone="SIDEBAR_FOOTER" />
+                    </div>
+                </div>
+            </aside>
+
+            {/* Floating Sidebar Toggle */}
+            <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className={`fixed bottom-8 left-8 z-[210] w-14 h-14 rounded-full bg-white text-black shadow-2xl flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-90 ${isSidebarOpen ? 'lg:translate-x-0' : ''}`}
+            >
+                {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+
             <div className="fixed top-0 left-0 w-full h-1 z-[150] pointer-events-none">
                 <div
                     className="h-full bg-[var(--reader-accent)] transition-all duration-150 ease-out shadow-[0_0_10px_var(--reader-accent)]"
@@ -266,6 +376,11 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                 onFontFamilyChange={setFontFamily}
             />
 
+            {/* Top Ad Placement */}
+            <div className="max-w-3xl mx-auto px-6 pt-8">
+                <ManagedAd zone="READER_TOP" />
+            </div>
+
             <div className="relative h-[50vh] w-full overflow-hidden flex items-end">
                 <img
                     src={novel.coverImage || "https://placehold.co/1200x800/1a1a1a/666666?text=CHAMPION"}
@@ -278,10 +393,35 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                     <p className="text-[10px] uppercase tracking-[0.6em] font-black italic" style={{ color: 'var(--reader-accent)' }}>
                         Chapter {chapterOrder}
                     </p>
+                    
+                    {/* Content Warnings */}
+                    {novel.contentWarnings && novel.contentWarnings.length > 0 && (
+                        <div className="flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
+                            <span className="text-[8px] uppercase tracking-[0.4em] text-red-500/60 font-black italic mr-2">Warnings:</span>
+                            {novel.contentWarnings.map((warning: string) => (
+                                <span 
+                                    key={warning}
+                                    className="text-[9px] uppercase tracking-widest text-red-400/80 font-bold px-2 py-0.5 rounded border border-red-500/20 bg-red-500/5 shadow-[0_0_10px_rgba(239,68,68,0.1)]"
+                                >
+                                    {warning}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
                     <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight leading-tight italic" style={{ color: 'var(--reader-text)' }}>
                         {chapter.title}
                     </h1>
                     <div className="flex items-center justify-center gap-4 text-[11px] uppercase tracking-widest opacity-60 font-black italic">
+                        {novel.rating && (
+                            <span className={`px-3 py-0.5 rounded-full border text-[9px] font-black italic tracking-widest ${
+                                novel.rating === 'Explicit' || novel.rating === 'Mature' 
+                                ? 'border-red-500/30 bg-red-500/10 text-red-400' 
+                                : 'border-blue-500/30 bg-blue-500/10 text-blue-400'
+                            }`}>
+                                {novel.rating}
+                            </span>
+                        )}
                         <span>{novel.title}</span>
                         <div className="h-1 w-1 bg-zinc-600 rounded-full" />
                         <Link href={`/authors/${novel.authorId}`} className="hover:text-[var(--reader-accent)] transition-colors">
@@ -320,6 +460,14 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                         </svg>
+                    </button>
+
+                    <button
+                        onClick={() => setIsReportModalOpen(true)}
+                        className="glass-panel p-2.5 rounded-2xl text-zinc-500 hover:text-red-400 transition-all hover:bg-red-500/5 hover:border-red-500/20"
+                        title="Report Chapter"
+                    >
+                        <Flag size={18} />
                     </button>
 
                     <div className="flex-grow" />
@@ -363,6 +511,13 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                     className={`leading-relaxed select-text min-h-[50vh] relative ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}`}
                     style={{ fontSize: `${fontSize}px`, lineHeight: '1.9' }}
                 >
+                    {isViralUnlock && !isLocked && (
+                        <div className="mb-8 p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-center">
+                            <p className="text-[10px] uppercase font-black text-purple-400 tracking-widest italic animate-pulse">
+                                Viral Grace Period Active — Thank you for spreading the word!
+                            </p>
+                        </div>
+                    )}
                     {isLocked ? (
                         <div className="relative py-20 px-6 rounded-3xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-md text-center space-y-8 animate-in fade-in zoom-in duration-500">
                             {/* Decorative background for the lock */}
@@ -401,6 +556,18 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                                         >
                                             {unlocking ? "Unlocking..." : `Unlock for ${unlockPrice} Inklets`}
                                         </button>
+                                        
+                                        <div className="pt-4 border-t border-white/5 space-y-4">
+                                            <p className="text-[9px] text-white/20 font-black uppercase tracking-widest italic">Or spread the word for a grace period</p>
+                                            <button 
+                                                onClick={handleShareToUnlock}
+                                                className="w-full flex items-center justify-center gap-3 px-8 py-3 rounded-full border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all italic text-white/40 hover:text-white"
+                                            >
+                                                <Share2 size={14} className="text-purple-500" />
+                                                Spread the Word
+                                            </button>
+                                        </div>
+                                        
                                         <p className="text-[9px] uppercase tracking-widest text-white/20 font-black">Refreshes permanently for your archive</p>
                                     </div>
                                 ) : (
@@ -650,6 +817,15 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                     </div>
                 </div>
             )}
+
+            <ReportModal 
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                contentType="chapter"
+                contentId={chapterId}
+                contentTitle={`${novel.title} - ${chapter.title}`}
+                authorId={novel.authorId}
+            />
         </main>
     );
 }

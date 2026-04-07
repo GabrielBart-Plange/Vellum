@@ -1,62 +1,105 @@
-import fs from 'fs';
-import path from 'path';
-
-const DB_PATH = path.join(__dirname, '../../data/vellum_bot.json');
-
-// Ensure data dir exists
-if (!fs.existsSync(path.dirname(DB_PATH))) {
-  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-}
-
-// Ensure file exists
-if (!fs.existsSync(DB_PATH)) {
-  fs.writeFileSync(DB_PATH, JSON.stringify({ 
-    messages: [], 
-    summaries: [],
-    admin_tracking: {}, // { channelId: lastMessageId }
-    admin_configs: {}, // { channelId: { text: "...", lastUpdated: 0 } }
-    server_stats: {} 
-  }), 'utf-8');
-}
+import { db as firestore } from './firebase';
+import { Timestamp } from 'firebase-admin/firestore';
 
 export const db = {
-  read: () => JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')),
-  write: (data: any) => fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8'),
-  logMessage: (message: any) => {
-    const data = db.read();
-    data.messages.push(message);
-    db.write(data);
+  logMessage: async (message: any) => {
+    try {
+      await firestore.collection('discord_logs').doc(message.id).set({
+        ...message,
+        createdAt: Timestamp.now(),
+        processed: 0
+      });
+    } catch (error) {
+      console.error('[Firestore] Failed to log message:', error);
+    }
   },
-  logSummary: (summary: string) => {
-    const data = db.read();
-    if (!data.summaries) data.summaries = [];
-    data.summaries.push({
-      content: summary,
-      timestamp: Date.now()
-    });
-    db.write(data);
+
+  logSummary: async (summary: string) => {
+    try {
+      await firestore.collection('discord_summaries').add({
+        content: summary,
+        timestamp: Timestamp.now()
+      });
+    } catch (error) {
+      console.error('[Firestore] Failed to log summary:', error);
+    }
   },
-  trackAdminMessage: (channelId: string, messageId: string) => {
-    const data = db.read();
-    if (!data.admin_tracking) data.admin_tracking = {};
-    data.admin_tracking[channelId] = messageId;
-    db.write(data);
+
+  trackAdminMessage: async (channelId: string, messageId: string) => {
+    try {
+      await firestore.collection('discord_admin_tracking').doc(channelId).set({
+        messageId,
+        lastUpdated: Timestamp.now()
+      }, { merge: true });
+    } catch (error) {
+      console.error('[Firestore] Failed to track admin message:', error);
+    }
   },
-  saveAdminConfig: (channelId: string, text: string) => {
-    const data = db.read();
-    if (!data.admin_configs) data.admin_configs = {};
-    data.admin_configs[channelId] = {
-      text,
-      lastUpdated: Date.now()
-    };
-    db.write(data);
+
+  saveAdminConfig: async (channelId: string, text: string) => {
+    try {
+      await firestore.collection('discord_admin_configs').doc(channelId).set({
+        text,
+        lastUpdated: Timestamp.now()
+      });
+    } catch (error) {
+      console.error('[Firestore] Failed to save admin config:', error);
+    }
   },
-  getAdminConfig: (channelId: string) => {
-    const data = db.read();
-    return data.admin_configs?.[channelId] || null;
+
+  getAdminConfig: async (channelId: string) => {
+    try {
+      const doc = await firestore.collection('discord_admin_configs').doc(channelId).get();
+      return doc.exists ? doc.data() : null;
+    } catch (error) {
+      console.error('[Firestore] Failed to get admin config:', error);
+      return null;
+    }
   },
-  getAdminMessageId: (channelId: string) => {
-    const data = db.read();
-    return data.admin_tracking?.[channelId] || null;
+
+  getAdminMessageId: async (channelId: string) => {
+    try {
+      const doc = await firestore.collection('discord_admin_tracking').doc(channelId).get();
+      return doc.exists ? doc.data()?.messageId : null;
+    } catch (error) {
+      console.error('[Firestore] Failed to get admin message ID:', error);
+      return null;
+    }
+  },
+
+  // Helper for historical fetches (used by summarizer)
+  getRecentMessages: async (limitHours: number = 24) => {
+    try {
+      const cutoff = new Date(Date.now() - limitHours * 60 * 60 * 1000);
+      const snapshot = await firestore.collection('discord_logs')
+        .where('timestamp', '>', cutoff.getTime())
+        .get();
+      
+      // Sort in-memory to avoid composite index requirement
+      return snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as any))
+        .sort((a, b) => b.timestamp - a.timestamp);
+    } catch (error) {
+      console.error('[Firestore] Failed to fetch recent messages:', error);
+      return [];
+    }
+  },
+
+  getChannelConfig: async (): Promise<Record<string, string>> => {
+    try {
+      const doc = await firestore.collection('discord_settings').doc('channels').get();
+      return doc.exists ? doc.data() as Record<string, string> : {};
+    } catch (error) {
+      console.error('[Firestore] Failed to get channel config:', error);
+      return {};
+    }
+  },
+
+  saveChannelConfig: async (config: Record<string, string>) => {
+    try {
+      await firestore.collection('discord_settings').doc('channels').set(config);
+    } catch (error) {
+      console.error('[Firestore] Failed to save channel config:', error);
+    }
   }
 };

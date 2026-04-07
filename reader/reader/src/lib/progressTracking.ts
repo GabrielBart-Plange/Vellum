@@ -54,14 +54,20 @@ interface ProgressTrackingService {
   undoRepostArtPiece: (userId: string, artId: string) => Promise<void>;
 
   // Novel/Story Engagement
-  likeContent: (userId: string, username: string, contentId: string, contentType: 'story' | 'novel' | 'chapter', title: string, authorId: string, coverImage?: string, authorName?: string, alphanumericId?: string, slug?: string, numericalId?: number) => Promise<void>;
-  unlikeContent: (userId: string, contentId: string, contentType: 'story' | 'novel' | 'chapter', authorId: string) => Promise<void>;
+  likeContent: (userId: string, username: string, contentId: string, contentType: 'story' | 'novel' | 'chapter', title: string, authorId: string, novelId?: string, coverImage?: string, authorName?: string, alphanumericId?: string, slug?: string, numericalId?: number) => Promise<void>;
+  unlikeContent: (userId: string, contentId: string, contentType: 'story' | 'novel' | 'chapter', authorId: string, novelId?: string) => Promise<void>;
   saveNovel: (userId: string, novelId: string, title: string, coverImage: string, authorName: string, authorId: string, numericalId?: number, slug?: string) => Promise<void>;
   unsaveNovel: (userId: string, novelId: string) => Promise<void>;
 
   // Notification methods
   notifyFollowers: (authorId: string, authorName: string, title: string, contentId: string, contentType: 'story' | 'novel', isNewRelease: boolean) => Promise<void>;
   triggerNotification: (config: Omit<Notification, 'id' | 'read' | 'createdAt'>) => Promise<void>;
+  recordGlobalActivity: (activity: {
+    type: 'comment' | 'like' | 'tip' | 'level_up' | 'referral_reward' | 'unlock_chapter' | 'unlock_story' | 'vellux_purchase';
+    user: string;
+    target?: string;
+    value?: string | number;
+  }) => Promise<void>;
 }
 
 export const progressTracking: ProgressTrackingService = {
@@ -317,12 +323,24 @@ export const progressTracking: ProgressTrackingService = {
     }
   },
 
-  likeContent: async (userId, username, contentId, contentType, title, authorId, coverImage, authorName, alphanumericId, slug, numericalId) => {
+  likeContent: async (userId, username, contentId, contentType, title, authorId, novelId, coverImage, authorName, alphanumericId, slug, numericalId) => {
     try {
-      const path = contentType === 'story' ? `stories/${contentId}/likes/${userId}` : `novels/${contentId}/likes/${userId}`;
+      let path = "";
+      if (contentType === 'chapter' && novelId) {
+        path = `novels/${novelId}/chapters/${contentId}/likes/${userId}`;
+      } else {
+        path = contentType === 'story' ? `stories/${contentId}/likes/${userId}` : `novels/${contentId}/likes/${userId}`;
+      }
+      
       await setDoc(doc(db, path), { userId, likedAt: Timestamp.now() });
 
-      const parentRef = doc(db, contentType === 'story' ? "stories" : "novels", contentId);
+      let parentRef;
+      if (contentType === 'chapter' && novelId) {
+        parentRef = doc(db, "novels", novelId, "chapters", contentId);
+      } else {
+        parentRef = doc(db, contentType === 'story' ? "stories" : "novels", contentId);
+      }
+      
       await setDoc(parentRef, { likes: increment(1) }, { merge: true });
 
       // If it's a story, add to likedStories in user library
@@ -359,11 +377,24 @@ export const progressTracking: ProgressTrackingService = {
     }
   },
 
-  unlikeContent: async (userId, contentId, contentType, authorId) => {
+  unlikeContent: async (userId, contentId, contentType, authorId, novelId) => {
     try {
-      const path = contentType === 'story' ? `stories/${contentId}/likes/${userId}` : `novels/${contentId}/likes/${userId}`;
+      let path = "";
+      if (contentType === 'chapter' && novelId) {
+        path = `novels/${novelId}/chapters/${contentId}/likes/${userId}`;
+      } else {
+        path = contentType === 'story' ? `stories/${contentId}/likes/${userId}` : `novels/${contentId}/likes/${userId}`;
+      }
+      
       await deleteDoc(doc(db, path));
-      const parentRef = doc(db, contentType === 'story' ? "stories" : "novels", contentId);
+
+      let parentRef;
+      if (contentType === 'chapter' && novelId) {
+        parentRef = doc(db, "novels", novelId, "chapters", contentId);
+      } else {
+        parentRef = doc(db, contentType === 'story' ? "stories" : "novels", contentId);
+      }
+      
       await setDoc(parentRef, { likes: increment(-1) }, { merge: true });
     } catch (error) {
       console.error("Error unliking content:", error);
@@ -453,6 +484,18 @@ export const progressTracking: ProgressTrackingService = {
       });
     } catch (error) {
       console.error("Error triggering notification:", error);
+    }
+  },
+
+  recordGlobalActivity: async (activity) => {
+    try {
+      const activityRef = doc(collection(db, "global_activity"));
+      await setDoc(activityRef, {
+        ...activity,
+        timestamp: Timestamp.now()
+      });
+    } catch (error) {
+      console.error("Error recording global activity:", error);
     }
   }
 };

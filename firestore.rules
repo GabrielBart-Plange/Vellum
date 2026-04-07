@@ -26,6 +26,12 @@ service cloud.firestore {
           && resource.data.userId == request.auth.uid;
       }
 
+      match /inline_comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      }
+
       match /likes/{likeId} {
         allow read: if true;
         allow write: if request.auth != null
@@ -61,15 +67,13 @@ service cloud.firestore {
       }
 
       match /chapters/{chapterId} {
-        // ✅ Author can read even if not published
-        allow read: if get(/databases/$(database)/documents/novels/$(novelId))
-                        .data.published == true
-                    || (request.auth != null
-                        && get(/databases/$(database)/documents/novels/$(novelId))
-                             .data.authorId == request.auth.uid);
+        // ✅ Use denormalized fields on chapter for faster/more reliable access
+        allow read: if resource.data.published == true
+                    || (request.auth != null && resource.data.authorId == request.auth.uid);
 
         // ✅ Author can create/edit/delete chapters
         allow write: if request.auth != null
+          && (resource == null || resource.data.authorId == request.auth.uid)
           && get(/databases/$(database)/documents/novels/$(novelId))
                .data.authorId == request.auth.uid;
 
@@ -90,7 +94,26 @@ service cloud.firestore {
           allow write: if request.auth != null
             && request.auth.uid == likeId;
         }
+
+        match /inline_comments/{commentId} {
+          allow read: if true;
+          allow create: if request.auth != null;
+          allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+        }
       }
+    }
+
+    // 🌐 Global Activity (The Pulse)
+    match /global_activity/{activityId} {
+      allow read: if true;
+      allow create: if request.auth != null; 
+      allow update, delete: if false; 
+    }
+
+    // 📖 Collection Group: Chapters (For 'Chapter Pulse' feed)
+    match /{path=**}/chapters/{chapterId} {
+      allow read: if resource.data.published == true 
+                  || (request.auth != null && resource.data.authorId == request.auth.uid);
     }
 
     // 👤 User Profiles (Reader + Creator)
@@ -114,7 +137,14 @@ service cloud.firestore {
             'level',
             'isChronicler',
             'subscriptionTier',
-            'legacyPoints'
+            'legacyPoints',
+            'inkletBalance',
+            'giltBalance',
+            'referralId',
+            'referralCount',
+            'vellux_gold_balance',
+            'vellux_diamond_balance',
+            'vellux_platinum_balance'
           ]);
           
       // Follow System
@@ -193,7 +223,7 @@ service cloud.firestore {
     // 📣 Notifications (Top-level match for isolation)
     match /users/{uid}/notifications/{docId} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null;
+      allow create: if false; // System-only (Cloud Functions / Next.js API)
     }
 
     // 🎨 Art Gallery

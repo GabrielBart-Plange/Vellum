@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface SearchModalProps {
     isOpen: boolean;
@@ -18,22 +18,55 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
+
+    // Context-aware search defaults
+    useEffect(() => {
+        if (isOpen) {
+            // Check if we are on a genre page
+            const genreMatch = pathname?.match(/\/genre\/([^/]+)/);
+            if (genreMatch) {
+                const genreSlug = genreMatch[1];
+                // Simple mapping for common genres
+                const genreMap: Record<string, string> = {
+                    'fantasy': 'Fantasy',
+                    'sci-fi': 'Sci-Fi',
+                    'romance': 'Romance',
+                    'action': 'Action',
+                    'mystery': 'Mystery',
+                    'horror': 'Horror'
+                };
+                if (genreMap[genreSlug]) {
+                    setSelectedGenre(genreMap[genreSlug]);
+                }
+            } else {
+                // Restore from session storage if not on a specific genre page
+                const savedGenre = sessionStorage.getItem("vellum-search-genre");
+                if (savedGenre) setSelectedGenre(savedGenre);
+            }
+
+            const savedTerm = sessionStorage.getItem("vellum-search-term");
+            const savedStatus = sessionStorage.getItem("vellum-search-status");
+            if (savedTerm) setSearchTerm(savedTerm);
+            if (savedStatus) setSelectedStatus(savedStatus);
+        }
+    }, [isOpen, pathname]);
 
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = "hidden";
-            // Focus input? 
         } else {
             document.body.style.overflow = "unset";
-            setSearchTerm("");
-            setSelectedGenre("All");
-            setSelectedStatus("All");
-            setResults([]);
+            // We don't clear the term/filters here anymore to allow "persistence"
         }
         return () => { document.body.style.overflow = "unset"; };
     }, [isOpen]);
 
     useEffect(() => {
+        sessionStorage.setItem("vellum-search-term", searchTerm);
+        sessionStorage.setItem("vellum-search-genre", selectedGenre);
+        sessionStorage.setItem("vellum-search-status", selectedStatus);
+
         const search = async () => {
             if (!searchTerm.trim()) {
                 setResults([]);
@@ -171,37 +204,57 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-1">
-                            {results.map(item => (
-                                <Link
-                                    key={item.id}
-                                    href={item.type === 'art' ? `/art` : `/${item.type}s/${item.id}`}
-                                    onClick={onClose}
-                                    className="flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-colors group"
-                                >
-                                    <div className="h-12 w-8 bg-zinc-800 rounded overflow-hidden flex-shrink-0">
-                                        {(item.coverImage || item.imageUrl) ? (
-                                            <img src={item.coverImage || item.imageUrl} className="w-full h-full object-cover" alt="" />
-                                        ) : (
-                                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-[8px] text-zinc-600">NO IMG</div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">
-                                            {item.title}
-                                        </h4>
-                                        <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-black italic">
-                                            by {item.authorName || "Unknown Author"} • <span className="text-[var(--reader-accent)]/80">{item.type}</span> • {item.genre || item.category || "General"}
-                                        </p>
-                                    </div>
-                                    {item.type === 'art' && (
-                                        <div className="px-2 py-0.5 rounded border border-white/10 bg-white/5 text-[8px] uppercase font-black text-zinc-500">
-                                            Visual
-                                        </div>
+                                <div className="space-y-1">
+                                    {results.map(item => (
+                                        <Link
+                                            key={item.id}
+                                            href={item.type === 'art' ? `/art` : `/${item.type}s/${item.id}`}
+                                            onClick={onClose}
+                                            className="flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-colors group"
+                                        >
+                                            <div className="h-12 w-8 bg-zinc-800 rounded overflow-hidden flex-shrink-0">
+                                                {(item.coverImage || item.imageUrl) ? (
+                                                    <img src={item.coverImage || item.imageUrl} className="w-full h-full object-cover" alt="" />
+                                                ) : (
+                                                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-[8px] text-zinc-600">NO IMG</div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">
+                                                        {item.title}
+                                                    </h4>
+                                                    {item.status && (
+                                                        <span className={`text-[8px] px-1.5 py-0.5 rounded-md border font-black uppercase tracking-tighter ${
+                                                            item.status === 'Completed' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5' : 'border-purple-500/30 text-purple-400 bg-purple-500/5'
+                                                        }`}>
+                                                            {item.status}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-black italic">
+                                                    by {item.authorName || "Unknown Author"} • <span className="text-[var(--reader-accent)]/80">{item.type}</span> • {item.genre || item.category || "General"}
+                                                </p>
+                                            </div>
+                                            {item.type === 'art' && (
+                                                <div className="px-2 py-0.5 rounded border border-white/10 bg-white/5 text-[8px] uppercase font-black text-zinc-500">
+                                                    Visual
+                                                </div>
+                                            )}
+                                        </Link>
+                                    ))}
+                                    
+                                    {results.length > 0 && (
+                                        <Link
+                                            href={`/search?q=${encodeURIComponent(searchTerm)}&genre=${selectedGenre}&status=${selectedStatus}`}
+                                            onClick={onClose}
+                                            className="flex items-center justify-center gap-2 p-4 mt-2 border-t border-white/5 text-[10px] uppercase tracking-[0.3em] font-black text-[var(--reader-accent)] hover:text-white transition-colors group"
+                                        >
+                                            View all {results.length >= 30 ? "30+" : results.length} results
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                        </Link>
                                     )}
-                                </Link>
-                            ))}
-                        </div>
+                                </div>
                     )}
 
                     {!searchTerm && (

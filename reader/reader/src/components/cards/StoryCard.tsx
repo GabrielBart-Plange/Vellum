@@ -48,10 +48,17 @@ export default function StoryCard({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
 
                 {/* Category Tag */}
-                <div className="absolute bottom-2 left-2 flex gap-1">
-                    <span className="rounded-md border border-[var(--glass-border)] glass-panel px-2 py-0.5 text-[8px] font-bold text-[var(--reader-text)] uppercase tracking-wider backdrop-blur-sm">
+                <div className="absolute bottom-2 left-2 flex gap-1 z-40">
+                    <div 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = `/genre/${category.toLowerCase().replace(/\s+/g, '-')}`;
+                        }}
+                        className="rounded-md border border-[var(--glass-border)] glass-panel px-2 py-0.5 text-[8px] font-bold text-[var(--reader-text)] uppercase tracking-wider backdrop-blur-sm hover:bg-white/10 transition-all cursor-pointer"
+                    >
                         {category}
-                    </span>
+                    </div>
                 </div>
             </div>
 

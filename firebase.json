@@ -5,17 +5,11 @@
     },
     "hosting": {
         "site": "vellum-reader",
-        "public": "reader/reader/out",
+        "source": "reader/reader",
         "ignore": [
             "firebase.json",
             "**/.*",
             "**/node_modules/**"
-        ],
-        "rewrites": [
-            {
-                "source": "**",
-                "destination": "/index.html"
-            }
         ]
     }
 }

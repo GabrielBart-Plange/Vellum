@@ -4,7 +4,7 @@ This backlog translates the Monetization Strategy shell into executable work ite
 
 ## Epics
 - Epic 1: Plausible MVP payments (Inklets & Tips) wiring
-- Epic 2: Subscriptions MVP (Vellum Prime) and revenue pool plumbing
+- Epic 2: Subscriptions MVP (Vellum Plus) and revenue pool plumbing
 - Epic 3: XP, Levels, and Ascension MVP (Level 0–9 UI and Level 10 go-live)
 - Epic 4: Creator monetization bubbles (payouts, Inklet-to-creator routing)
 - Epic 5: Denormalization & Firestore read-storm mitigation
@@ -22,8 +22,8 @@ This backlog translates the Monetization Strategy shell into executable work ite
   - Tip transactions update the creator balance and transaction history.
   - Basic analytics for Inklet adoption are collected (purchases, tips).
 
-### Phase M2 – Prime Subscriptions MVP
-- As a reader, I can subscribe to Vellum Prime (GHS 15/mo, USD equivalent) and access ad-free reading with early access.
+### Phase M2 – Plus Subscriptions MVP
+- As a reader, I can subscribe to Vellum Plus (GHS 10/week, USD equivalent) and access ad-free reading with early access.
 - Acceptance criteria:
   - Subscription purchases integrated with gateway routing (region-aware).
   - Revenue pool tracking starts recording creator shares from subscription revenue.
@@ -34,11 +34,11 @@ This backlog translates the Monetization Strategy shell into executable work ite
   - Subscriptions revenue pool is calculated (65% to creators).
   - Creator reads-based payout is computed and disbursed.
 
-### Phase M4 – Nexus Tier & XP UI
-- Implement Level 0–9 XP UI (ruler bar) and Nexus tier features.
+### Phase M4 – Pro Tier & XP UI
+- Implement Level 0–9 XP UI (ruler bar) and Pro tier features.
 - Acceptance criteria:
   - XP events recorded (read, comment, review, refer).
-  - Nexus tier unlocks visible to users meeting criteria.
+  - Pro tier unlocks visible to users meeting criteria.
 
 ### Phase M5 – Ascension (Level 10)
 - Go-live of one-time Ascension fee (GHS 150).

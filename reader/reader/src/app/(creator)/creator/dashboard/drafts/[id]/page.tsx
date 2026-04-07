@@ -8,6 +8,7 @@ import ImageUpload from "@/components/creator/ImageUpload";
 import Link from "next/link";
 import { progressTracking } from "@/lib/progressTracking";
 import { SMART_TAG_MACROS } from "@/lib/macroTemplates";
+import { discordNotificationService } from "@/lib/discord/notificationService";
 
 export default function DraftEditorPage() {
     const GENRE_OPTIONS = {
@@ -17,6 +18,8 @@ export default function DraftEditorPage() {
 
     const params = useParams();
     const id = params?.id as string;
+    const router = useRouter();
+    
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [category, setCategory] = useState<keyof typeof GENRE_OPTIONS>("fiction");
@@ -24,7 +27,7 @@ export default function DraftEditorPage() {
     const [isCustomGenre, setIsCustomGenre] = useState(false);
     const [coverImage, setCoverImage] = useState("");
     const [type, setType] = useState<"short" | "novel">("short");
-    const [chapters, setChapters] = useState<{ id: string, title: string, content: string }[]>([]);
+    const [chapters, setChapters] = useState<{ id: string, title: string, content: string, isPremium?: boolean, price?: number }[]>([]);
     const [activeChapterIndex, setActiveChapterIndex] = useState(0);
     const [saving, setSaving] = useState(false);
     const [tags, setTags] = useState<string[]>([]);
@@ -33,6 +36,8 @@ export default function DraftEditorPage() {
     const [status, setStatus] = useState("Ongoing");
     const [isPremium, setIsPremium] = useState(false);
     const [price, setPrice] = useState(10);
+    const [contentWarnings, setContentWarnings] = useState<string[]>([]);
+    const [targetAudience, setTargetAudience] = useState("Neutral");
 
     const hasSystemTag = tags.some(t => t.toLowerCase() === "#system");
     const activeMacroTags = tags.filter(t => Object.keys(SMART_TAG_MACROS).includes(t.toLowerCase()));
@@ -46,11 +51,11 @@ export default function DraftEditorPage() {
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
 
-        const currentVal = type === 'short' ? content : (chapters[activeChapterIndex]?.content || "");
+        const currentVal = type === "short" ? content : (chapters[activeChapterIndex]?.content || "");
 
         const newVal = currentVal.substring(0, start) + templateText + currentVal.substring(end);
 
-        if (type === 'short') {
+        if (type === "short") {
             setContent(newVal);
         } else {
             updateActiveChapter({ content: newVal });
@@ -75,7 +80,7 @@ export default function DraftEditorPage() {
     };
 
     const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Tab') {
+        if (e.key === "Tab") {
             const textarea = editorRef.current;
             if (!textarea) return;
 
@@ -103,7 +108,6 @@ export default function DraftEditorPage() {
             if (!user) return;
 
             try {
-                console.log("Loading draft or published work for ID:", id);
                 const draftRef = doc(db, "users", user.uid, "drafts", id);
                 const draftSnap = await getDoc(draftRef);
 
@@ -122,30 +126,19 @@ export default function DraftEditorPage() {
 
                 if (currentData) {
                     setTitle(currentData.title || "");
-
-                    // Handle legacy and new genre structure
                     const loadedCategory = (currentData.category as keyof typeof GENRE_OPTIONS) || "fiction";
                     setCategory(loadedCategory);
-
                     const loadedGenre = currentData.genre || "Fantasy";
                     setGenre(loadedGenre);
-
-                    // If the loaded genre isn't in our list, it's custom
                     if (!GENRE_OPTIONS[loadedCategory].includes(loadedGenre)) {
                         setIsCustomGenre(true);
                     }
-
                     setCoverImage(currentData.coverImage || "");
                     
-                    // Robust type detection setup
                     let detectedType = currentData.type;
                     if (!detectedType) {
                         const novelSnap = await getDoc(doc(db, "novels", id));
-                        if (novelSnap.exists()) {
-                            detectedType = "novel";
-                        } else {
-                            detectedType = "short";
-                        }
+                        detectedType = novelSnap.exists() ? "novel" : "short";
                     }
                     
                     setType(detectedType);
@@ -155,7 +148,8 @@ export default function DraftEditorPage() {
                     setStatus(currentData.status || "Ongoing");
                     setIsPremium(currentData.isPremium || false);
                     setPrice(currentData.price || 10);
-                    // Wait for type state to update then load chapters if needed
+                    setContentWarnings(currentData.contentWarnings || []);
+                    setTargetAudience(currentData.targetAudience || "Neutral");
                 }
             } catch (err) {
                 console.error("Critical Load Error:", err);
@@ -214,6 +208,8 @@ export default function DraftEditorPage() {
                     status,
                     isPremium: type === "short" ? isPremium : false,
                     price: type === "short" ? price : 0,
+                    contentWarnings,
+                    targetAudience,
                     updatedAt: serverTimestamp(),
                 }, { merge: true });
 
@@ -225,8 +221,8 @@ export default function DraftEditorPage() {
                         await setDoc(chapRef, {
                             title: chapter.title || "Untitled Chapter",
                             content: chapter.content || "",
-                            isPremium: (chapter as any).isPremium || false,
-                            price: (chapter as any).price || 0,
+                            isPremium: chapter.isPremium || false,
+                            price: chapter.price || 0,
                             order: i,
                             updatedAt: serverTimestamp(),
                         }, { merge: true });
@@ -240,8 +236,7 @@ export default function DraftEditorPage() {
         }, 2000);
 
         return () => clearTimeout(t);
-    }, [title, content, category, genre, coverImage, chapters, id, type, tags, description, status]);
-
+    }, [title, content, category, genre, coverImage, chapters, id, type, tags, description, status, contentWarnings, targetAudience]);
 
     const publish = async () => {
         const user = auth.currentUser;
@@ -270,9 +265,13 @@ export default function DraftEditorPage() {
             tags,
             description,
             status,
+            contentWarnings,
+            targetAudience,
             published: true,
             updatedAt: serverTimestamp(),
-            publishedAt: isAlreadyPublished ? contentSnap.data().publishedAt : serverTimestamp(),
+            createdAt: contentSnap.exists() ? (contentSnap.data()?.createdAt || serverTimestamp()) : serverTimestamp(),
+            publishedAt: isAlreadyPublished ? (contentSnap.data()?.publishedAt || serverTimestamp()) : serverTimestamp(),
+            chapterCount: type === "novel" ? chapters.length : 0,
             ...(type === "short" ? { content, isPremium, price } : {}),
         }, { merge: true });
 
@@ -283,23 +282,40 @@ export default function DraftEditorPage() {
                 await setDoc(doc(db, "novels", id, "chapters", chapter.id), {
                     title: chapter.title || "Untitled",
                     content: chapter.content || "",
-                    isPremium: (chapter as any).isPremium || false,
-                    price: (chapter as any).price || 0,
+                    isPremium: chapter.isPremium || false,
+                    price: chapter.price || 0,
                     order: i,
                     authorId: user.uid,
+                    authorName: authorDisplayName,
                     novelId: id,
+                    novelTitle: title,
+                    coverImage: coverImage || "https://placehold.co/400x600/1a1a1a/666666?text=Cover",
                     published: true,
                     publishedAt: serverTimestamp(),
-                });
+                }, { merge: true });
             }
         }
 
-        await progressTracking.notifyFollowers(user.uid, authorDisplayName, title, id, type === 'novel' ? 'novel' : 'story', !isAlreadyPublished);
+        await progressTracking.notifyFollowers(user.uid, authorDisplayName, title, id, type === "novel" ? "novel" : "story", !isAlreadyPublished);
+        
+        // Notify Discord on first-time publish
+        if (!isAlreadyPublished) {
+            const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vellum.read';
+            const contentUrl = type === "novel" 
+                ? `${baseUrl}/novel/${id}` // Using ID as slug fallback if needed, but usually we'd want the actual slug
+                : `${baseUrl}/stories/${id}`;
+            
+            await discordNotificationService.notifyContentPublished({
+                title,
+                authorName: authorDisplayName,
+                type: type === "novel" ? "novel" : "story",
+                url: contentUrl
+            }).catch(err => console.error("[Discord Notification] Failed:", err));
+        }
 
         alert(`${type === "novel" ? "Novel" : "Short story"} ${isAlreadyPublished ? "updated" : "published"} successfully!`);
     };
 
-    // ... rest of help functions same ...
     const deleteChapter = async (index: number) => {
         if (!confirm("Are you sure you want to delete this chapter?")) return;
         const chapterToDelete = chapters[index];
@@ -318,7 +334,7 @@ export default function DraftEditorPage() {
         setActiveChapterIndex(chapters.length);
     };
 
-    const updateActiveChapter = (updates: Partial<{ title: string, content: string }>) => {
+    const updateActiveChapter = (updates: Partial<{ title: string, content: string, isPremium: boolean, price: number }>) => {
         const newChapters = [...chapters];
         newChapters[activeChapterIndex] = { ...newChapters[activeChapterIndex], ...updates };
         setChapters(newChapters);
@@ -422,9 +438,9 @@ export default function DraftEditorPage() {
                             {tags.map((tag, idx) => (
                                 <span
                                     key={idx}
-                                    className={`px-3 py-1.5 text-[9px] uppercase tracking-[0.2em] rounded-full border transition-all flex items-center gap-3 ${tag.toLowerCase() === '#system'
-                                        ? 'border-[var(--accent-sakura)]/30 bg-[var(--accent-sakura)]/5 text-[var(--accent-sakura)] shadow-[0_0_15px_-5px_var(--accent-sakura)]'
-                                        : 'border-white/5 bg-white/[0.02] text-[var(--reader-text)]/60'
+                                    className={`px-3 py-1.5 text-[9px] uppercase tracking-[0.2em] rounded-full border transition-all flex items-center gap-3 ${tag.toLowerCase() === "#system"
+                                        ? "border-[var(--accent-sakura)]/30 bg-[var(--accent-sakura)]/5 text-[var(--accent-sakura)] shadow-[0_0_15px_-5px_var(--accent-sakura)]"
+                                        : "border-white/5 bg-white/[0.02] text-[var(--reader-text)]/60"
                                         }`}
                                 >
                                     {tag}
@@ -435,10 +451,10 @@ export default function DraftEditorPage() {
                                 value={tagInput}
                                 onChange={(e) => setTagInput(e.target.value)}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault(); // Prevent accidental form submission or scrolling
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
                                         if (tagInput.trim()) {
-                                            const formattedTag = tagInput.trim().startsWith('#') ? tagInput.trim() : `#${tagInput.trim()}`;
+                                            const formattedTag = tagInput.trim().startsWith("#") ? tagInput.trim() : `#${tagInput.trim()}`;
                                             setTags([...tags, formattedTag]);
                                             setTagInput("");
                                         }
@@ -491,7 +507,7 @@ export default function DraftEditorPage() {
                         </div>
                     </div>
 
-                    {/* Short Story Monetization */}
+                    {/* Monetization Settings */}
                     {type === "short" && (
                         <div className="glass-panel p-8 rounded-3xl space-y-6 border-white/5">
                             <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Monetization Settings</label>
@@ -525,8 +541,47 @@ export default function DraftEditorPage() {
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Enter the chronicle summary..."
-                            className="w-full h-40 bg-white/[0.02] border border-white/5 p-4 rounded-2x text-sm text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all resize-none leading-relaxed"
+                            className="w-full h-40 bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-sm text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all resize-none leading-relaxed"
                         />
+                    </div>
+
+                    {/* Metadata Refinement: Target Audience & Content Warnings */}
+                    <div className="glass-panel p-8 rounded-3xl space-y-8 border-white/5">
+                        <div className="space-y-4">
+                            <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Target Audience</label>
+                            <div className="flex gap-2 p-1.5 bg-black/20 rounded-2xl border border-white/5">
+                                {["Male", "Neutral", "Female"].map((aud) => (
+                                    <button
+                                        key={aud}
+                                        onClick={() => setTargetAudience(aud)}
+                                        className={`flex-1 py-3 text-[9px] uppercase tracking-[0.2em] rounded-xl transition-all ${targetAudience === aud ? "bg-white/5 text-white font-bold shadow-inner" : "text-[var(--reader-text)]/40 hover:text-white"}`}
+                                    >
+                                        {aud} Lead
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold ml-1">Content Warnings</label>
+                            <div className="flex flex-wrap gap-2">
+                                {["Gore", "Strong Language", "Sexual Content", "Violence", "Trauma"].map((warning) => (
+                                    <button
+                                        key={warning}
+                                        onClick={() => {
+                                            if (contentWarnings.includes(warning)) {
+                                                setContentWarnings(contentWarnings.filter(w => w !== warning));
+                                            } else {
+                                                setContentWarnings([...contentWarnings, warning]);
+                                            }
+                                        }}
+                                        className={`px-4 py-2 text-[9px] uppercase tracking-widest rounded-full border transition-all ${contentWarnings.includes(warning) ? "border-red-500/30 bg-red-500/10 text-red-500 shadow-[0_0_15px_-5px_red]" : "border-white/5 bg-white/[0.02] text-zinc-500 hover:text-white"}`}
+                                    >
+                                        {warning}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Cover Asset Block */}
@@ -558,7 +613,7 @@ export default function DraftEditorPage() {
                 {/* Right Column: Writing Surface */}
                 <div className="lg:col-span-2 space-y-10">
                     {type === "short" ? (
-                        <div className="glass-panel p-1 rounded-[2.5rem] border-white/5 h-full min-h-[80vh] flex flex-col overflow-hidden">
+                        <div className="glass-panel p-1 rounded-[2.5rem] border-white/5 h-full min-h-[80vh] flex flex-col relative overflow-hidden">
                             <div className="absolute top-8 left-8 text-[9px] uppercase tracking-[0.5em] text-white/5 pointer-events-none">Narrative Flow</div>
                             <textarea
                                 ref={editorRef}
@@ -566,7 +621,7 @@ export default function DraftEditorPage() {
                                 onChange={(e) => setContent(e.target.value)}
                                 onKeyDown={handleEditorKeyDown}
                                 placeholder="Start your legend…"
-                                className="flex-1 w-full bg-transparent p-12 resize-none text-xl font-light text-[var(--foreground)] focus:outline-none placeholder:text-white/5 leading-relaxed selection:bg-[var(--accent-sakura)]/20"
+                                className="flex-1 w-full bg-transparent p-12 resize-none text-xl font-light text-[var(--foreground)] focus:outline-none placeholder:text-white/5 leading-relaxed selection:bg-[var(--accent-sakura)]/20 scrollbar-hide"
                             />
                         </div>
                     ) : (
@@ -574,7 +629,7 @@ export default function DraftEditorPage() {
                             {/* Modern Chapter Sidebar */}
                             <div className="w-64 flex flex-col gap-4 border-r border-white/5 pr-6 overflow-y-auto scrollbar-hide">
                                 <div className="flex justify-between items-center mb-4">
-                                    <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold">Chapters</label>
+                                    <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/30 font-bold">Chapters</label>
                                     <button
                                         onClick={addChapter}
                                         className="text-[16px] text-white/20 hover:text-white transition-all p-2 bg-white/5 rounded-full"
@@ -594,14 +649,13 @@ export default function DraftEditorPage() {
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <span className="opacity-30 font-bold tabular-nums">{(idx + 1).toString().padStart(2, '0')}</span>
+                                                    <span className="opacity-30 font-bold tabular-nums">{(idx + 1).toString().padStart(2, "0")}</span>
                                                     <span className="tracking-wide">{ch?.title || "Untitled"}</span>
                                                 </div>
                                                 {activeChapterIndex === idx && (
                                                     <div className="absolute right-0 top-0 bottom-0 w-1 bg-[var(--accent-sakura)] shadow-[0_0_10px_var(--accent-sakura)]" />
                                                 )}
                                             </button>
-                                            {/* Quick Delete Trigger */}
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); deleteChapter(idx); }}
                                                 className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-white/0 group-hover:text-red-500/40 hover:text-red-500 transition-all z-10"
@@ -614,7 +668,6 @@ export default function DraftEditorPage() {
                                 </div>
                             </div>
 
-                            {/* Refined Chapter Editor */}
                             <div className="flex-1 flex flex-col gap-8 min-h-0 bg-white/[0.01] rounded-[2.5rem] border border-white/5 p-12 overflow-hidden relative">
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
@@ -624,23 +677,26 @@ export default function DraftEditorPage() {
                                             <button
                                                 onClick={() => {
                                                     const newChapters = [...chapters];
-                                                    const ch = newChapters[activeChapterIndex] as any;
+                                                    const ch = newChapters[activeChapterIndex];
+                                                    if (!ch) return;
                                                     ch.isPremium = !ch.isPremium;
                                                     if (ch.isPremium && !ch.price) ch.price = 10;
                                                     setChapters(newChapters);
                                                 }}
-                                                className={`w-8 h-4 rounded-full transition-all relative ${chapters[activeChapterIndex] && (chapters[activeChapterIndex] as any).isPremium ? "bg-[var(--accent-lime)]" : "bg-white/10"}`}
+                                                className={`w-8 h-4 rounded-full transition-all relative ${chapters[activeChapterIndex]?.isPremium ? "bg-[var(--accent-lime)]" : "bg-white/10"}`}
                                             >
-                                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${(chapters[activeChapterIndex] as any)?.isPremium ? "left-4.5" : "left-0.5"}`} />
+                                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${chapters[activeChapterIndex]?.isPremium ? "left-4.5" : "left-0.5"}`} />
                                             </button>
-                                            {(chapters[activeChapterIndex] as any)?.isPremium && (
+                                            {chapters[activeChapterIndex]?.isPremium && (
                                                 <input
                                                     type="number"
-                                                    value={(chapters[activeChapterIndex] as any).price || 10}
+                                                    value={chapters[activeChapterIndex].price || 10}
                                                     onChange={(e) => {
                                                         const newChapters = [...chapters];
-                                                        (newChapters[activeChapterIndex] as any).price = Number(e.target.value);
-                                                        setChapters(newChapters);
+                                                        if (newChapters[activeChapterIndex]) {
+                                                            newChapters[activeChapterIndex].price = Number(e.target.value);
+                                                            setChapters(newChapters);
+                                                        }
                                                     }}
                                                     className="w-12 bg-transparent border-none p-0 text-[10px] text-white focus:outline-none text-center font-bold"
                                                 />
