@@ -251,19 +251,19 @@ export default function WalletCard() {
                     </div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-4 self-center md:self-start">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 self-center md:self-start w-full sm:w-auto mt-6 md:mt-0">
                     {!hasCheckedInToday && (
                         <button
                             onClick={handleDailyCheckIn}
                             disabled={isCheckingIn}
-                            className="px-8 py-4 bg-blue-600 text-white text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-blue-500 active:scale-95 transition-all shadow-[0_20px_40px_-10px_rgba(59,130,246,0.3)] italic whitespace-nowrap"
+                            className="px-6 md:px-8 py-3 md:py-4 bg-blue-600 text-white text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] rounded-2xl hover:bg-blue-500 active:scale-95 transition-all shadow-[0_20px_40px_-10px_rgba(59,130,246,0.3)] italic whitespace-nowrap w-full sm:w-auto"
                         >
                             {isCheckingIn ? "Communing..." : "Daily Gift"}
                         </button>
                     )}
                     <button
                         onClick={() => setShowOptions(!showOptions)}
-                        className="px-10 py-4 bg-white text-black text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_20px_40px_-10px_rgba(255,255,255,0.3)] italic whitespace-nowrap"
+                        className="px-6 md:px-10 py-3 md:py-4 bg-white text-black text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_20px_40px_-10px_rgba(255,255,255,0.3)] italic whitespace-nowrap w-full sm:w-auto"
                     >
                         {showOptions ? "Close Vault" : "Manifest Gilt"}
                     </button>

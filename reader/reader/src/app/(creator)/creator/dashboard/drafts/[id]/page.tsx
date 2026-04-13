@@ -625,9 +625,9 @@ export default function DraftEditorPage() {
                             />
                         </div>
                     ) : (
-                        <div className="flex gap-6 h-[85vh]">
+                        <div className="flex flex-col md:flex-row gap-6 h-[120vh] md:h-[85vh]">
                             {/* Modern Chapter Sidebar */}
-                            <div className="w-64 flex flex-col gap-4 border-r border-white/5 pr-6 overflow-y-auto scrollbar-hide">
+                            <div className="w-full md:w-64 flex flex-col gap-4 border-b md:border-b-0 md:border-r border-white/5 pb-6 md:pb-0 md:pr-6 overflow-y-auto max-h-[30vh] md:max-h-full scrollbar-hide">
                                 <div className="flex justify-between items-center mb-4">
                                     <label className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/30 font-bold">Chapters</label>
                                     <button

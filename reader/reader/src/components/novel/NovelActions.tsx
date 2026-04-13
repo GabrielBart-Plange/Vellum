@@ -80,10 +80,10 @@ export default function NovelActions({ novel, novelId, slug, chapters }: NovelAc
 
   return (
     <>
-      <div className="flex items-center justify-center gap-6 pt-12">
+      <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 sm:gap-6 pt-12">
         <button
           onClick={() => setShowChapters(true)}
-          className="px-12 py-5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[13px] font-black uppercase tracking-[0.3em] premium-shadow hover:scale-105 active:scale-95 transition-all duration-500"
+          className="w-full sm:w-auto px-8 md:px-12 py-4 md:py-5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[11px] md:text-[13px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] premium-shadow hover:scale-105 active:scale-95 transition-all duration-500"
           title="See all chapters in this novel"
         >
           Start Reading
@@ -91,7 +91,7 @@ export default function NovelActions({ novel, novelId, slug, chapters }: NovelAc
         {readingProgress && (
           <Link
             href={`/chapter/${novel.numericalId || novel.slug || slug}-${readingProgress.chapterOrder || 1}`}
-            className="px-12 py-5 rounded-2xl bg-white text-black text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95"
+            className="w-full sm:w-auto px-8 md:px-12 py-4 md:py-5 text-center rounded-2xl bg-white text-black text-[11px] md:text-[13px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] shadow-2xl hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95"
           >
             Continue Reading
           </Link>
@@ -99,7 +99,7 @@ export default function NovelActions({ novel, novelId, slug, chapters }: NovelAc
         <button
           onClick={handleSaveToLibrary}
           disabled={saving}
-          className="px-12 py-5 rounded-2xl border border-white/10 glass-panel text-white text-[13px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all disabled:opacity-50"
+          className="w-full sm:w-auto px-8 md:px-12 py-4 md:py-5 rounded-2xl border border-white/10 glass-panel text-white text-[11px] md:text-[13px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] hover:bg-white/5 transition-all disabled:opacity-50"
           title="Add this novel to your personal library"
         >
           {saved ? "In Library" : saving ? "Saving..." : "Save to Library"}
