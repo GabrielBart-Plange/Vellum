@@ -13,19 +13,13 @@ export default function WalletCard() {
     const [isSuccess, setIsSuccess] = useState(false);
     const [checkInReward, setCheckInReward] = useState<number | null>(null);
     const [showOptions, setShowOptions] = useState(false);
-    const [preferredProvider, setPreferredProvider] = useState<'lemonsqueezy' | 'paystack'>('lemonsqueezy');
+    const [preferredProvider, setPreferredProvider] = useState<'lemonsqueezy' | 'paystack'>('paystack');
     const [copied, setCopied] = useState(false);
 
     const hasCheckedInToday = (monetization as any)?.lastCheckIn === new Date().toISOString().split('T')[0];
 
-    // Simple geolocation/language based provider suggestion
-    useEffect(() => {
-        const isAfricanRegion = ['en-GH', 'en-NG', 'en-ZA', 'en-KE'].includes(navigator.language);
-        if (isAfricanRegion) {
-            setPreferredProvider('paystack');
-        }
-    }, []);
-
+    // Note: Geolocation routing temporarily disabled pending Lemon Squeezy KYC validation.
+    // All traffic routed through Paystack logic natively.
 
 
     const handlePaymentSuccess = async (reference: string, amount: number, priceGHS: number, type: string) => {
@@ -350,20 +344,7 @@ export default function WalletCard() {
                                 <div className="h-px w-24 bg-white/5" />
                             </div>
                             
-                            <div className="flex bg-white/5 rounded-xl p-1 border border-white/10">
-                                <button 
-                                    onClick={() => setPreferredProvider('lemonsqueezy')}
-                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all ${preferredProvider === 'lemonsqueezy' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
-                                >
-                                    Global (Cards/Apple)
-                                </button>
-                                <button 
-                                    onClick={() => setPreferredProvider('paystack')}
-                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all ${preferredProvider === 'paystack' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
-                                >
-                                    Local (Momo)
-                                </button>
-                            </div>
+                            {/* Lemon Squeezy vs Paystack Toggle Temporarily Removed for Launch */}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {inkletOptions.map((opt) => (
