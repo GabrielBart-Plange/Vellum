@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paystackService } from '@/lib/monetization/paystackService';
 
 export async function POST(req: NextRequest) {
-  const { reference, userId, amount, currencyAmount, priceGHS, type } = await req.json();
-  const finalCurrencyAmount = currencyAmount || priceGHS;
+  // Only extract the reference to check with Paystack. Do not trust other fields.
+  const { reference, userId } = await req.json();
 
   if (!reference || !userId) {
     return NextResponse.json({ ok: false, error: 'Missing reference or userId' }, { status: 400 });
@@ -26,20 +26,29 @@ export async function POST(req: NextRequest) {
     }
 
     const paystackData = paystackJson.data;
+    const metadata = paystackData.metadata;
 
-    // 2. Amount sanity check (Paystack returns amount in pesewas)
-    if (finalCurrencyAmount && Math.abs(paystackData.amount - Math.round(finalCurrencyAmount * 100)) > 1) {
-      return NextResponse.json({ ok: false, error: 'Amount mismatch' }, { status: 400 });
+    // 2. Extract verified parameters directly from Paystack metadata
+    const customFields = metadata?.custom_fields || [];
+    const typeField = customFields.find((f: any) => f.variable_name === 'type');
+    const amountField = customFields.find((f: any) => f.variable_name === 'amount');
+
+    const verifiedType = typeField?.value;
+    const verifiedAmount = amountField?.value;
+    const verifiedCurrencyAmount = paystackData.amount / 100; // Convert from pesewas to GHS
+
+    if (!verifiedType || !verifiedAmount) {
+      return NextResponse.json({ ok: false, error: 'Missing secure metadata in transaction' }, { status: 400 });
     }
 
-    // 3. Process and update Firestore via Service (Transaction + Idempotent)
+    // 3. Process and update Firestore via Service
     await paystackService.processVerifiedPayment({
       reference,
-      userId,
-      amount,
-      currencyAmount: finalCurrencyAmount,
-      type,
-      metadata: paystackData.metadata
+      userId, // We keep the user session id
+      amount: Number(verifiedAmount),
+      currencyAmount: verifiedCurrencyAmount,
+      type: verifiedType,
+      metadata: metadata
     });
 
     return NextResponse.json({ ok: true, success: true });

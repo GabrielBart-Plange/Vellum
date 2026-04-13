@@ -54,8 +54,12 @@ export const paystackService = {
                     
                     if (tier === 'plus') {
                         expiresAt.setDate(expiresAt.getDate() + 7);
+                        // Vellum Plus Bonus: 50 Inklets
+                        updates.inkletBalance = admin.firestore.FieldValue.increment(50);
                     } else if (tier === 'pro') {
                         expiresAt.setMonth(expiresAt.getMonth() + 1);
+                        // Vellum Pro Bonus: 1 Gold Vellux
+                        updates.vellux_gold_balance = admin.firestore.FieldValue.increment(1);
                     }
                     
                     updates.subscriptionTier = tier;
