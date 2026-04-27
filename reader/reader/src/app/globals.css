@@ -17,6 +17,8 @@
   --reader-footer-bg: #0b0a0f;
   --glass-bg: rgba(255, 255, 255, 0.02);
   --glass-border: rgba(255, 255, 255, 0.05);
+  
+  color-scheme: dark;
 
   /* Glow Effects */
   --glow-blue: rgba(59, 130, 246, 0.3);
@@ -40,6 +42,8 @@
 }
 
 [data-theme='archive'] {
+  --background: #f5f2e9;
+  --foreground: #27272a;
   --reader-bg: #f5f2e9;
   --reader-text: #27272a;
   --reader-text-muted: rgba(39, 39, 42, 0.7);
@@ -51,6 +55,8 @@
   --reader-footer-bg: #ebe7d9;
   --glass-bg: rgba(124, 45, 18, 0.03);
   --glass-border: rgba(124, 45, 18, 0.1);
+  
+  color-scheme: light;
 
   /* Notation Tokens - Archive */
   --notion-sys-bg: rgba(124, 45, 18, 0.05);
@@ -65,6 +71,8 @@
 }
 
 [data-theme='nebula'] {
+  --background: #110e20;
+  --foreground: #e0e7ff;
   --reader-bg: #110e20;
   --reader-text: #e0e7ff;
   --reader-text-muted: rgba(224, 231, 255, 0.6);
@@ -76,9 +84,13 @@
   --reader-footer-bg: #141126;
   --glass-bg: rgba(192, 132, 252, 0.05);
   --glass-border: rgba(192, 132, 252, 0.2);
+  
+  color-scheme: dark;
 }
 
 [data-theme='light'] {
+  --background: #ffffff;
+  --foreground: #09090b;
   --reader-bg: #ffffff;
   --reader-text: #09090b;
   --reader-text-muted: rgba(9, 9, 11, 0.7);
@@ -90,6 +102,8 @@
   --reader-footer-bg: #f4f4f5;
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(0, 0, 0, 0.05);
+  
+  color-scheme: light;
 
   /* Notation Tokens - Light */
   --notion-sys-bg: rgba(37, 99, 235, 0.05);
@@ -104,6 +118,8 @@
 }
 
 [data-theme='midnight'] {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
   --reader-bg: #0f172a;
   --reader-text: #e2e8f0;
   --reader-text-muted: rgba(226, 232, 240, 0.6);
@@ -115,9 +131,13 @@
   --reader-footer-bg: #020617;
   --glass-bg: rgba(56, 189, 248, 0.03);
   --glass-border: rgba(56, 189, 248, 0.1);
+  
+  color-scheme: dark;
 }
 
 [data-theme='serene'] {
+  --background: #fff5f7;
+  --foreground: #3d2c2e;
   --reader-bg: #fff5f7;
   --reader-text: #3d2c2e;
   --reader-text-muted: rgba(61, 44, 46, 0.8);
@@ -129,6 +149,8 @@
   --reader-footer-bg: #ffe4e6;
   --glass-bg: rgba(244, 114, 182, 0.05);
   --glass-border: rgba(244, 114, 182, 0.2);
+  
+  color-scheme: light;
 }
 
 @layer base {
@@ -151,8 +173,8 @@
 
   body {
     @apply antialiased selection:bg-[var(--reader-accent)]/30 selection:text-white;
-    color: var(--reader-text);
-    background: var(--reader-bg);
+    color: var(--foreground);
+    background: var(--background);
     font-family: 'Outfit', sans-serif;
     transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1), color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     scroll-behavior: smooth;
@@ -165,7 +187,8 @@
   h5,
   h6 {
     @apply tracking-tight font-semibold;
-    color: var(--reader-text);
+    color: var(--foreground);
+    transition: color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 

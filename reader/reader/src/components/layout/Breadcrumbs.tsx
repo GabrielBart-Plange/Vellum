@@ -10,7 +10,11 @@ interface BreadcrumbItem {
     active?: boolean;
 }
 
-export default function Breadcrumbs() {
+interface BreadcrumbsProps {
+    customLabels?: Record<string, string>;
+}
+
+export default function Breadcrumbs({ customLabels = {} }: BreadcrumbsProps) {
     const pathname = usePathname();
     if (!pathname || pathname === "/") return null;
 
@@ -26,7 +30,7 @@ export default function Breadcrumbs() {
         const isActive = index === segments.length - 1;
         
         // Custom label mapping
-        let label = deslugify(segment);
+        let label = customLabels[segment] || deslugify(segment);
         if (segment === "novel") label = "Novels";
         if (segment === "stories") label = "Short Stories";
         if (segment === "art") label = "Gallery";

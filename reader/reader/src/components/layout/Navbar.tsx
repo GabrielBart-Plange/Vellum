@@ -38,6 +38,7 @@ export default function Navbar() {
 
         const q = query(
             collection(db, "users", user.uid, "notifications"),
+            orderBy("createdAt", "desc"),
             limit(20)
         );
 

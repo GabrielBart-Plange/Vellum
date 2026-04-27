@@ -55,4 +55,5 @@ if (!admin.apps.length) {
 
 const app = admin.apps[0] ?? null;
 export const adminDb = app ? admin.firestore() : null as any;
+export const db = adminDb; // Alias for consistency across routes
 export const adminAuth = app ? admin.auth() : null as any;

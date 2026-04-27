@@ -60,7 +60,7 @@ export default function ThematicCollections() {
                         color: "text-amber-400",
                         works: processResults(
                             allNovels.filter((n: any) => (n.views || 0) <= 1000),
-                            allStories.filter((s: any) => (s.viewCount || 0) <= 500)
+                            allStories.filter((s: any) => (s.views || s.viewCount || 0) <= 500)
                         )
                     },
                     {

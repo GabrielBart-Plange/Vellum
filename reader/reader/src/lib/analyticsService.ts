@@ -22,28 +22,27 @@ export const analyticsService = {
      */
     logEvent: async (event: AnalyticsEvent) => {
         try {
-            const eventRef = collection(db, "analytics_events");
+            // Commented out client-side writes to avoid "Missing or insufficient permissions"
+            // These should be handled via a secure server-side API or Cloud Function.
             
-            // 1. Log the individual event
+            /*
+            const eventRef = collection(db, "analytics_events");
             await addDoc(eventRef, {
                 ...event,
                 timestamp: serverTimestamp()
             });
 
-            // 2. Increment aggregate counters (Author specific)
             const authorRef = doc(db, "users", event.authorId);
             const authorUpdate: any = {};
-            
             if (event.type === 'chapter_view' || event.type === 'story_view') {
                 authorUpdate.totalViews = increment(1);
             }
-            
             if (Object.keys(authorUpdate).length > 0) {
                 await updateDoc(authorRef, authorUpdate);
             }
+            */
 
         } catch (error) {
-            // Silently fail analytics to prevent user experience disruption
             console.error("[AnalyticsService] Error logging event:", error);
         }
     },

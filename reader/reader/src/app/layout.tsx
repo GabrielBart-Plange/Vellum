@@ -20,8 +20,6 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0b0a0f",
-  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -92,6 +90,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var savedTheme = localStorage.getItem('vellum-theme');
+                if (savedTheme) {
+                  document.documentElement.setAttribute('data-theme', savedTheme);
+                } else {
+                  document.documentElement.setAttribute('data-theme', 'void');
+                }
+              } catch (e) {}
+            })();
+          `
+        }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
         suppressHydrationWarning

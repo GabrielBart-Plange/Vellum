@@ -94,7 +94,7 @@ export default async function NovelLandingPage({ params }: PageProps) {
       {renderJsonLd(breadcrumbSchema)}
       <main className="min-h-screen text-[var(--reader-text)] font-sans pb-40">
       <div className="max-w-7xl mx-auto px-8 pt-8 relative z-[60]">
-        <Breadcrumbs />
+        <Breadcrumbs customLabels={{ [slug]: novel.title }} />
       </div>
       <NovelViewTracker novelId={novelId} />
       

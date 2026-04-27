@@ -47,7 +47,7 @@ export default function GenrePage({ params }: { params: Promise<{ slug: string }
                 collection(db, "stories"),
                 where("published", "==", true),
                 where("genre", "==", searchGenre),
-                orderBy(sortBy, "desc"),
+                orderBy(sortBy === 'views' ? 'viewCount' : sortBy, "desc"),
                 limit(batchSize)
             );
 
@@ -63,15 +63,19 @@ export default function GenrePage({ params }: { params: Promise<{ slug: string }
             
             if (isMore) {
                 setResults(prev => {
-                    const merged = [...prev, ...combined].sort((a, b) => 
-                        (b[sortBy]?.seconds || b[sortBy] || 0) - (a[sortBy]?.seconds || a[sortBy] || 0)
-                    );
+                    const merged = [...prev, ...combined].sort((a, b) => {
+                        const valB = b[sortBy]?.seconds || b[sortBy] || (sortBy === 'views' ? b.viewCount : 0) || 0;
+                        const valA = a[sortBy]?.seconds || a[sortBy] || (sortBy === 'views' ? a.viewCount : 0) || 0;
+                        return valB - valA;
+                    });
                     return merged;
                 });
             } else {
-                setResults(combined.sort((a, b) => 
-                    (b[sortBy]?.seconds || b[sortBy] || 0) - (a[sortBy]?.seconds || a[sortBy] || 0)
-                ));
+                setResults(combined.sort((a, b) => {
+                    const valB = b[sortBy]?.seconds || b[sortBy] || (sortBy === 'views' ? b.viewCount : 0) || 0;
+                    const valA = a[sortBy]?.seconds || a[sortBy] || (sortBy === 'views' ? a.viewCount : 0) || 0;
+                    return valB - valA;
+                }));
             }
 
             setLastNovelDoc(novelsSnap.docs[novelsSnap.docs.length - 1] || null);

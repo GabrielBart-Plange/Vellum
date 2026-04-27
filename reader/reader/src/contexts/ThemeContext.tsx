@@ -16,11 +16,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // Load theme from localStorage on mount
+        // Hydrate theme from localStorage or document attribute (set by head script)
         const savedTheme = localStorage.getItem("vellum-theme") as Theme;
+        const currentTheme = document.documentElement.getAttribute("data-theme") as Theme;
+        
         if (savedTheme) {
             setThemeState(savedTheme);
-            document.documentElement.setAttribute("data-theme", savedTheme);
+            if (currentTheme !== savedTheme) {
+                document.documentElement.setAttribute("data-theme", savedTheme);
+            }
         }
         setMounted(true);
     }, []);
@@ -36,7 +40,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <ThemeContext.Provider value={{ theme, setTheme }}>
-            {children}
+            <div className={mounted ? "contents" : "invisible"}>
+                {children}
+            </div>
         </ThemeContext.Provider>
     );
 }

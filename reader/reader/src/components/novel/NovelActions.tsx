@@ -90,7 +90,7 @@ export default function NovelActions({ novel, novelId, slug, chapters }: NovelAc
         </button>
         {readingProgress && (
           <Link
-            href={`/chapter/${novel.numericalId || novel.slug || slug}-${readingProgress.chapterOrder || 1}`}
+            href={`/chapter/${novel.numericalId || novel.slug || slug}-${readingProgress.chapterOrder || readingProgress.lastChapter || 1}`}
             className="w-full sm:w-auto px-8 md:px-12 py-4 md:py-5 text-center rounded-2xl bg-white text-black text-[11px] md:text-[13px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] shadow-2xl hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95"
           >
             Continue Reading
@@ -128,7 +128,7 @@ export default function NovelActions({ novel, novelId, slug, chapters }: NovelAc
                 {chapters.map((chapter, index) => (
                   <Link
                     key={chapter.id}
-                    href={`/chapter/${novel.numericalId || novel.slug || slug}-${chapter.order}`}
+                    href={`/chapter/${novel.numericalId || novel.slug || slug}-${chapter.order || chapter.id || (index + 1)}`}
                     className="group p-6 glass-panel border border-white/5 rounded-2xl hover:border-purple-500/40 hover:bg-white/[0.05] transition-all duration-500"
                   >
                     <div className="space-y-2">

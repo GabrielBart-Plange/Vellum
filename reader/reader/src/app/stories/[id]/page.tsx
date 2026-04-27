@@ -97,7 +97,7 @@ export default async function StoryPage({ params }: PageProps) {
       {renderJsonLd(breadcrumbSchema)}
       <main className="min-h-screen px-6 py-24 bg-[var(--reader-bg)] font-sans relative">
       <div className="max-w-4xl mx-auto mb-8 relative z-50">
-        <Breadcrumbs />
+        <Breadcrumbs customLabels={{ [id]: story.title }} />
       </div>
       <StoryReaderClient 
         storyId={storyId} 

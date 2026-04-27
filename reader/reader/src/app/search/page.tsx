@@ -42,7 +42,7 @@ function SearchResults() {
         else setLoading(true);
 
         try {
-            const batchSize = 24;
+            const batchSize = 60; // Increased to cover more archival content
             // Fetch from multiple collections
             const novelQuery = query(collection(db, "novels"), where("published", "==", true), limit(batchSize));
             const storyQuery = query(collection(db, "stories"), where("published", "==", true), limit(batchSize));
