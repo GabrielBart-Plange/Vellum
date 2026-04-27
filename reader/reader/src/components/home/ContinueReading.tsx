@@ -21,15 +21,14 @@ export default function ContinueReading() {
 
             try {
                 const library = await progressTracking.getUserLibrary(user.uid);
-                if (library.novelsInProgress.length > 0) {
-                    // Sort by lastReadAt descending
-                    const sorted = [...library.novelsInProgress].sort((a, b) => {
-                        const dateA = a.lastReadAt?.seconds || 0;
-                        const dateB = b.lastReadAt?.seconds || 0;
-                        return dateB - dateA;
-                    });
+                    const sorted = [...library.novelsInProgress]
+                        .filter(p => p.title && p.title !== "Unknown Novel" && p.title !== "UNKNOWN NOVEL")
+                        .sort((a, b) => {
+                            const dateA = a.lastReadAt?.seconds || 0;
+                            const dateB = b.lastReadAt?.seconds || 0;
+                            return dateB - dateA;
+                        });
                     setProgressList(sorted);
-                }
             } catch (error) {
                 console.error("Error loading continue reading:", error);
             } finally {
