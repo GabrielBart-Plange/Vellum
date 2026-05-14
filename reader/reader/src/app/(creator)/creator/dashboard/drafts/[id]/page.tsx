@@ -106,6 +106,12 @@ export default function DraftEditorPage() {
         }
     };
 
+    const titleRef = useRef(title);
+    const contentRef = useRef(content);
+
+    useEffect(() => { titleRef.current = title; }, [title]);
+    useEffect(() => { contentRef.current = content; }, [content]);
+
     // Unified data loading effect
     useEffect(() => {
         const unsub = auth.onAuthStateChanged(async (user) => {
@@ -201,8 +207,13 @@ export default function DraftEditorPage() {
                     const data = snapshot.data();
                     if (data?.updatedAt) {
                         const serverTime = (data.updatedAt as Timestamp).toMillis();
+                        
+                        // Use refs to avoid stale closure issues
+                        const isDifferent = (data.title !== titleRef.current && titleRef.current !== "") || 
+                                          (type === "short" ? data.content !== contentRef.current : false);
+
                         setLastServerTime((prev) => {
-                            if (prev && serverTime > prev + 2000) {
+                            if (prev && serverTime > prev + 2000 && isDifferent) {
                                 setHasConflict(true);
                             }
                             return serverTime;
