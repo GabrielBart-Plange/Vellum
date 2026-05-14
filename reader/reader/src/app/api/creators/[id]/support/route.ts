@@ -13,10 +13,10 @@ const AUTHOR_VELLUX_SPLIT = 0.30; // 30% to author
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const creatorId = params.id;
+        const { id: creatorId } = await params;
         const { userId, username, tier } = await request.json();
 
         if (!userId || !tier) {
@@ -34,7 +34,7 @@ export async function POST(
         const creatorRef = db.collection('users').doc(creatorId);
         const userRef = db.collection('users').doc(userId);
 
-        await db.runTransaction(async (transaction) => {
+        await db.runTransaction(async (transaction: any) => {
             const [userDoc, creatorDoc] = await Promise.all([
                 transaction.get(userRef),
                 transaction.get(creatorRef),

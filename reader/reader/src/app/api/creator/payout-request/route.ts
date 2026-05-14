@@ -46,7 +46,7 @@ export async function POST(request: Request) {
         const payoutData = payoutSnap.data() || {};
 
         // Atomically create request and zero-out balance
-        await db.runTransaction(async (transaction) => {
+        await db.runTransaction(async (transaction: any) => {
             // Re-read balance inside transaction to be safe
             const freshUser = await transaction.get(userRef);
             const freshBalance = freshUser.data()?.payoutBalance ?? 0;

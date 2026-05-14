@@ -81,7 +81,7 @@ export default function ChapterReaderClient({
             setProgress((currentScroll / totalScroll) * 100);
         };
         window.addEventListener("scroll", handleScroll);
-        return () => window.removeOH(window.removeEventListener("scroll", handleScroll));
+        return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     useEffect(() => {
@@ -449,7 +449,14 @@ export default function ChapterReaderClient({
                     </div>
                 </div>
             )}
-            <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} contentId={chapterId} contentType="chapter" novelId={novelId} />
+            <ReportModal 
+                isOpen={isReportModalOpen} 
+                onClose={() => setIsReportModalOpen(false)} 
+                contentId={chapterId} 
+                contentType="chapter" 
+                contentTitle={`${novel.title} - ${chapter.title}`}
+                authorId={novel.authorId}
+            />
         </main>
     );
 }
