@@ -125,6 +125,13 @@ export default function NewDraftPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // File size check (10MB limit)
+        const MAX_SIZE = 10 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            alert("File size exceeds 10MB limit. Please upload a smaller document.");
+            return;
+        }
+
         const title = sanitizeTitle(file.name.replace(/\.[^/.]+$/, ""));
         let rawText = "";
 

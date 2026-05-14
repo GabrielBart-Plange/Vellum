@@ -3,6 +3,7 @@ import cors from 'cors'
 import * as admin from 'firebase-admin'
 import axios from 'axios'
 import dotenv from 'dotenv'
+import rateLimit from 'express-rate-limit'
 
 dotenv.config()
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY
@@ -18,6 +19,28 @@ const app = express()
 
 app.use(express.json())
 app.use(cors())
+
+// --- Rate Limiting ---
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { ok: false, error: 'Too many requests, please try again later.' }
+});
+
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // limit each IP to 10 payment-related requests per 15 mins
+  message: { ok: false, error: 'Payment attempt limit reached. Please wait 15 minutes.' }
+});
+
+// Apply general limit to all routes
+app.use(generalLimiter);
+
+// Apply strict limit to sensitive endpoints
+app.use('/api/payments/', paymentLimiter);
+app.use('/api/stories/unlock', paymentLimiter);
+app.use('/api/chapters/unlock', paymentLimiter);
+app.use('/api/payouts/', paymentLimiter);
 
 app.get('/', (req, res) => {
   res.json({

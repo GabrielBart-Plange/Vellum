@@ -17,6 +17,13 @@ export default function ImageUpload({ onUploadComplete, label = "Upload Image", 
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // File size check (5MB limit)
+        const MAX_SIZE = 5 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            setError("Image size exceeds 5MB limit.");
+            return;
+        }
+
         // Show preview
         const objectUrl = URL.createObjectURL(file);
         setPreview(objectUrl);
