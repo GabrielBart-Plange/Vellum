@@ -1,7 +1,7 @@
 "use client";
 
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, deleteDoc, updateDoc, serverTimestamp, collection, getDocs, orderBy, query, Timestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, updateDoc, serverTimestamp, collection, getDocs, orderBy, query, Timestamp, onSnapshot } from "firebase/firestore";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ImageUpload from "@/components/creator/ImageUpload";
@@ -115,8 +115,8 @@ export default function DraftEditorPage() {
                 const draftRef = doc(db, "users", user.uid, "drafts", id);
                 const draftSnap = await getDoc(draftRef);
 
-                let currentData = null;
-                let publishedData = null;
+                let currentData: any = null;
+                let publishedData: any = null;
 
                 // Check Published collections first to know the true "source of truth" for type
                 const novelSnap = await getDoc(doc(db, "novels", id));
@@ -141,9 +141,9 @@ export default function DraftEditorPage() {
                         description: draftData.description || publishedData?.description || "",
                         contentWarnings: (draftData.contentWarnings && draftData.contentWarnings.length > 0) ? draftData.contentWarnings : (publishedData?.contentWarnings || []),
                         targetAudience: draftData.targetAudience || publishedData?.targetAudience || "Neutral"
-                    };
+                    } as any;
                 } else {
-                    currentData = publishedData;
+                    currentData = publishedData as any;
                 }
 
                 if (currentData) {
