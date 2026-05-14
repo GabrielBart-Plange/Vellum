@@ -7,30 +7,36 @@ export type MacroTemplate = {
 };
 
 export const SMART_TAG_MACROS: Record<string, MacroTemplate[]> = {
-    '#litrpg': [
+    '#system': [
         {
-            id: 'litrpg-status',
+            id: 'system-status',
             label: 'Status Window',
             color: 'bg-blue-500',
             text: `\n|Status|\nName: [Character Name]\nLevel: [##]\nClass: [Class Name]\nHP: [###/###]\nMP: [###/###]\n\nStrength: [##]\nAgility: [##]\nIntelligence: [##]\nEndurance: [##]\n\nActive Skills:\n- [Skill Name Lv.#]\n- [Skill Name Lv.#]\n\nPassive Skills:\n- [Skill Name Lv.#]\n|/Status|\n`
         },
         {
-            id: 'litrpg-alert',
+            id: 'system-alert',
             label: 'System Alert',
             color: 'bg-indigo-500',
-            text: `\n[System: Alert]\n> [Notification message here.]\n`
+            text: `\n[System: Alert]\n> [Notification message here.]\n[/System]\n`
         },
         {
-            id: 'litrpg-quest',
+            id: 'system-quest',
             label: 'Quest Log',
             color: 'bg-amber-500',
-            text: `\n{Quest: [Quest Title]}\n\nObjective:\n- [Primary objective]\n\nOptional:\n- [Optional objective]\n\nRewards:\n- [XP Amount]\n- [Item/Skill/Title]\n\nPenalty:\n- [Failure consequence]\n`
+            text: `\n{Quest: [Quest Title]}\n\nObjective:\n- [Primary objective]\n\nOptional:\n- [Optional objective]\n\nRewards:\n- [XP Amount]\n- [Item/Skill/Title]\n\nPenalty:\n- [Failure consequence]\n{/Quest}\n`
         },
         {
-            id: 'litrpg-skill',
+            id: 'system-skill',
             label: 'Skill Acquisition',
             color: 'bg-emerald-500',
-            text: `\n[System: Skill Acquired]\n\nSkill: [Skill Name]\nType: [Active/Passive]\nDescription:\n[Brief skill description.]\n\nCooldown: [Time]\nCost: [Resource Cost]\n`
+            text: `\n[System: Skill Acquired]\n\nSkill: [Skill Name]\nType: [Active/Passive]\nDescription:\n[Brief skill description.]\n\nCooldown: [Time]\nCost: [Resource Cost]\n[/System]\n`
+        },
+        {
+            id: 'system-prompt',
+            label: 'System Prompt',
+            color: 'bg-teal-500',
+            text: `\n[System: Prompt]\nUnlock [Skill/Item/Feature]?\n[YES] [NO]\n[/System]\n`
         }
     ],
     '#progressionfantasy': [

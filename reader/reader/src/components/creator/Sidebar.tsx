@@ -16,15 +16,25 @@ export default function Sidebar() {
           { name: "Drafts", href: "/creator/dashboard/drafts" },
           { name: "Published", href: "/creator/dashboard/published" },
           { name: "Art Archives", href: "/creator/dashboard/art" },
+          { name: "My Wallet", href: "/creator/wallet", accent: true },
           { name: "Settings", href: "/creator/dashboard/settings" },
           { name: "Exit to Reader", href: "/" },
         ].map((link) => (
           <a
             key={link.name}
             href={link.href}
-            className="text-[var(--reader-text-muted)] hover:text-[var(--foreground)] text-xs uppercase tracking-[0.2em] transition-all hover:pl-2"
+            className={`text-xs uppercase tracking-[0.2em] transition-all hover:pl-2 flex items-center gap-2 ${
+              link.accent
+                ? "text-[var(--accent-sakura)]/80 hover:text-[var(--accent-sakura)]"
+                : "text-[var(--reader-text-muted)] hover:text-[var(--foreground)]"
+            }`}
           >
             {link.name}
+            {link.accent && (
+              <span className="text-[8px] font-bold tracking-widest text-[var(--accent-lime)] bg-[var(--accent-lime)]/10 px-1.5 py-0.5 rounded-full">
+                GHS
+              </span>
+            )}
           </a>
         ))}
       </nav>

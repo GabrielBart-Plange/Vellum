@@ -4,6 +4,9 @@ import { InkletWallet, VelluxWallet, VelluxTier, SubscriptionTier } from "@/type
 
 const MONETIZATION_API = process.env.NEXT_PUBLIC_MONETIZATION_API || (typeof window !== "undefined" ? `${window.location.origin}/api` : "http://localhost:3000/api");
 export const GILT_EXCHANGE_RATIO = 10;
+export const GHS_PER_GILT = 0.20; // 10 Gilt = GHS 2.00
+export const AUTHOR_REVENUE_SPLIT = 0.70; // 70% to author
+export const POOL_REVENUE_SPLIT = 0.05; // 5% to Level 9 Pool
 
 /**
  * Fetches the user's Inklet wallet from Firestore.

@@ -8,11 +8,13 @@ import Link from "next/link";
 import MobileNav from "@/components/creator/MobileNav";
 import Sidebar from "@/components/creator/Sidebar";
 import { useTheme, Theme } from "@/contexts/ThemeContext";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function SettingsPage() {
     const [user, setUser] = useState<User | null>(null);
     const [supportLink, setSupportLink] = useState("");
+    const [mobileMoneyNumber, setMobileMoneyNumber] = useState("");
+    const [mobileMoneyProvider, setMobileMoneyProvider] = useState("MTN");
     const [saving, setSaving] = useState(false);
     const router = useRouter();
     const { theme, setTheme } = useTheme();
@@ -22,9 +24,17 @@ export default function SettingsPage() {
             if (u) {
                 setUser(u);
                 // Fetch profile
-                const snap = await getDoc(doc(db, "users", u.uid));
-                if (snap.exists()) {
-                    setSupportLink(snap.data().supportLink || "");
+                const profileSnap = await getDoc(doc(db, "users", u.uid));
+                if (profileSnap.exists()) {
+                    setSupportLink(profileSnap.data().supportLink || "");
+                }
+
+                // Fetch Private Vault (Payout Details)
+                const payoutSnap = await getDoc(doc(db, "users", u.uid, "private", "payout"));
+                if (payoutSnap.exists()) {
+                    const payoutData = payoutSnap.data();
+                    setMobileMoneyNumber(payoutData.mobileMoneyNumber || "");
+                    setMobileMoneyProvider(payoutData.mobileMoneyProvider || "MTN");
                 }
             } else {
                 router.replace("/login");
@@ -33,13 +43,22 @@ export default function SettingsPage() {
         return () => unsub();
     }, [router]);
 
-    const saveSupportLink = async () => {
+    const saveSettings = async () => {
         if (!user) return;
         setSaving(true);
         try {
-            await updateDoc(doc(db, "users", user.uid), {
-                supportLink: supportLink.trim()
-            });
+            // Update Public Profile
+            await setDoc(doc(db, "users", user.uid), {
+                supportLink: supportLink.trim(),
+            }, { merge: true });
+
+            // Update Private Vault
+            await setDoc(doc(db, "users", user.uid, "private", "payout"), {
+                mobileMoneyNumber: mobileMoneyNumber.trim(),
+                mobileMoneyProvider,
+                updatedAt: new Date()
+            }, { merge: true });
+
             alert("Settings updated successfully.");
         } catch (e) {
             console.error(e);
@@ -100,7 +119,7 @@ export default function SettingsPage() {
                         <div className="h-[1px] w-full bg-[var(--reader-border)]" />
                     </h2>
 
-                    <div className="glass-panel p-10 rounded-3xl space-y-8 border-white/5">
+                    <div className="glass-panel p-10 rounded-3xl space-y-8">
                         {/* Theme Selection */}
                         <div className="space-y-4">
                             <p className="text-[10px] text-[var(--reader-text-muted)] uppercase tracking-[0.2em] font-medium ml-1">Archive Atmosphere (Theme)</p>
@@ -137,7 +156,7 @@ export default function SettingsPage() {
                         <div className="h-[1px] w-full bg-[var(--reader-border)]" />
                     </h2>
 
-                    <div className="glass-panel p-10 rounded-3xl space-y-6 border-white/5">
+                    <div className="glass-panel p-10 rounded-3xl space-y-6">
                         <div className="space-y-4">
                             <p className="text-[10px] text-[var(--reader-text-muted)] uppercase tracking-[0.2em] font-medium ml-1">Support Link (Ko-fi, Patreon, etc.)</p>
                             <div className="flex gap-4">
@@ -148,16 +167,59 @@ export default function SettingsPage() {
                                     className="flex-1 bg-[var(--reader-surface)] border border-[var(--reader-border)] p-4 rounded-2xl text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-accent)] transition-all placeholder:text-[var(--reader-text-subtle)]"
                                 />
                                 <button
-                                    onClick={saveSupportLink}
+                                    onClick={saveSettings}
                                     disabled={saving}
                                     className="px-8 bg-[var(--reader-accent)] text-white text-[10px] uppercase tracking-[0.2em] font-bold rounded-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                                 >
-                                    {saving ? "Saving..." : "Save Link"}
+                                    {saving ? "Saving..." : "Save Settings"}
                                 </button>
                             </div>
                             <p className="text-[10px] text-[var(--reader-text-subtle)] italic font-light ml-1">
                                 This will make the "Donate" button on your profile functional.
                             </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Payout Details */}
+                <div className="space-y-8">
+                    <h2 className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text-subtle)] font-bold flex items-center gap-4">
+                        <span className="flex-shrink-0">Payout Details</span>
+                        <div className="h-[1px] w-full bg-[var(--reader-border)]" />
+                    </h2>
+
+                    <div className="glass-panel p-10 rounded-3xl space-y-6">
+                        <div className="space-y-4">
+                            <p className="text-[10px] text-[var(--reader-text-muted)] uppercase tracking-[0.2em] font-medium ml-1">Mobile Money Number</p>
+                            <input
+                                value={mobileMoneyNumber}
+                                onChange={(e) => setMobileMoneyNumber(e.target.value)}
+                                placeholder="e.g. 024XXXXXXX"
+                                className="w-full bg-[var(--reader-surface)] border border-[var(--reader-border)] p-4 rounded-2xl text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-accent)] transition-all placeholder:text-[var(--reader-text-subtle)]"
+                            />
+                        </div>
+
+                        <div className="space-y-4">
+                            <p className="text-[10px] text-[var(--reader-text-muted)] uppercase tracking-[0.2em] font-medium ml-1">Network Provider</p>
+                            <select
+                                value={mobileMoneyProvider}
+                                onChange={(e) => setMobileMoneyProvider(e.target.value)}
+                                className="w-full bg-[var(--reader-surface)] border border-[var(--reader-border)] p-4 rounded-2xl text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--reader-accent)] transition-all"
+                            >
+                                <option value="MTN">MTN</option>
+                                <option value="Vodafone">Telecel (Vodafone)</option>
+                                <option value="AirtelTigo">AT (AirtelTigo)</option>
+                            </select>
+                        </div>
+                        
+                        <div className="pt-4">
+                            <button
+                                onClick={saveSettings}
+                                disabled={saving}
+                                className="w-full py-4 bg-[var(--reader-accent)] text-white text-[10px] uppercase tracking-[0.2em] font-bold rounded-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                            >
+                                {saving ? "Saving..." : "Save Payout Details"}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -168,7 +230,7 @@ export default function SettingsPage() {
                         <span className="flex-shrink-0">Danger Zone</span>
                         <div className="h-[1px] w-full bg-red-900/10" />
                     </h2>
-                    <div className="p-8 rounded-3xl bg-red-950/5 border border-red-900/10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="p-8 rounded-3xl bg-red-500/5 border border-red-500/10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <p className="text-[10px] text-[var(--reader-text-muted)] italic font-light max-w-sm">
                             Permanent actions that cannot be undone. Exercise extreme caution within the deep archives.
                         </p>

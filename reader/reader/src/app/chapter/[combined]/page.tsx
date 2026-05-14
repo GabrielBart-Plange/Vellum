@@ -20,6 +20,8 @@ import { getChapterStatus, unlockChapter } from "@/lib/monetization/coinService"
 import { analyticsService } from "@/lib/analyticsService";
 import ReportModal from "@/components/modals/ReportModal";
 
+const MONETIZATION_API = process.env.NEXT_PUBLIC_MONETIZATION_API || (typeof window !== "undefined" ? `${window.location.origin}/api` : "http://localhost:3000/api");
+
 export default function UnifiedChapterPage({ params }: { params: Promise<{ combined: string }> }) {
     const { combined } = use(params);
     const router = useRouter();
@@ -172,7 +174,13 @@ export default function UnifiedChapterPage({ params }: { params: Promise<{ combi
                         // View Increment
                         const storageKey = `viewed_chapter_${targetChap.id}`;
                         if (!localStorage.getItem(storageKey)) {
-                            await updateDoc(targetChap.ref, { views: increment(1) });
+                            try {
+                                await fetch(`${MONETIZATION_API}/analytics/view`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ contentId: targetChap.id, contentType: "novel" }) // Chapters increment novel views currently or we could add 'chapter' type
+                                });
+                            } catch (e) { console.error("View track error", e); }
                             localStorage.setItem(storageKey, "true");
                             
                             // Analytics tracking

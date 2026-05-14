@@ -13,7 +13,8 @@ import { discordNotificationService } from "@/lib/discord/notificationService";
 export default function DraftEditorPage() {
     const GENRE_OPTIONS = {
         fiction: ["Fantasy", "Sci-Fi", "Mystery", "Horror", "Thriller", "Romance", "Adventure", "Historical Fiction", "Comedy", "Literary Fiction"],
-        "non-fiction": ["Biography", "Memoir", "Self-Help", "Essay", "Travel", "History", "Science", "Philosophy", "Guide", "Commentary"]
+        "non-fiction": ["Biography", "Memoir", "Self-Help", "Essay", "Travel", "History", "Science", "Philosophy", "Guide", "Commentary"],
+        religion: ["Daily Devotional", "Theology", "Spirituality", "Commentary", "Inspirational", "Biblical Study"]
     };
 
     const params = useParams();
@@ -22,7 +23,7 @@ export default function DraftEditorPage() {
     
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
-    const [category, setCategory] = useState<keyof typeof GENRE_OPTIONS>("fiction");
+    const [category, setCategory] = useState<keyof typeof GENRE_OPTIONS | string>("fiction");
     const [genre, setGenre] = useState("Fantasy");
     const [isCustomGenre, setIsCustomGenre] = useState(false);
     const [coverImage, setCoverImage] = useState("");
@@ -38,6 +39,9 @@ export default function DraftEditorPage() {
     const [price, setPrice] = useState(10);
     const [contentWarnings, setContentWarnings] = useState<string[]>([]);
     const [targetAudience, setTargetAudience] = useState("Neutral");
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasConflict, setHasConflict] = useState(false);
+    const [lastServerTime, setLastServerTime] = useState<number | null>(null);
 
     const hasSystemTag = tags.some(t => t.toLowerCase() === "#system");
     const activeMacroTags = tags.filter(t => Object.keys(SMART_TAG_MACROS).includes(t.toLowerCase()));
@@ -112,25 +116,48 @@ export default function DraftEditorPage() {
                 const draftSnap = await getDoc(draftRef);
 
                 let currentData = null;
+                let publishedData = null;
+
+                // Check Published collections first to know the true "source of truth" for type
+                const novelSnap = await getDoc(doc(db, "novels", id));
+                if (novelSnap.exists()) publishedData = { ...novelSnap.data(), type: "novel" as const };
+                else {
+                    const storySnap = await getDoc(doc(db, "stories", id));
+                    if (storySnap.exists()) publishedData = { ...storySnap.data(), type: "short" as const };
+                }
 
                 if (draftSnap.exists()) {
-                    currentData = draftSnap.data();
+                    const draftData = draftSnap.data();
+                    currentData = {
+                        ...publishedData,
+                        ...draftData,
+                        // Ensure critical metadata is recovered if the draft is empty/corrupted
+                        title: draftData.title || publishedData?.title || "",
+                        coverImage: draftData.coverImage || publishedData?.coverImage || "",
+                        type: publishedData?.type || draftData.type || "short",
+                        category: draftData.category || publishedData?.category || "fiction",
+                        genre: draftData.genre || publishedData?.genre || "Fantasy",
+                        tags: (draftData.tags && draftData.tags.length > 0) ? draftData.tags : (publishedData?.tags || []),
+                        description: draftData.description || publishedData?.description || "",
+                        contentWarnings: (draftData.contentWarnings && draftData.contentWarnings.length > 0) ? draftData.contentWarnings : (publishedData?.contentWarnings || []),
+                        targetAudience: draftData.targetAudience || publishedData?.targetAudience || "Neutral"
+                    };
                 } else {
-                    const novelSnap = await getDoc(doc(db, "novels", id));
-                    if (novelSnap.exists()) currentData = novelSnap.data();
-                    else {
-                        const storySnap = await getDoc(doc(db, "stories", id));
-                        if (storySnap.exists()) currentData = storySnap.data();
-                    }
+                    currentData = publishedData;
                 }
 
                 if (currentData) {
                     setTitle(currentData.title || "");
-                    const loadedCategory = (currentData.category as keyof typeof GENRE_OPTIONS) || "fiction";
+                    const rawCategory = (currentData.category as string) || "fiction";
+                    const loadedCategory = rawCategory.toLowerCase() as keyof typeof GENRE_OPTIONS;
+                    
+                    // Safety check: if category is unknown, default to fiction but allow it to be set
                     setCategory(loadedCategory);
                     const loadedGenre = currentData.genre || "Fantasy";
                     setGenre(loadedGenre);
-                    if (!GENRE_OPTIONS[loadedCategory].includes(loadedGenre)) {
+
+                    const currentGenreList = GENRE_OPTIONS[loadedCategory] || [];
+                    if (!currentGenreList.includes(loadedGenre)) {
                         setIsCustomGenre(true);
                     }
                     setCoverImage(currentData.coverImage || "");
@@ -150,13 +177,45 @@ export default function DraftEditorPage() {
                     setPrice(currentData.price || 10);
                     setContentWarnings(currentData.contentWarnings || []);
                     setTargetAudience(currentData.targetAudience || "Neutral");
+
+                    // If it's a short story, we can stop loading here. 
+                    // Novels wait for the chapter loader to finish.
+                    if (detectedType !== "novel") setIsLoading(false);
+                } else {
+                    // No data found at all
+                    setIsLoading(false);
                 }
             } catch (err) {
                 console.error("Critical Load Error:", err);
+                setIsLoading(false);
             }
         });
 
-        return () => unsub();
+        // Set up conflict listener
+        let conflictUnsub = () => {};
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                const draftRef = doc(db, "users", user.uid, "drafts", id);
+                conflictUnsub = onSnapshot(draftRef, (snapshot) => {
+                    if (snapshot.metadata.hasPendingWrites) return;
+                    const data = snapshot.data();
+                    if (data?.updatedAt) {
+                        const serverTime = (data.updatedAt as Timestamp).toMillis();
+                        setLastServerTime((prev) => {
+                            if (prev && serverTime > prev + 2000) {
+                                setHasConflict(true);
+                            }
+                            return serverTime;
+                        });
+                    }
+                });
+            }
+        });
+
+        return () => {
+            unsub();
+            conflictUnsub();
+        };
     }, [id]);
 
     // Separate chapter loading effect to ensure type is set
@@ -182,7 +241,11 @@ export default function DraftEditorPage() {
                 } else {
                     setChapters(chapSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
                 }
-            } catch (e) { console.error("Chapter load error", e); }
+            } catch (e) { 
+                console.error("Chapter load error", e); 
+            } finally {
+                setIsLoading(false);
+            }
         };
         loadChapters();
     }, [id, type]);
@@ -190,7 +253,7 @@ export default function DraftEditorPage() {
     // Autosave
     useEffect(() => {
         const user = auth.currentUser;
-        if (!user) return;
+        if (!user || isLoading || hasConflict) return;
 
         const t = setTimeout(async () => {
             setSaving(true);
@@ -340,8 +403,37 @@ export default function DraftEditorPage() {
         setChapters(newChapters);
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 animate-in fade-in duration-700">
+                <div className="w-12 h-12 border-2 border-[var(--accent-sakura)]/20 border-t-[var(--accent-sakura)] rounded-full animate-spin" />
+                <div className="space-y-2 text-center">
+                    <p className="text-[10px] uppercase tracking-[0.4em] text-[var(--reader-text)]/40 font-bold">Securing Archives</p>
+                    <p className="text-xs text-[var(--reader-text)]/20 italic tracking-widest">Synchronizing chronicle data...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <section className="space-y-12 max-w-5xl mx-auto pb-24 transition-all duration-700">
+            {hasConflict && (
+                <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 duration-500">
+                    <div className="glass-panel px-8 py-4 rounded-full border-[var(--accent-sakura)]/40 bg-[var(--accent-sakura)]/10 backdrop-blur-xl flex items-center gap-6 shadow-[0_0_40px_-10px_var(--accent-sakura)]">
+                        <div className="flex flex-col">
+                            <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--accent-sakura)]">Temporal Collision</p>
+                            <p className="text-[9px] text-white/40 tracking-widest italic">Updated on another device. Refresh to merge.</p>
+                        </div>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="bg-[var(--accent-sakura)] text-white px-6 py-2 rounded-full text-[9px] uppercase tracking-widest font-bold hover:scale-105 active:scale-95 transition-all"
+                        >
+                            Synchronize
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Header Area */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-white/5">
                 <div className="flex-1 space-y-4">
@@ -390,6 +482,12 @@ export default function DraftEditorPage() {
                                 >
                                     Non-Fiction
                                 </button>
+                                <button
+                                    onClick={() => { setCategory("religion"); setGenre(GENRE_OPTIONS.religion[0]); setIsCustomGenre(false); }}
+                                    className={`flex-1 py-3 text-[9px] uppercase tracking-[0.2em] rounded-xl transition-all ${category === "religion" ? "bg-white/5 text-white font-bold shadow-inner" : "text-[var(--reader-text)]/40 hover:text-white"}`}
+                                >
+                                    Religion
+                                </button>
                             </div>
                         </div>
 
@@ -404,7 +502,7 @@ export default function DraftEditorPage() {
                                     }}
                                     className="w-full bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-xs text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all uppercase tracking-[0.2em] appearance-none cursor-pointer"
                                 >
-                                    {GENRE_OPTIONS[category].map(opt => (
+                                    {(GENRE_OPTIONS[category as keyof typeof GENRE_OPTIONS] || []).map(opt => (
                                         <option key={opt} value={opt} className="bg-neutral-900">{opt}</option>
                                     ))}
                                     <option value="CUSTOM" className="bg-neutral-900">+ Custom Genre...</option>
@@ -418,7 +516,7 @@ export default function DraftEditorPage() {
                                         className="flex-1 bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-xs text-[var(--foreground)] focus:outline-none focus:border-white/20 transition-all uppercase tracking-[0.2em]"
                                     />
                                     <button
-                                        onClick={() => { setIsCustomGenre(false); setGenre(GENRE_OPTIONS[category][0]); }}
+                                        onClick={() => { setIsCustomGenre(false); setGenre((GENRE_OPTIONS[category as keyof typeof GENRE_OPTIONS] || ["Fantasy"])[0]); }}
                                         className="aspect-square w-12 flex items-center justify-center border border-white/5 text-[var(--reader-text)] hover:text-white rounded-2xl transition-all"
                                     >
                                         ✕

@@ -29,7 +29,8 @@ app.get('/', (req, res) => {
       '/api/chapters/status/:userId/:novelId/:chapterId',
       '/api/chapters/unlock',
       '/api/stories/status/:userId/:storyId',
-      '/api/stories/unlock'
+      '/api/stories/unlock',
+      '/api/analytics/view'
     ]
   });
 });
@@ -322,6 +323,48 @@ app.post('/api/stories/unlock', async (req: Request, res: Response) => {
 });
 
 
+// --- Analytics & Engagement ---
+
+const viewCooldowns = new Map<string, number>();
+
+/**
+ * POST /api/analytics/view
+ * Safely increments view counts for novels or stories.
+ */
+app.post('/api/analytics/view', async (req: Request, res: Response) => {
+  const { contentId, contentType } = req.body as any;
+
+  if (!contentId || !contentType) {
+    return res.status(400).json({ ok: false, error: 'Missing contentId or contentType' });
+  }
+
+  // Basic Rate Limiting: 1 view per contentId per IP every 5 minutes
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const cooldownKey = `${clientIp}_${contentId}`;
+  const now = Date.now();
+
+  if (viewCooldowns.has(cooldownKey) && now < viewCooldowns.get(cooldownKey)!) {
+    return res.json({ ok: true, message: 'View already counted recently' });
+  }
+
+  try {
+    const collectionName = contentType === 'novel' ? 'novels' : 'stories';
+    const contentRef = db.collection(collectionName).doc(contentId);
+    
+    await contentRef.update({
+      views: admin.firestore.FieldValue.increment(1),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    viewCooldowns.set(cooldownKey, now + (5 * 60 * 1000)); // 5 min cooldown
+
+    res.json({ ok: true });
+  } catch (error: any) {
+    console.error('View tracking error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 // Phase M1 - Inklets & Tips
 app.post('/api/payments/inklets/purchase', async (req: Request, res: Response) => {
   const { userId, amount, provider } = req.body
@@ -432,6 +475,14 @@ app.post('/api/payments/paystack/verify', async (req: Request, res: Response) =>
     const userRef = db.collection('users').doc(userId);
     
     await db.runTransaction(async (transaction) => {
+      const txRef = db.collection('transactions').doc(reference);
+      const txSnap = await transaction.get(txRef);
+      
+      // Idempotency Check: If this transaction ID was already processed, stop here.
+      if (txSnap.exists) {
+        throw new Error('Transaction already processed');
+      }
+
       const userSnap = await transaction.get(userRef);
       if (!userSnap.exists) throw new Error('User not found');
 

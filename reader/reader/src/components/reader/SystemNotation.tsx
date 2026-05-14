@@ -100,18 +100,36 @@ export default function SystemNotation({ content, fontSize, chapterId, novelId, 
     };
 
     const parseContent = (text: string) => {
-        const parts = text.split(/(\[System:[\s\S]*?\]|\{Quest:[\s\S]*?\}|\|Status.*?\|[\s\S]*?\|\/Status\|)/g);
+        const parts = text.split(/(\[System:.*?\](?:(?!\[System:)[\s\S])*?\[\/[Ss]ystem\]|\[System:.*?\].*|\{Quest:.*?\}(?:(?!\{Quest:)[\s\S])*?\{\/[Qq]uest\}|\{Quest:.*?\}.*|\|Status.*?\|(?:(?!\|Status)[\s\S])*?\|\/Status\|)/g);
 
         let paragraphCounter = 0;
 
         return parts.map((part, index) => {
             if (!part || !part.trim()) return null;
 
-            // --- 1. [System: Header | Message] ---
+            // --- 1. [System: Header] ... [/System] OR [System: Header | Message] OR [System: Header] Message ---
             if (part.startsWith("[System:")) {
-                const inner = part.replace("[System:", "").replace("]", "").trim();
-                const [header, ...msgParts] = inner.includes("|") ? inner.split("|") : [null, inner];
-                const message = msgParts.join("|").trim();
+                const isBlock = part.toLowerCase().includes("[/system]");
+                let header: string | null = null;
+                let message = "";
+
+                if (isBlock) {
+                    const firstLineEnd = part.indexOf("]");
+                    header = part.substring(8, firstLineEnd).trim();
+                    const endTagIndex = part.toLowerCase().lastIndexOf("[/system]");
+                    message = part.substring(firstLineEnd + 1, endTagIndex).trim();
+                } else {
+                    const firstLineEnd = part.indexOf("]");
+                    header = part.substring(8, firstLineEnd).trim();
+                    message = part.substring(firstLineEnd + 1).trim();
+                    
+                    // Fallback for old pipe syntax if message is empty
+                    if (!message && header.includes("|")) {
+                        const msgParts = header.split("|");
+                        header = msgParts[0].trim();
+                        message = msgParts.slice(1).join("|").trim();
+                    }
+                }
 
                 return (
                     <div
@@ -134,11 +152,31 @@ export default function SystemNotation({ content, fontSize, chapterId, novelId, 
                 );
             }
 
-            // --- 2. {Quest: Title | Content} ---
+            // --- 2. {Quest: Title} ... {/Quest} OR {Quest: Title | Content} OR {Quest: Title} Content ---
             if (part.startsWith("{Quest:")) {
-                const inner = part.replace("{Quest:", "").replace("}", "").trim();
-                const [title, ...contentParts] = inner.includes("|") ? inner.split("|") : ["QUEST UPDATE", inner];
-                const questContent = contentParts.join("|").trim();
+                const isBlock = part.toLowerCase().includes("{/quest}");
+                let title = "QUEST UPDATE";
+                let questContent = "";
+
+                if (isBlock) {
+                    const firstLineEnd = part.indexOf("}");
+                    const innerTitle = part.substring(7, firstLineEnd).trim();
+                    if (innerTitle) title = innerTitle;
+                    const endTagIndex = part.toLowerCase().lastIndexOf("{/quest}");
+                    questContent = part.substring(firstLineEnd + 1, endTagIndex).trim();
+                } else {
+                    const firstLineEnd = part.indexOf("}");
+                    const innerTitle = part.substring(7, firstLineEnd).trim();
+                    if (innerTitle) title = innerTitle;
+                    questContent = part.substring(firstLineEnd + 1).trim();
+
+                    // Fallback for old pipe syntax if content is empty
+                    if (!questContent && title.includes("|")) {
+                        const contentParts = title.split("|");
+                        title = contentParts[0].trim();
+                        questContent = contentParts.slice(1).join("|").trim();
+                    }
+                }
 
                 return (
                     <div

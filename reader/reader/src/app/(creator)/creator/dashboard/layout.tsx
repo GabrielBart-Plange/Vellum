@@ -16,6 +16,13 @@ export default function DashboardLayout({
   const router = useRouter();
   const [showSidebar, setShowSidebar] = useState(true);
 
+  // Auto-hide sidebar on mobile on initial load
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setShowSidebar(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!loading) {
       if (!user) {
@@ -59,11 +66,11 @@ export default function DashboardLayout({
         </div>
       </div>
 
-      {/* Floating Toggle for Zen Mode */}
+      {/* Floating Toggle for Zen Mode (Desktop Only) */}
       {!showSidebar && (
         <button
           onClick={() => setShowSidebar(true)}
-          className="fixed top-8 left-8 z-50 h-10 w-10 flex items-center justify-center text-[var(--reader-text)] hover:text-[var(--foreground)] border border-[var(--reader-border)] glass-panel rounded-full hover:bg-[var(--reader-surface-hover)] transition-all animate-in fade-in slide-in-from-left-4"
+          className="fixed top-8 left-8 z-50 hidden md:flex h-10 w-10 items-center justify-center text-[var(--reader-text)] hover:text-[var(--foreground)] border border-[var(--reader-border)] glass-panel rounded-full hover:bg-[var(--reader-surface-hover)] transition-all animate-in fade-in slide-in-from-left-4"
           title="Show Menu"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -71,11 +78,29 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content Area */}
-      <main className={`flex-1 overflow-y-auto px-8 py-12 transition-all duration-500 ${!showSidebar ? "mx-auto max-w-6xl" : "max-w-7xl mx-auto"}`}>
-        <div className="relative z-10">
-          {children}
+      <div className={`flex flex-col flex-1 overflow-hidden transition-all duration-500 ${!showSidebar ? "md:mx-auto md:max-w-6xl w-full" : "md:max-w-7xl md:mx-auto w-full"}`}>
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between px-6 py-4 border-b border-[var(--reader-border)]/30 bg-transparent z-30 relative">
+          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-[var(--reader-text-muted)] flex items-center gap-2">
+            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-[#8b0000] to-[#4a0000] flex items-center justify-center text-[8px] font-serif shadow-[0_2px_10px_rgba(139,0,0,0.5)] border border-[#a52a2a]/30 overflow-hidden">
+              <span className="relative z-10 text-[#aa8e45]">V</span>
+            </div>
+            Archivist
+          </div>
+          <button
+            onClick={() => setShowSidebar(true)}
+            className="p-2 -mr-2 text-[var(--reader-text)] hover:text-[var(--foreground)]"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
         </div>
-      </main>
+
+        <main className="flex-1 overflow-y-auto px-6 md:px-8 py-8 md:py-12">
+          <div className="relative z-10">
+            {children}
+          </div>
+        </main>
+      </div>
 
       {/* Overlay for mobile */}
       {showSidebar && (

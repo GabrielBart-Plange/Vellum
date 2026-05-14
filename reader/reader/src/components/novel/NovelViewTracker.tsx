@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { doc, increment, updateDoc } from "firebase/firestore";
 
+const MONETIZATION_API = process.env.NEXT_PUBLIC_MONETIZATION_API || (typeof window !== "undefined" ? `${window.location.origin}/api` : "http://localhost:3000/api");
+
 export default function NovelViewTracker({ novelId }: { novelId: string }) {
   useEffect(() => {
     const incrementView = async () => {
@@ -15,10 +17,11 @@ export default function NovelViewTracker({ novelId }: { novelId: string }) {
       if (hasViewed) return;
 
       try {
-        // Commented out client-side write to avoid "Missing or insufficient permissions"
-        // Readers should not have direct write access to novels collection.
-        // const novelRef = doc(db, "novels", novelId);
-        // await updateDoc(novelRef, { views: increment(1) });
+        await fetch(`${MONETIZATION_API}/analytics/view`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contentId: novelId, contentType: "novel" })
+        });
         localStorage.setItem(storageKey, "true");
       } catch (error) {
         console.error("Error tracking view:", error);

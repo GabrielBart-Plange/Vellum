@@ -1,4 +1,29 @@
 {
-    "indexes": [],
+    "indexes": [
+        {
+            "collectionGroup": "analytics_events",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "authorId", "order": "ASCENDING" },
+                { "fieldPath": "timestamp", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "payout_requests",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "authorId", "order": "ASCENDING" },
+                { "fieldPath": "status", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "payout_requests",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "authorId", "order": "ASCENDING" },
+                { "fieldPath": "requestedAt", "order": "DESCENDING" }
+            ]
+        }
+    ],
     "fieldOverrides": []
 }
