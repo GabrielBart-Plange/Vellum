@@ -52,13 +52,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_GH",
-    url: "https://v1-vellum.vercel.app",
+    url: "https://vellum-alpha.vercel.app",
     siteName: "Vellum",
     title: "Vellum | Original Stories & Novels",
     description: "The archive for digital chronicles. Explore thousands of original sagas.",
     images: [
       {
-        url: "https://v1-vellum.vercel.app/og-image.jpg",
+        url: "https://vellum-alpha.vercel.app/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Vellum - The Scribe's Archive",
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Vellum | Original Stories & Novels",
     description: "Explore the newest chronicles in the digital archive.",
-    images: ["https://v1-vellum.vercel.app/twitter-image.jpg"],
+    images: ["https://vellum-alpha.vercel.app/twitter-image.jpg"],
   },
   icons: {
     icon: "/favicon.ico",
