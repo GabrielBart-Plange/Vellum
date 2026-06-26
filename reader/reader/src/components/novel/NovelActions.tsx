@@ -125,18 +125,21 @@ export default function NovelActions({ novel, novelId, slug, chapters }: NovelAc
             </header>
             <div className="flex-grow overflow-y-auto p-8 custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {chapters.map((chapter, index) => (
-                  <Link
-                    key={chapter.id}
-                    href={`/chapter/${novel.numericalId || novel.slug || slug}-${chapter.order || chapter.id || (index + 1)}`}
-                    className="group p-6 glass-panel border border-white/5 rounded-2xl hover:border-purple-500/40 hover:bg-white/[0.05] transition-all duration-500"
-                  >
-                    <div className="space-y-2">
-                      <p className="text-[9px] uppercase tracking-widest text-[var(--reader-text-subtle)] font-black group-hover:text-[var(--reader-accent)] transition-colors">Chapter {index + 1}</p>
-                      <h3 className="text-[var(--reader-text-muted)] text-sm font-black group-hover:text-[var(--reader-text)] transition-colors tracking-tight line-clamp-1 truncate uppercase">{chapter.title}</h3>
-                    </div>
-                  </Link>
-                ))}
+                {chapters.map((chapter, index) => {
+                  const chapterOrder = chapter.order !== undefined ? chapter.order : (index + 1);
+                  return (
+                    <Link
+                      key={chapter.id}
+                      href={`/chapter/${novel.numericalId || novel.slug || slug}-${chapterOrder}`}
+                      className="group p-6 glass-panel border border-white/5 rounded-2xl hover:border-purple-500/40 hover:bg-white/[0.05] transition-all duration-500"
+                    >
+                      <div className="space-y-2">
+                        <p className="text-[9px] uppercase tracking-widest text-[var(--reader-text-subtle)] font-black group-hover:text-[var(--reader-accent)] transition-colors">Chapter {index + 1}</p>
+                        <h3 className="text-[var(--reader-text-muted)] text-sm font-black group-hover:text-[var(--reader-text)] transition-colors tracking-tight line-clamp-1 truncate uppercase">{chapter.title}</h3>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>
