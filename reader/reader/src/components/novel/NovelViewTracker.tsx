@@ -4,12 +4,15 @@ import { useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { doc, increment, updateDoc } from "firebase/firestore";
 
-const MONETIZATION_API = process.env.NEXT_PUBLIC_MONETIZATION_API || (typeof window !== "undefined" ? `${window.location.origin}/api` : "http://localhost:3000/api");
+const MONETIZATION_API = process.env.NEXT_PUBLIC_MONETIZATION_API || "http://localhost:3005/api";
 
 export default function NovelViewTracker({ novelId }: { novelId: string }) {
   useEffect(() => {
     const incrementView = async () => {
       if (!novelId) return;
+
+      // Check if localStorage is available (browser environment)
+      if (typeof window === 'undefined') return;
 
       const storageKey = `viewed_novel_${novelId}`;
       const hasViewed = localStorage.getItem(storageKey);
